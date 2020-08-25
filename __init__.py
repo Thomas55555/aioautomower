@@ -51,25 +51,15 @@ class GetMowerData:
                         'X-Api-Key': '{0}'.format(self.api_key)}
 
     async def async_mower_state(self):
-        """Return the token"""
+        """Returns the token."""
         self.resp = requests.get(MOWER_API_BASE_URL, headers=self.mower_headers)
         self.resp.raise_for_status()
         self.resp_raw_dict = json.loads(self.resp.content.decode('utf-8'))
         return self.resp_raw_dict['data'][0]
 
 class Return:
+  
     """Class to communicate with the ExampleHub API."""
-
-#   mower_parkuntilfurthernotice:
-#     url: https://api.amc.husqvarna.dev/v1/mowers/b2bc3443-b31a-4c7f-834e-d6e408c53f1b/actions
-#     method: POST
-#     headers:
-#       authorization: !secret automower_access_token
-#       Authorization-Provider: 'husqvarna'
-#       Content-Type: 'application/vnd.api+json'
-#       X-Api-Key: !secret husqvarna_x_api_key
-#     payload: '{"data": {"type": "ParkUntilFurtherNotice"}}'
-
 
     def __init__(self, api_key, access_token, provider, token_type, mower_id):
         """Initialize the API and store the auth so we can make requests."""
