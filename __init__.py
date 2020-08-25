@@ -1,3 +1,4 @@
+""" Module to communicate with Husqvarna API."""
 import requests
 import json
 import logging
@@ -14,7 +15,8 @@ AUTH_HEADERS = {'Content-Type': 'application/x-www-form-urlencoded',
 MOWER_API_BASE_URL = 'https://api.amc.husqvarna.dev/v1/mowers/'
 
 class GetAccessToken:
-    """Class to communicate with the ExampleHub API."""
+  
+    """Class to get the access token."""
 
     def __init__(self, api_key, username, password):
         """Initialize the API and store the auth so we can make requests."""
@@ -24,7 +26,7 @@ class GetAccessToken:
         self.auth_data= 'client_id={0}&grant_type=password&username={1}&password={2}'.format(self.api_key,self.username,self.password)
 
     async def async_get_access_token(self):
-        """Return the token"""
+        """Returns the token."""
         # self.resp = requests.post(url=AUTH_API_URL, headers=AUTH_HEADERS, data=self.auth_data)
         # self.resp.raise_for_status()
         # self.resp_raw_dict = json.loads(self.resp.content.decode('utf-8'))
@@ -46,7 +48,7 @@ class GetMowerData:
         self.mower_headers = {'Authorization': '{0} {1}'.format(self.token_type,self.access_token),
                         'Authorization-Provider': '{0}'.format(self.provider),
                         'Content-Type': 'application/vnd.api+json',
-                        'X-Api-Key': '{0}'.format(self.api_key)}             
+                        'X-Api-Key': '{0}'.format(self.api_key)}
 
     async def async_mower_state(self):
         """Return the token"""
@@ -85,7 +87,7 @@ class Return:
 
 
     def mower_parkuntilfurthernotice(self):
-        """Return the token"""
+        """Sends the command to park the mower until further notice."""
         self.payload = '{"data": {"type": "ParkUntilFurtherNotice"}}'
         self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
         _LOGGER.info("befehl wurde gesendet")
@@ -96,7 +98,7 @@ class Return:
         return self.resp.status_code
 
     def mower_pause(self):
-        """Return the token"""
+        """Sends the command to pause the mower until further notice."""
         self.payload = '{"data": {"type": "Pause"}}'
         self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
         _LOGGER.info("befehl wurde gesendet")
@@ -107,7 +109,7 @@ class Return:
         return self.resp.status_code
 
     def mower_parkuntilnextschedule(self):
-        """Return the token"""
+        """Sends the command to park the mower until the next schedule begins."""
         self.payload = '{"data": {"type": "ParkUntilNextSchedule"}}'
         self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
         _LOGGER.info("befehl wurde gesendet")
@@ -118,7 +120,7 @@ class Return:
         return self.resp.status_code
 
     def mower_resumeschedule(self):
-        """Resume Scheudele"""
+        """Sends the command to resume the schedule."""
         self.payload = '{"data": {"type": "ResumeSchedule"}}'
         self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
         _LOGGER.info("befehl wurde gesendet")
