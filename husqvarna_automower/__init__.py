@@ -1,4 +1,4 @@
-import requests
+import time
 import json
 import logging
 import aiohttp
@@ -52,7 +52,7 @@ class GetMowerData:
 
 class Return:
     """Class to send commands to the Automower Connect API."""
-    def __init__(self, api_key, access_token, provider, token_type, mower_id):
+    def __init__(self, api_key, access_token, provider, token_type, mower_id, payload):
         """Initialize the API and store the auth so we can make requests."""
         self.api_key= api_key
         self.access_token = access_token
@@ -65,48 +65,15 @@ class Return:
                         'accept': '*/*',
                         'X-Api-Key': '{0}'.format(self.api_key)}
         self.mower_action_url = f"{MOWER_API_BASE_URL}{self.mower_id}/actions"
+        self.payload = payload
 
-
-    def mower_parkuntilfurthernotice(self):
-        """Return the token"""
-        self.payload = '{"data": {"type": "ParkUntilFurtherNotice"}}'
-        self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
-        _LOGGER.info("befehl wurde gesendet")
-        _LOGGER.info('action_url: {0} \n mower_headers: {1} \n Payload: {2} \n payload_json: {3} \n'.format(self.mower_action_url,self.mower_headers,self.payload,json.dumps(self.payload)))
-        _LOGGER.info(f"{self.resp}")
-        # self.resp.raise_for_status()
-        # self.resp_raw_dict = json.loads(self.resp.content.decode('utf-8'))
-        return self.resp.status_code
-
-    def mower_pause(self):
-        """Return the token"""
-        self.payload = '{"data": {"type": "Pause"}}'
-        self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
-        _LOGGER.info("befehl wurde gesendet")
-        _LOGGER.info('action_url: {0} \n mower_headers: {1} \n Payload: {2} \n payload_json: {3} \n'.format(self.mower_action_url,self.mower_headers,self.payload,json.dumps(self.payload)))
-        _LOGGER.info(f"{self.resp}")
-        # self.resp.raise_for_status()
-        # self.resp_raw_dict = json.loads(self.resp.content.decode('utf-8'))
-        return self.resp.status_code
-
-    def mower_parkuntilnextschedule(self):
-        """Return the token"""
-        self.payload = '{"data": {"type": "ParkUntilNextSchedule"}}'
-        self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
-        _LOGGER.info("befehl wurde gesendet")
-        _LOGGER.info('action_url: {0} \n mower_headers: {1} \n Payload: {2} \n payload_json: {3} \n'.format(self.mower_action_url,self.mower_headers,self.payload,json.dumps(self.payload)))
-        _LOGGER.info(f"{self.resp}")
-        # self.resp.raise_for_status()
-        # self.resp_raw_dict = json.loads(self.resp.content.decode('utf-8'))
-        return self.resp.status_code
-
-    def mower_resumeschedule(self):
-        """Resume Scheudele"""
-        self.payload = '{"data": {"type": "ResumeSchedule"}}'
-        self.resp = requests.post(self.mower_action_url, headers=self.mower_headers, data=self.payload)
-        _LOGGER.info("befehl wurde gesendet")
-        _LOGGER.info('action_url: {0} \n mower_headers: {1} \n Payload: {2} \n payload_json: {3} \n'.format(self.mower_action_url,self.mower_headers,self.payload,json.dumps(self.payload)))
-        _LOGGER.info(f"{self.resp}")
-        # self.resp.raise_for_status()
-        # self.resp_raw_dict = json.loads(self.resp.content.decode('utf-8'))
-        return self.resp.status_code
+    async def async_mower_command(self):
+        """Resume Scheudele."""
+        async with aiohttp.ClientSession(headers=self.mower_headers) as session:
+            async with session.post(self.mower_action_url, data=self.payload) as resp:
+                result = await session.close()
+        _LOGGER.debug(f"sent payload {self.payload}")
+        _LOGGER.debug(f"API answer {resp.status}")
+        time.sleep(5)
+        _LOGGER.debug("Waited 5s until mower state is updated")
+        return resp.status
