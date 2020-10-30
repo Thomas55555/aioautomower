@@ -1,5 +1,5 @@
+"""Automower library using aiohttp"
 import time
-import json
 import logging
 import aiohttp
 
@@ -23,7 +23,7 @@ class GetAccessToken:
         self.auth_data= 'client_id={0}&grant_type=password&username={1}&password={2}'.format(self.api_key,self.username,self.password)
 
     async def async_get_access_token(self):
-        """Return the token"""
+        """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 result = await resp.json()
@@ -33,7 +33,7 @@ class GetMowerData:
     """Class to communicate with the Automower Connect API."""
 
     def __init__(self, api_key, access_token, provider, token_type):
-        """Initialize the API."""
+        """Initialize the Communication API to get data."""
         self.api_key= api_key
         self.access_token = access_token
         self.provider = provider
@@ -44,7 +44,7 @@ class GetMowerData:
                         'X-Api-Key': '{0}'.format(self.api_key)}
 
     async def async_mower_state(self):
-        """Return the mowers data as a list of mowers"""
+        """Return the mowers data as a list of mowers."""
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
                 result = await resp.json()
@@ -68,7 +68,7 @@ class Return:
         self.payload = payload
 
     async def async_mower_command(self):
-        """Resume Scheudele."""
+        """Send a payload to the mower to execute a command."""
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.post(self.mower_action_url, data=self.payload) as resp:
                 result = await session.close()
