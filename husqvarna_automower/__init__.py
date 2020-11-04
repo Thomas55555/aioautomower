@@ -27,6 +27,10 @@ class GetAccessToken:
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 result = await resp.json()
+                if resp.status != 200:
+                    result = resp.status
+        _LOGGER.info(f"result: {result}")
+        _LOGGER.info(f"resp.status: {resp.status}")
         return result
 
 class GetMowerData:
