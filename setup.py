@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="husqvarna_automower",
-    version="0.5.1",
+    version="0.5.11",
     author="Thomas Protzner",
     author_email="thomas.protzner@gmail.com",
     description="module to communicate to Husqvarna Automower API",
