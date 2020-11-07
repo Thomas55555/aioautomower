@@ -1,4 +1,4 @@
-"""Automower library using aiohttp"""
+"""Automower library using aiohttp."""
 import time
 import logging
 import aiohttp
