@@ -9,6 +9,7 @@ setuptools.setup(
     author="Thomas Protzner",
     author_email="thomas.protzner@gmail.com",
     description="module to communicate to Husqvarna Automower API",
+    license="Apache License 2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Thomas55555/husqvarna_automower_py",
@@ -18,5 +19,5 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires='==3.8',
+    install_requires=list(val.strip() for val in open("requirements.txt")),
 )
