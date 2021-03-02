@@ -29,8 +29,8 @@ class GetAccessToken:
                 result = await resp.json()
                 if resp.status != 200:
                     result = resp.status
-        _LOGGER.info(f"result: {result}")
-        _LOGGER.info(f"resp.status: {resp.status}")
+        _LOGGER.debug(f"result: {result}")
+        _LOGGER.debug(f"resp.status: {resp.status}")
         return result
 
 class GetMowerData:
@@ -52,6 +52,8 @@ class GetMowerData:
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
                 result = await resp.json()
+        _LOGGER.debug(f"result: {result}")
+        _LOGGER.debug(f"resp.status: {resp.status}")
         return result
 
 class Return:
