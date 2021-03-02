@@ -26,11 +26,11 @@ class GetAccessToken:
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                result = await resp.json()
+                result = await resp.json(encoding="UTF-8")
                 if resp.status != 200:
                     result = resp.status
-        _LOGGER.info(f"result: {result}")
-        _LOGGER.info(f"resp.status: {resp.status}")
+        _LOGGER.debug(f"result: {result}")
+        _LOGGER.debug(f"resp.status: {resp.status}")
         return result
 
 class GetMowerData:
@@ -51,7 +51,9 @@ class GetMowerData:
         """Return the mowers data as a list of mowers."""
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
-                result = await resp.json()
+                result = await resp.json(encoding="UTF-8")
+        _LOGGER.debug(f"result: {result}")
+        _LOGGER.debug(f"resp.status: {resp.status}")
         return result
 
 class Return:
