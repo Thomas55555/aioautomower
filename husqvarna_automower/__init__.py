@@ -27,8 +27,7 @@ class GetAccessToken:
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 result = await resp.json(encoding="UTF-8")
-                if resp.status != 200:
-                    result = resp.status
+                result['status'] = resp.status
         _LOGGER.debug(f"result: {result}")
         _LOGGER.debug(f"resp.status: {resp.status}")
         return result
@@ -52,6 +51,7 @@ class GetMowerData:
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
                 result = await resp.json(encoding="UTF-8")
+                result['status'] = resp.status
         _LOGGER.debug(f"result: {result}")
         _LOGGER.debug(f"resp.status: {resp.status}")
         return result
@@ -78,6 +78,7 @@ class Return:
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.post(self.mower_action_url, data=self.payload) as resp:
                 result = await session.close()
+                result['status'] = resp.status
         _LOGGER.debug(f"sent payload {self.payload}")
         _LOGGER.debug(f"API answer {resp.status}")
         time.sleep(5)
