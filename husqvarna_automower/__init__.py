@@ -2,6 +2,7 @@
 import time
 import logging
 import aiohttp
+from urllib.parse import urlencode, quote_plus
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ AUTH_HEADERS = {'Content-Type': 'application/x-www-form-urlencoded',
 
 MOWER_API_BASE_URL = 'https://api.amc.husqvarna.dev/v1/mowers/'
 
+
 class GetAccessToken:
     """Class to communicate with the Authentication API."""
 
@@ -19,8 +21,8 @@ class GetAccessToken:
         """Initialize the Auth-API and store the auth so we can make requests."""
         self.username = username
         self.password = password
-        self.api_key= api_key
-        self.auth_data= 'client_id={0}&grant_type=password&username={1}&password={2}'.format(self.api_key,self.username,self.password)
+        self.api_key = api_key
+        self.auth_data = urlencode({'client_id': self.api_key, 'grant_type': 'password', 'username': self.username, 'password': self.password}, quote_via=quote_plus)
 
     async def async_get_access_token(self):
         """Return the token."""
