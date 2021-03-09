@@ -36,6 +36,7 @@ class GetAccessToken:
         _LOGGER.debug(f"resp.status: {resp.status}")
         return result
 
+
 class RefreshAccessToken:
     """Class to renew the Access Token."""
 
@@ -55,6 +56,7 @@ class RefreshAccessToken:
         _LOGGER.debug(f"result: {result}")
         _LOGGER.debug(f"resp.status: {resp.status}")
         return result
+
 
 class GetMowerData:
     """Class to communicate with the Automower Connect API."""
