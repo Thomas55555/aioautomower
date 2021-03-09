@@ -35,6 +35,25 @@ class GetAccessToken:
         _LOGGER.debug(f"resp.status: {resp.status}")
         return result
 
+class RefreshAccessToken:
+    """Class to renew the Access Token."""
+
+    def __init__(self, api_key, refresh_token):
+        """Initialize the Auth-API and store the auth so we can make requests."""
+        self.api_key = api_key
+        self.refresh_token = refresh_token
+        self.auth_data = urlencode({'client_id': self.api_key, 'grant_type': 'refresh_token',
+                                    'refresh_token': self.refresh_token}, quote_via=quote_plus)
+
+    async def async_refresh_access_token(self):
+        """Return the token."""
+        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
+            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
+                result = await resp.json(encoding="UTF-8")
+                result['status'] = resp.status
+        _LOGGER.debug(f"result: {result}")
+        _LOGGER.debug(f"resp.status: {resp.status}")
+        return result
 
 class GetMowerData:
     """Class to communicate with the Automower Connect API."""
