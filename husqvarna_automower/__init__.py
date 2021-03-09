@@ -1,8 +1,9 @@
 """Automower library using aiohttp."""
-import time
 import logging
+import time
+from urllib.parse import quote_plus, urlencode
+
 import aiohttp
-from urllib.parse import urlencode, quote_plus
 
 _LOGGER = logging.getLogger(__name__)
 
