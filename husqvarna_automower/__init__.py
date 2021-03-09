@@ -16,7 +16,7 @@ MOWER_API_BASE_URL = 'https://api.amc.husqvarna.dev/v1/mowers/'
 
 
 class GetAccessToken:
-    """Class to communicate with the Authentication API."""
+    """Class to get an acces token from the Authentication API."""
 
     def __init__(self, api_key, username, password):
         """Initialize the Auth-API and store the auth so we can make requests."""
@@ -48,7 +48,7 @@ class RefreshAccessToken:
                                     'refresh_token': self.refresh_token}, quote_via=quote_plus)
 
     async def async_refresh_access_token(self):
-        """Return the token."""
+        """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 result = await resp.json(encoding="UTF-8")
@@ -87,7 +87,7 @@ class Return:
     """Class to send commands to the Automower Connect API."""
 
     def __init__(self, api_key, access_token, provider, token_type, mower_id, payload):
-        """Initialize the API and store the auth so we can make requests."""
+        """Initialize the API and store the auth so we can send commands."""
         self.api_key = api_key
         self.access_token = access_token
         self.provider = provider
