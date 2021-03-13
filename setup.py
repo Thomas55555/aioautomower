@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="husqvarna_automower",
-    version="2021.3.2",
+    name="aioautomower",
+    version="2021.3.3",
     author="Thomas Protzner",
     author_email="thomas.protzner@gmail.com",
     description="module to communicate to Husqvarna Automower API",
