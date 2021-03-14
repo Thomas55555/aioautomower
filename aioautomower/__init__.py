@@ -9,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 AUTH_API_URL = 'https://api.authentication.husqvarnagroup.dev/v1/oauth2/token'
+TOKEN_URL = 'https://api.authentication.husqvarnagroup.dev/v1/token'
 AUTH_HEADERS = {'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': 'application/json'}
 
@@ -112,3 +113,26 @@ class Return:
         time.sleep(5)
         _LOGGER.debug("Waited 5s until mower state is updated")
         return resp.status
+
+
+class DeleteAccessToken:
+    """Class to invalidate an acces token."""
+
+    def __init__(self, api_key, provider, access_token):
+        """Initialize the Auth-API and store the auth so we can make requests."""
+        self.api_key = api_key
+        self.provider = provider
+        self.delete_headers = {'Authorization-Provider': '{0}'.format(self.provider),
+                               'X-Api-Key': '{0}'.format(self.api_key)}
+        self.access_token = access_token
+        self.delete_url = f"{TOKEN_URL}/{self.access_token}"
+
+    async def async_delete_access_token(self):
+        """Delete the token."""
+        async with aiohttp.ClientSession(headers=self.delete_headers) as session:
+            async with session.delete(self.delete_url) as resp:
+                result = await resp.json(encoding="UTF-8")
+                result['status'] = resp.status
+        _LOGGER.debug(f"result: {result}")
+        _LOGGER.debug(f"resp.status: {resp.status}")
+        return result
