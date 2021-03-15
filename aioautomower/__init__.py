@@ -126,9 +126,8 @@ class Return:
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.post(self.mower_action_url, data=self.payload) as resp:
                 result = await session.close()
-                result["status"] = resp.status
         _LOGGER.debug("Sent payload: %s", self.payload)
-        _LOGGER.debug("API answer: %i", result["status"])
+        _LOGGER.debug("Resp status: %s", resp.status)
         time.sleep(5)
         _LOGGER.debug("Waited 5s until mower state is updated")
         return resp.status
