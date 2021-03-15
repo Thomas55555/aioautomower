@@ -42,6 +42,7 @@ class GetAccessToken:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 result = await resp.json(encoding="UTF-8")
                 result["status"] = resp.status
+                result["expires_at"] = result["expires_in"] + time.time()
         _LOGGER.debug("Resp.status: %i", result["status"])
         return result
 
@@ -68,6 +69,7 @@ class RefreshAccessToken:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 result = await resp.json(encoding="UTF-8")
                 result["status"] = resp.status
+                result["expires_at"] = result["expires_in"] + time.time()
         _LOGGER.debug("Resp.status: %i", result["status"])
         return result
 
