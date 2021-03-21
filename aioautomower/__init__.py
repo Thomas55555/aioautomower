@@ -2,7 +2,6 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
-
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,6 +16,7 @@ AUTH_HEADERS = {
 
 MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
 
+timeout = aiohttp.ClientTimeout(total=10)
 
 class GetAccessToken:
     """Class to get an acces token from the Authentication API."""
@@ -40,10 +40,13 @@ class GetAccessToken:
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                result = await resp.json(encoding="UTF-8")
-                result["status"] = resp.status
-                result["expires_at"] = result["expires_in"] + time.time()
-        _LOGGER.debug("Resp.status: %i", result["status"])
+                _LOGGER.debug("Resp.status: %i", resp.status)
+                if resp.status == 200:
+                    result = await resp.json(encoding="UTF-8")
+                    result["expires_at"] = result["expires_in"] + time.time()
+                if resp.status >= 400:
+                    resp.raise_for_status()
+        result["status"] = resp.status
         return result
 
 
@@ -67,10 +70,13 @@ class RefreshAccessToken:
         """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                result = await resp.json(encoding="UTF-8")
-                result["status"] = resp.status
-                result["expires_at"] = result["expires_in"] + time.time()
-        _LOGGER.debug("Resp.status: %i", result["status"])
+                _LOGGER.debug("Resp.status: %i", resp.status)
+                if resp.status == 200:
+                    result = await resp.json(encoding="UTF-8")
+                    result["expires_at"] = result["expires_in"] + time.time()
+                if resp.status >= 400:
+                    resp.raise_for_status()
+        result["status"] = resp.status
         return result
 
 
@@ -92,12 +98,15 @@ class GetMowerData:
 
     async def async_mower_state(self):
         """Return the mowers data as a list of mowers."""
-        async with aiohttp.ClientSession(headers=self.mower_headers) as session:
+        async with aiohttp.ClientSession(headers=self.mower_headers, timeout=timeout) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
-                result = await resp.json(encoding="UTF-8")
-                result["status"] = resp.status
-        _LOGGER.debug("Result: %s", result)
-        _LOGGER.debug("Resp.status: %i", result["status"])
+                _LOGGER.debug("Resp.status: %i", resp.status)
+                if resp.status == 200:
+                    result = await resp.json(encoding="UTF-8")
+                if resp.status >= 400:
+                    test = resp.raise_for_status()
+                    _LOGGER.debug("Resp.status: %s", test)
+        result["status"] = resp.status
         return result
 
 
