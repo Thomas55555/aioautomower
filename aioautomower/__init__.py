@@ -36,6 +36,7 @@ class GetAccessToken:
             quote_via=quote_plus,
         )
 
+
     async def async_get_access_token(self):
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
@@ -66,11 +67,12 @@ class RefreshAccessToken:
             quote_via=quote_plus,
         )
 
+
     async def async_refresh_access_token(self):
         """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                _LOGGER.debug("Resp.status: %i", resp.status)
+                _LOGGER.debug("Resp.status refresh token: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
@@ -100,12 +102,11 @@ class GetMowerData:
         """Return the mowers data as a list of mowers."""
         async with aiohttp.ClientSession(headers=self.mower_headers, timeout=timeout) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
-                _LOGGER.debug("Resp.status: %i", resp.status)
+                _LOGGER.debug("Resp.status mower data: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                 if resp.status >= 400:
-                    test = resp.raise_for_status()
-                    _LOGGER.debug("Resp.status: %s", test)
+                    resp.raise_for_status()
         result["status"] = resp.status
         return result
 
@@ -136,7 +137,7 @@ class Return:
             async with session.post(self.mower_action_url, data=self.payload) as resp:
                 result = await session.close()
         _LOGGER.debug("Sent payload: %s", self.payload)
-        _LOGGER.debug("Resp status: %s", resp.status)
+        _LOGGER.debug("Resp status mower command: %s", resp.status)
         time.sleep(5)
         _LOGGER.debug("Waited 5s until mower state is updated")
         return resp.status
@@ -160,8 +161,10 @@ class DeleteAccessToken:
         """Delete the token."""
         async with aiohttp.ClientSession(headers=self.delete_headers) as session:
             async with session.delete(self.delete_url) as resp:
+            _LOGGER.debug("Resp.status delete token: %i", resp.status)
+            if resp.status == 200:
                 result = await resp.json(encoding="UTF-8")
-                result["status"] = resp.status
-        _LOGGER.debug("Result: %s", result)
-        _LOGGER.debug("Resp.status: %i", result["status"])
+            if resp.status >= 400:
+                resp.raise_for_status()
+        result["status"] = resp.status
         return result
