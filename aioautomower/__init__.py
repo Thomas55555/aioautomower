@@ -18,6 +18,7 @@ MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
 
 timeout = aiohttp.ClientTimeout(total=10)
 
+
 class GetAccessToken:
     """Class to get an acces token from the Authentication API."""
 
@@ -35,7 +36,6 @@ class GetAccessToken:
             },
             quote_via=quote_plus,
         )
-
 
     async def async_get_access_token(self):
         """Return the token."""
@@ -66,7 +66,6 @@ class RefreshAccessToken:
             },
             quote_via=quote_plus,
         )
-
 
     async def async_refresh_access_token(self):
         """Return the refresh token."""
@@ -100,7 +99,9 @@ class GetMowerData:
 
     async def async_mower_state(self):
         """Return the mowers data as a list of mowers."""
-        async with aiohttp.ClientSession(headers=self.mower_headers, timeout=timeout) as session:
+        async with aiohttp.ClientSession(
+            headers=self.mower_headers, timeout=timeout
+        ) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
                 _LOGGER.debug("Resp.status mower data: %i", resp.status)
                 if resp.status == 200:
