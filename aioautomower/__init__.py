@@ -144,7 +144,7 @@ class Return:
 
 
 class DeleteAccessToken:
-    """Class to invalidate an acces token."""
+    """Class to invalidate an access token."""
 
     def __init__(self, api_key, provider, access_token):
         """Initialize the Auth-API and store the auth so we can make requests."""
