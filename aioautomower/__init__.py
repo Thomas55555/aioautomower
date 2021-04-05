@@ -20,6 +20,15 @@ MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
 timeout = aiohttp.ClientTimeout(total=10)
 
 
+class TokenError(Exception):
+    """Raised when Husqvarna Authentication API request ended in error."""
+
+    def __init__(self, status: str):
+        """Initialize."""
+        super().__init__(status)
+        self.status = status
+
+
 class GetAccessToken:
     """Class to get an acces token from the Authentication API."""
 
@@ -105,7 +114,9 @@ class ValidateAccessToken:
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                 if resp.status >= 400:
-                    resp.raise_for_status()
+                    raise TokenError(
+                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                    )
         result["status"] = resp.status
         return result
 
