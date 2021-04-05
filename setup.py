@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="aioautomower",
-    version="2021.4.0",
+    version="2021.4.1",
     author="Thomas Protzner",
     author_email="thomas.protzner@gmail.com",
     description="module to communicate to Husqvarna Automower API",
     license="Apache License 2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Thomas55555/husqvarna_automower_py",
+    url="https://github.com/Thomas55555/aioautomower",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

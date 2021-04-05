@@ -2,6 +2,7 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
+
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +82,34 @@ class RefreshAccessToken:
         return result
 
 
+class ValidateAccessToken:
+    """Class to validate the Access Token."""
+
+    def __init__(self, api_key, access_token, provider):
+        """Initialize the Auth-API and store the auth so we can make requests."""
+        self.api_key = api_key
+        self.access_token = access_token
+        self.provider = provider
+        self.token_url = f"{TOKEN_URL}/{self.access_token}"
+        self.token_headers = {
+            "Authorization-Provider": "{0}".format(self.provider),
+            "Accept": "application/json",
+            "X-Api-Key": "{0}".format(self.api_key),
+        }
+
+    async def async_validate_access_token(self):
+        """Returns information about the current token."""
+        async with aiohttp.ClientSession(headers=self.token_headers) as session:
+            async with session.get(self.token_url) as resp:
+                _LOGGER.debug("Resp.status validate token: %i", resp.status)
+                if resp.status == 200:
+                    result = await resp.json(encoding="UTF-8")
+                if resp.status >= 400:
+                    resp.raise_for_status()
+        result["status"] = resp.status
+        return result
+
+
 class GetMowerData:
     """Class to communicate with the Automower Connect API."""
 
@@ -154,6 +183,7 @@ class DeleteAccessToken:
         self.delete_headers = {
             "Authorization-Provider": "{0}".format(self.provider),
             "X-Api-Key": "{0}".format(self.api_key),
+            "Accept": "application/json",
         }
         self.access_token = access_token
         self.delete_url = f"{TOKEN_URL}/{self.access_token}"
@@ -163,9 +193,8 @@ class DeleteAccessToken:
         async with aiohttp.ClientSession(headers=self.delete_headers) as session:
             async with session.delete(self.delete_url) as resp:
                 _LOGGER.debug("Resp.status delete token: %i", resp.status)
-                if resp.status == 200:
+                if resp.status == 204:
                     result = await resp.json(encoding="UTF-8")
                 if resp.status >= 400:
                     resp.raise_for_status()
-        result["status"] = resp.status
         return result
