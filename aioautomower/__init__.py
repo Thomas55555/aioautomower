@@ -154,6 +154,7 @@ class DeleteAccessToken:
         self.delete_headers = {
             "Authorization-Provider": "{0}".format(self.provider),
             "X-Api-Key": "{0}".format(self.api_key),
+            "Accept": "application/json",
         }
         self.access_token = access_token
         self.delete_url = f"{TOKEN_URL}/{self.access_token}"
@@ -163,9 +164,8 @@ class DeleteAccessToken:
         async with aiohttp.ClientSession(headers=self.delete_headers) as session:
             async with session.delete(self.delete_url) as resp:
                 _LOGGER.debug("Resp.status delete token: %i", resp.status)
-                if resp.status == 200:
+                if resp.status == 204:
                     result = await resp.json(encoding="UTF-8")
                 if resp.status >= 400:
                     resp.raise_for_status()
-        result["status"] = resp.status
         return result
