@@ -2,6 +2,7 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
+
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,6 +81,7 @@ class RefreshAccessToken:
         result["status"] = resp.status
         return result
 
+
 class ValidateAccessToken:
     """Class to validate the Access Token."""
 
@@ -96,7 +98,7 @@ class ValidateAccessToken:
         }
 
     async def async_validate_access_token(self):
-        """Return the refresh token."""
+        """Returns information about the current token."""
         async with aiohttp.ClientSession(headers=self.token_headers) as session:
             async with session.get(self.token_url) as resp:
                 _LOGGER.debug("Resp.status validate token: %i", resp.status)
@@ -106,6 +108,7 @@ class ValidateAccessToken:
                     resp.raise_for_status()
         result["status"] = resp.status
         return result
+
 
 class GetMowerData:
     """Class to communicate with the Automower Connect API."""
