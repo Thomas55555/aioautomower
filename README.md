@@ -5,7 +5,7 @@
 ## This library is under development.
 
 ```python
-from aioautomower import GetAccessToken, GetMowerData
+from aioautomower import GetAccessToken, GetMowerData, Return
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 import asyncio
@@ -55,6 +55,31 @@ class Mower_Data:
             return "Make sure, you are connected to the Authentication API and the Automower API"
         return mower_data
 
+class SendingCommand:
+    """Returns the data of all mowers as dict."""
+    def __init__(self, api_key, access_token, provider, token_type, mower_id, payload):
+        self.api_key = api_key
+        self.access_token = access_token
+        self.provider = provider
+        self.token_type = token_type
+        self.mower_id = mower_id
+        self.payload = payload
+
+    async def mowers(self):
+        try:
+            send = Return(
+                self.api_key,
+                self.access_token,
+                self.provider,
+                self.token_type,
+                self.mower_id ,
+            )
+            send = await send.async_mower_command()
+        except Exception:
+            return "Something went wrong"
+        return send
+
+
 example = Example_Token(api_key, username, password)
 token_output = asyncio.run(example.token())
 print(token_output)
@@ -66,4 +91,9 @@ token_type = token_output["token_type"]
 example2 = Mower_Data(api_key, access_token, provider, token_type)
 mower_output = asyncio.run(example2.mowers())
 print(mower_output)
+
+mower_id = mower_output["data"][0]["id"] ## '0' is your first mower
+print (mower_id)
+payload = '{"data": {"type": "ResumeSchedule"}}'  ## For more commands see: https://developer.husqvarnagroup.cloud/apis/Automower+Connect+API#/swagger
+SendingCommand(api_key, access_token, provider, token_type, mower_id, payload)
 ```
