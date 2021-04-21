@@ -56,7 +56,9 @@ class GetAccessToken:
                     result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
                 if resp.status >= 400:
-                    resp.raise_for_status()
+                    raise TokenError(
+                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                    )
         result["status"] = resp.status
         return result
 
@@ -86,7 +88,9 @@ class RefreshAccessToken:
                     result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
                 if resp.status >= 400:
-                    resp.raise_for_status()
+                    raise TokenError(
+                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                    )
         result["status"] = resp.status
         return result
 
