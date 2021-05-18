@@ -183,8 +183,6 @@ class Return:
                 result = await session.close()
         _LOGGER.debug("Sent payload: %s", self.payload)
         _LOGGER.debug("Resp status mower command: %s", resp.status)
-        time.sleep(5)
-        _LOGGER.debug("Waited 5s until mower state is updated")
         return resp.status
 
 
