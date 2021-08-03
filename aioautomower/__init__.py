@@ -21,7 +21,25 @@ timeout = aiohttp.ClientTimeout(total=10)
 
 
 class TokenError(Exception):
-    """Raised when Husqvarna Authentication API request ended in error."""
+    """Raised when Husqvarna Authentication API request ended in error 400."""
+
+    def __init__(self, status: str):
+        """Initialize."""
+        super().__init__(status)
+        self.status = status
+
+
+class TokenRefreshError(Exception):
+    """Raised when Husqvarna Authentication API is not able to refresh the token (Error 400 or 404)."""
+
+    def __init__(self, status: str):
+        """Initialize."""
+        super().__init__(status)
+        self.status = status
+
+
+class TokenValidationError(Exception):
+    """Raised when Husqvarna Authentication API token request ended in error 404. The reason might be an invalid token or that a refresh is needed"""
 
     def __init__(self, status: str):
         """Initialize."""
@@ -87,12 +105,12 @@ class RefreshAccessToken:
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
-                if resp.status >= 400:
-                    raise TokenError(
-                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                    result["status"] = resp.status
+                    return result
+                if resp.status in [400, 404]:
+                    raise TokenRefreshError(
+                        f"The token cannot be refreshed, respone from Husqvarna Automower API: {resp.status}"
                     )
-        result["status"] = resp.status
-        return result
 
 
 class ValidateAccessToken:
@@ -117,9 +135,9 @@ class ValidateAccessToken:
                 _LOGGER.debug("Resp.status validate token: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
-                if resp.status >= 400:
-                    raise TokenError(
-                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                if resp.status == 404:
+                    raise TokenValidationError(
+                        f"The token is probably expired or invalid, respone from Husqvarna Automower API: {resp.status}"
                     )
         result["status"] = resp.status
         return result
