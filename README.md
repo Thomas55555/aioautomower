@@ -126,7 +126,8 @@ async def main():
     await asyncio.sleep(5)
     status = await sess.get_status()
     print(status)
-    await asyncio.sleep(10000)
+    await asyncio.sleep(30)
+    await sess.close()
 
 asyncio.run(main())
 ```

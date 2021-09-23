@@ -34,7 +34,10 @@ class AutomowerSession:
 
         :param str username: Your username
         :param str password: Your password
-        :return dict: The token as returned by rest.GetAccessToken.async_get_access_token()
+        :return dict: The token as returned by
+        rest.GetAccessToken.async_get_access_token(). You can store this
+        persistently and pass it to the constructor on subsequent
+        instantiations.
         """
         a = rest.GetAccessToken(self.api_key, username, password)
         self.token = await a.async_get_access_token()
@@ -65,20 +68,29 @@ class AutomowerSession:
             _LOGGER.info("Token has expired. Login again using username and password.")
             return False
 
-        self.ws_task = asyncio.ensure_future(
-            self._ws_task(
-                status_cb,
-                positions_cb,
-                settings_cb,
-                ws_heartbeat_interval,
+        if any([status_cb, positions_cb, settings_cb]):
+            self.ws_task = asyncio.ensure_future(
+                self._ws_task(
+                    status_cb,
+                    positions_cb,
+                    settings_cb,
+                    ws_heartbeat_interval,
+                )
             )
-        )
         self.token_task = asyncio.ensure_future(self._token_monitor_task())
         return True
 
-    async def wait(self):
-        # Will hang forever. Fix stop conditions
-        asyncio.gather(self.ws_task, self.token_task)
+    async def close(self):
+        for task in [self.ws_task, self.token_task]:
+            tasks = []
+            if task is not None:
+                tasks.append(task)
+                if not task.cancelled():
+                    task.cancel()
+        try:
+            await asyncio.gather(*tasks)
+        except asyncio.CancelledError:
+            pass
 
     async def get_status(self):
         if self.token is None:
@@ -149,49 +161,49 @@ class AutomowerSession:
         settings_cb=None,
         ws_heartbeat_interval=60.0,
     ):
-        session = aiohttp.ClientSession()
         cb_map = {
             "status-event": status_cb,
             "positions-event": positions_cb,
             "settings-event": settings_cb,
         }
-        while True:
-            async with session.ws_connect(
-                url=WS_URL,
-                headers={
-                    "Authorization": AUTH_HEADER_FMT.format(self.token["access_token"])
-                },
-                heartbeat=ws_heartbeat_interval,
-            ) as ws:
-                async for msg in ws:
-                    if msg.type == aiohttp.WSMsgType.TEXT:
-                        _LOGGER.debug("Received TEXT")
-                        j = msg.json()
-                        if "type" in j:
-                            if j["type"] not in cb_map:
-                                _LOGGER.debug("Received unknown ws type %s", j["type"])
-                            cb = cb_map.get(j["type"])
-                            if cb is not None:
-                                session.loop.call_soon(cb, j)
+        async with aiohttp.ClientSession() as session:
+            while True:
+                async with session.ws_connect(
+                    url=WS_URL,
+                    headers={
+                        "Authorization": AUTH_HEADER_FMT.format(self.token["access_token"])
+                    },
+                    heartbeat=ws_heartbeat_interval,
+                ) as ws:
+                    async for msg in ws:
+                        if msg.type == aiohttp.WSMsgType.TEXT:
+                            _LOGGER.debug("Received TEXT")
+                            j = msg.json()
+                            if "type" in j:
+                                if j["type"] not in cb_map:
+                                    _LOGGER.debug("Received unknown ws type %s", j["type"])
+                                cb = cb_map.get(j["type"])
+                                if cb is not None:
+                                    session.loop.call_soon(cb, j)
+                            else:
+                                _LOGGER.debug("No type specified in ws resp: %s", j)
+                        elif msg.type == aiohttp.WSMsgType.ERROR:
+                            _LOGGER.debug("Received ERROR")
+                            break
+                        elif msg.type == aiohttp.WSMsgType.CONTINUATION:
+                            _LOGGER.debug("Received CONTINUATION")
+                        elif msg.type == aiohttp.WSMsgType.BINARY:
+                            _LOGGER.debug("Received BINARY")
+                        elif msg.type == aiohttp.WSMsgType.PING:
+                            _LOGGER.debug("Received PING")
+                        elif msg.type == aiohttp.WSMsgType.PONG:
+                            _LOGGER.debug("Received PONG")
+                        elif msg.type == aiohttp.WSMsgType.CLOSE:
+                            _LOGGER.debug("Received CLOSE")
+                        elif msg.type == aiohttp.WSMsgType.CLOSING:
+                            _LOGGER.debug("Received CLOSING")
+                        elif msg.type == aiohttp.WSMsgType.CLOSED:
+                            _LOGGER.debug("Received CLOSED")
                         else:
-                            _LOGGER.debug("No type specified in ws resp: %s", j)
-                    elif msg.type == aiohttp.WSMsgType.ERROR:
-                        _LOGGER.debug("Received ERROR")
-                        break
-                    elif msg.type == aiohttp.WSMsgType.CONTINUATION:
-                        _LOGGER.debug("Received CONTINUATION")
-                    elif msg.type == aiohttp.WSMsgType.BINARY:
-                        _LOGGER.debug("Received BINARY")
-                    elif msg.type == aiohttp.WSMsgType.PING:
-                        _LOGGER.debug("Received PING")
-                    elif msg.type == aiohttp.WSMsgType.PONG:
-                        _LOGGER.debug("Received PONG")
-                    elif msg.type == aiohttp.WSMsgType.CLOSE:
-                        _LOGGER.debug("Received CLOSE")
-                    elif msg.type == aiohttp.WSMsgType.CLOSING:
-                        _LOGGER.debug("Received CLOSING")
-                    elif msg.type == aiohttp.WSMsgType.CLOSED:
-                        _LOGGER.debug("Received CLOSED")
-                    else:
-                        _LOGGER.debug("Received msg.type=%d", msg.type)
-            _LOGGER.debug("Websocket end session")
+                            _LOGGER.debug("Received msg.type=%d", msg.type)
+                _LOGGER.debug("Websocket end session")
