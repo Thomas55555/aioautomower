@@ -13,15 +13,27 @@ AUTH_HEADER_FMT = "Bearer {}"
 
 
 class AutomowerSession:
-    def __init__(self, api_key: str, token: dict = None):
+    def __init__(
+        self,
+        api_key: str,
+        token: dict = None,
+        update_cb=None,
+        ws_heartbeat_interval: float = 60.0,
+    ):
         """Create a session.
 
         :param str api_key: A 36 digit api key.
         :param dict token: A token as returned by rest.GetAccessToken.async_get_access_token()
+        :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        :param float ws_heartbeat_interval: Periodicity of keep-alive pings on the websocket in seconds.
 
         """
         self.api_key = api_key
         self.token = token
+        self.update_cb = update_cb
+        self.ws_heartbeat_interval = ws_heartbeat_interval
+
+        self.data = None
 
         self.ws_task = None
         self.token_task = None
@@ -43,22 +55,12 @@ class AutomowerSession:
         self.token = await a.async_get_access_token()
         return self.token
 
-    async def connect(
-        self,
-        status_cb=None,
-        positions_cb=None,
-        settings_cb=None,
-        ws_heartbeat_interval=60.0,
-    ):
+    async def connect(self):
         """Connect to the API.
 
         This method handles the login and starts a task that keep the access
         token constantly fresh. Call this method before any other methods.
 
-        :param func status_cb: Callback for websocket status messages. Takes one dict argument which is the untouched WS response.
-        :param func positions_cb: Callback for websocket positions messages. Takes one dict argument which is the untouched WS response.
-        :param func settings_cb: Callback for websocket settings messages. Takes one dict argument which is the untouched WS response.
-        :param float ws_heartbeat_interval: Periodicity of keep-alive pings on the websocket in seconds.
         :return bool: True if connection went good. False if refresh_token is too old or invalid.
         """
         if self.token is None:
@@ -68,15 +70,9 @@ class AutomowerSession:
             _LOGGER.info("Token has expired. Login again using username and password.")
             return False
 
-        if any([status_cb, positions_cb, settings_cb]):
-            self.ws_task = asyncio.ensure_future(
-                self._ws_task(
-                    status_cb,
-                    positions_cb,
-                    settings_cb,
-                    ws_heartbeat_interval,
-                )
-            )
+        self.data = await self.get_status()
+
+        self.ws_task = asyncio.ensure_future(self._ws_task())
         self.token_task = asyncio.ensure_future(self._token_monitor_task())
         return True
 
@@ -154,37 +150,45 @@ class AutomowerSession:
             self.token = await r.async_refresh_access_token()
             _LOGGER.debug("_token_monitor_task got new token %s", self.token)
 
-    async def _ws_task(
-        self,
-        status_cb=None,
-        positions_cb=None,
-        settings_cb=None,
-        ws_heartbeat_interval=60.0,
-    ):
-        cb_map = {
-            "status-event": status_cb,
-            "positions-event": positions_cb,
-            "settings-event": settings_cb,
-        }
+    def _update_data(self, j):
+        if self.data is None:
+            return
+        for datum in self.data["data"]:
+            if datum["type"] == "mower" and datum["id"] == j["id"]:
+                for attrib in j["attributes"]:
+                    datum["attributes"][attrib] = j["attributes"][attrib]
+
+    async def _ws_task(self):
+        EVENT_TYPES = [
+            "status-event",
+            "positions-event",
+            "settings-event",
+        ]
         async with aiohttp.ClientSession() as session:
             while True:
                 async with session.ws_connect(
                     url=WS_URL,
                     headers={
-                        "Authorization": AUTH_HEADER_FMT.format(self.token["access_token"])
+                        "Authorization": AUTH_HEADER_FMT.format(
+                            self.token["access_token"]
+                        )
                     },
-                    heartbeat=ws_heartbeat_interval,
+                    heartbeat=self.ws_heartbeat_interval,
                 ) as ws:
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             _LOGGER.debug("Received TEXT")
                             j = msg.json()
+                            _LOGGER.debug(j)
                             if "type" in j:
-                                if j["type"] not in cb_map:
-                                    _LOGGER.debug("Received unknown ws type %s", j["type"])
-                                cb = cb_map.get(j["type"])
-                                if cb is not None:
-                                    session.loop.call_soon(cb, j)
+                                if j["type"] in EVENT_TYPES:
+                                    self._update_data(j)
+                                    if self.update_cb is not None:
+                                        self.update_cb(self.data)
+                                else:
+                                    _LOGGER.debug(
+                                        "Received unknown ws type %s", j["type"]
+                                    )
                             else:
                                 _LOGGER.debug("No type specified in ws resp: %s", j)
                         elif msg.type == aiohttp.WSMsgType.ERROR:
