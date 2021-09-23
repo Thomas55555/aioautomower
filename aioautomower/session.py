@@ -17,26 +17,32 @@ class AutomowerSession:
         self,
         api_key: str,
         token: dict = None,
-        update_cb=None,
         ws_heartbeat_interval: float = 60.0,
     ):
         """Create a session.
 
         :param str api_key: A 36 digit api key.
         :param dict token: A token as returned by rest.GetAccessToken.async_get_access_token()
-        :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
         :param float ws_heartbeat_interval: Periodicity of keep-alive pings on the websocket in seconds.
 
         """
         self.api_key = api_key
         self.token = token
-        self.update_cb = update_cb
+        self.update_cbs = []
         self.ws_heartbeat_interval = ws_heartbeat_interval
 
         self.data = None
 
         self.ws_task = None
         self.token_task = None
+
+    def register_cb(self, update_cb):
+        """Register a update callback.
+
+        :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        """
+        if update_cb not in self.update_cbs:
+            self.update_cbs.append(update_cb)
 
     async def login(self, username: str, password: str):
         """Login with username and password.
@@ -183,8 +189,8 @@ class AutomowerSession:
                             if "type" in j:
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
-                                    if self.update_cb is not None:
-                                        self.update_cb(self.data)
+                                    for cb in self.update_cbs:
+                                        cb(self.data)
                                 else:
                                     _LOGGER.debug(
                                         "Received unknown ws type %s", j["type"]
