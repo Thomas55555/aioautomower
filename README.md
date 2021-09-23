@@ -116,17 +116,27 @@ API_KEY = "12312312-0126-6222-2662-3e6c49f0012c"
 
 
 async def main():
-    sess = aioautomower.AutomowerSession(API_KEY)
+    sess = aioautomower.AutomowerSession(API_KEY, token=None)
+
+    # Add a callback, can be done at any point in time and
+    # multiple callbacks can be added.
+    sess.register_cb(lambda data:print(data))
+
+    # If no token was passed to the constructor, we need to call login()
+    # before connect(). The token can be stored somewhere and passed to
+    # the constructor later on.
     token = await sess.login(USERNAME, PASSWORD)
-    if not await sess.connect(status_cb=lambda websocket_data: print(websocket_data),
-                              positions_cb=lambda websocket_data: print(websocket_data),
-                              settings_cb=lambda websocket_data: print(websocket_data)):
+
+    if not await sess.connect():
+        # If the token is still None or too old, the connect will fail.
         print("Connect failed")
         return
     await asyncio.sleep(5)
     status = await sess.get_status()
     print(status)
     await asyncio.sleep(30)
+
+    # The close() will stop the websocket and the token refresh tasks
     await sess.close()
 
 asyncio.run(main())
