@@ -116,10 +116,13 @@ API_KEY = "12312312-0126-6222-2662-3e6c49f0012c"
 
 
 async def main():
-    sess = aioautomower.AutomowerSession(API_KEY, USERNAME, PASSWORD)
-    await sess.connect(status_cb=lambda websocket_data: print(websocket_data),
-                       positions_cb=lambda websocket_data: print(websocket_data),
-                       settings_cb=lambda websocket_data: print(websocket_data))
+    sess = aioautomower.AutomowerSession(API_KEY)
+    token = await sess.login(USERNAME, PASSWORD)
+    if not await sess.connect(status_cb=lambda websocket_data: print(websocket_data),
+                              positions_cb=lambda websocket_data: print(websocket_data),
+                              settings_cb=lambda websocket_data: print(websocket_data)):
+        print("Connect failed")
+        return
     await asyncio.sleep(5)
     status = await sess.get_status()
     print(status)

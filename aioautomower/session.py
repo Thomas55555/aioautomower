@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 import aiohttp
 
@@ -12,14 +13,32 @@ AUTH_HEADER_FMT = "Bearer {}"
 
 
 class AutomowerSession:
-    def __init__(self, api_key: str, username: str, password: str):
-        self.api_key = api_key
-        self.username = username
-        self.password = password
+    def __init__(self, api_key: str, token: dict = None):
+        """Create a session.
 
-        self.token = None
+        :param str api_key: A 36 digit api key.
+        :param dict token: A token as returned by rest.GetAccessToken.async_get_access_token()
+
+        """
+        self.api_key = api_key
+        self.token = token
+
         self.ws_task = None
         self.token_task = None
+
+    async def login(self, username: str, password: str):
+        """Login with username and password.
+
+        This method updates the stored token. If connect() returns False. Call
+        this method and call connect() again.
+
+        :param str username: Your username
+        :param str password: Your password
+        :return dict: The token as returned by rest.GetAccessToken.async_get_access_token()
+        """
+        a = rest.GetAccessToken(self.api_key, username, password)
+        self.token = await a.async_get_access_token()
+        return self.token
 
     async def connect(
         self,
@@ -37,11 +56,14 @@ class AutomowerSession:
         :param func positions_cb: Callback for websocket positions messages. Takes one dict argument which is the untouched WS response.
         :param func settings_cb: Callback for websocket settings messages. Takes one dict argument which is the untouched WS response.
         :param float ws_heartbeat_interval: Periodicity of keep-alive pings on the websocket in seconds.
-
+        :return bool: True if connection went good. False if refresh_token is too old or invalid.
         """
-        a = rest.GetAccessToken(self.api_key, self.username, self.password)
-        self.token = await a.async_get_access_token()
-        _LOGGER.debug("Initial token: %s", self.token)
+        if self.token is None:
+            _LOGGER.debug("No token to connect with.")
+            return False
+        if time.time() > self.token["expires_at"]:
+            _LOGGER.info("Token has expired. Login again using username and password.")
+            return False
 
         self.ws_task = asyncio.ensure_future(
             self._ws_task(
@@ -52,6 +74,7 @@ class AutomowerSession:
             )
         )
         self.token_task = asyncio.ensure_future(self._token_monitor_task())
+        return True
 
     async def wait(self):
         # Will hang forever. Fix stop conditions
@@ -104,13 +127,13 @@ class AutomowerSession:
 
     async def _token_monitor_task(self):
         while True:
-            expires_in = self.token["expires_in"]
+            expires_at = self.token["expires_at"]
 
             MIN_SLEEP_TIME = 600.0  # Avoid hammering
             # Token is typically valid for 24h, request a new one some time before its expiration to avoid glitches.
             MARGIN_TIME = 60.0
 
-            sleep_time = max(MIN_SLEEP_TIME, expires_in - MARGIN_TIME)
+            sleep_time = max(MIN_SLEEP_TIME, expires_at - time.time() - MARGIN_TIME)
 
             _LOGGER.debug("_token_monitor_task sleeping for %s sec", sleep_time)
             await asyncio.sleep(sleep_time)
