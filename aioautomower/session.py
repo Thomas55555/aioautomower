@@ -114,7 +114,6 @@ class AutomowerSession:
             self.api_key,
             self.token["access_token"],
             self.token["provider"],
-            self.token["provider"],
             self.token["token_type"],
             mower_id,
             payload,
