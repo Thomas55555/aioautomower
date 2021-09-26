@@ -5,6 +5,8 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
+__version__ = "dev"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -109,7 +111,7 @@ class RefreshAccessToken:
                     return result
                 if resp.status in [400, 404]:
                     raise TokenRefreshError(
-                        f"The token cannot be refreshed, respone from Husqvarna Automower API: {resp.status}"
+                        f"The token cannot be refreshed, respone from Husqvarna Automower API: {resp.status}, {resp.reason}"
                     )
 
 
