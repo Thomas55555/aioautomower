@@ -78,8 +78,8 @@ class AutomowerSession:
 
         self.data = await self.get_status()
 
-        self.ws_task = asyncio.ensure_future(self._ws_task())
-        self.token_task = asyncio.ensure_future(self._token_monitor_task())
+        self.ws_task = asyncio.create_task(self._ws_task())
+        self.token_task = asyncio.create_task(self._token_monitor_task())
         return True
 
     async def close(self):
@@ -140,28 +140,39 @@ class AutomowerSession:
 
     async def _token_monitor_task(self):
         while True:
-            expires_at = self.token["expires_at"]
-
             MIN_SLEEP_TIME = 600.0  # Avoid hammering
             # Token is typically valid for 24h, request a new one some time before its expiration to avoid glitches.
             MARGIN_TIME = 60.0
+            if self.token["status"] == 200 and "expires_at" in self.token:
+                expires_at = self.token["expires_at"]
 
-            sleep_time = max(MIN_SLEEP_TIME, expires_at - time.time() - MARGIN_TIME)
+                sleep_time = max(MIN_SLEEP_TIME, expires_at - time.time() - MARGIN_TIME)
+            else:
+                sleep_time = MIN_SLEEP_TIME
 
             _LOGGER.debug("_token_monitor_task sleeping for %s sec", sleep_time)
             await asyncio.sleep(sleep_time)
 
             r = rest.RefreshAccessToken(self.api_key, self.token["refresh_token"])
             self.token = await r.async_refresh_access_token()
-            _LOGGER.debug("_token_monitor_task got new token %s", self.token)
+
+            if self.token["status"] != 200:
+                _LOGGER.warning(
+                    "_token_monitor_task failed to refresh token %s", self.token
+                )
+            else:
+                _LOGGER.debug("_token_monitor_task got new token %s", self.token)
 
     def _update_data(self, j):
         if self.data is None:
+            _LOGGER.error("Failed to update data with ws response (no data).")
             return
         for datum in self.data["data"]:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
                 for attrib in j["attributes"]:
                     datum["attributes"][attrib] = j["attributes"][attrib]
+                return
+        _LOGGER.error("Failed to update data with ws response (id not found).")
 
     async def _ws_task(self):
         EVENT_TYPES = [
@@ -169,8 +180,21 @@ class AutomowerSession:
             "positions-event",
             "settings-event",
         ]
+        printed_err_msg = False
         async with aiohttp.ClientSession() as session:
             while True:
+                if self.token is None or "access_token" not in self.token:
+                    if not printed_err_msg:
+                        # New login() needed but since we don't store username
+                        # and password, we cannot get request one.
+                        #
+                        # TODO: Add callback for this to notify the user that
+                        # this has happened.
+                        _LOGGER.warning("No access token for ws auth. Retrying.")
+                        printed_err_msg = True
+                    await asyncio.sleep(60.0)
+                    continue
+                printed_err_msg = False
                 async with session.ws_connect(
                     url=WS_URL,
                     headers={
@@ -180,22 +204,32 @@ class AutomowerSession:
                     },
                     heartbeat=self.ws_heartbeat_interval,
                 ) as ws:
+                    _LOGGER.info("Websocket (re)connected")
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             _LOGGER.debug("Received TEXT")
                             j = msg.json()
-                            _LOGGER.debug(j)
+                            # _LOGGER.debug(j)
                             if "type" in j:
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
+                                    _LOGGER.debug("Got %s", j["type"])
                                     for cb in self.update_cbs:
-                                        cb(self.data)
+                                        _LOGGER.debug("Schedule callback %s", cb)
+                                        loop = asyncio.get_event_loop()
+                                        loop.call_soon(cb, self.data)
                                 else:
-                                    _LOGGER.debug(
+                                    _LOGGER.info(
                                         "Received unknown ws type %s", j["type"]
                                     )
+                            elif "ready" in j and "connectionId" in j:
+                                _LOGGER.debug(
+                                    "Websocket ready=%s (id='%s')",
+                                    j["ready"],
+                                    j["connectionId"],
+                                )
                             else:
-                                _LOGGER.debug("No type specified in ws resp: %s", j)
+                                _LOGGER.debug("Discarded websocket response: %s", j)
                         elif msg.type == aiohttp.WSMsgType.ERROR:
                             _LOGGER.debug("Received ERROR")
                             break
@@ -215,4 +249,3 @@ class AutomowerSession:
                             _LOGGER.debug("Received CLOSED")
                         else:
                             _LOGGER.debug("Received msg.type=%d", msg.type)
-                _LOGGER.debug("Websocket end session")
