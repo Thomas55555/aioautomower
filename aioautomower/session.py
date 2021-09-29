@@ -18,18 +18,24 @@ class AutomowerSession:
         api_key: str,
         token: dict = None,
         ws_heartbeat_interval: float = 60.0,
+        loop=None,
     ):
         """Create a session.
 
         :param str api_key: A 36 digit api key.
         :param dict token: A token as returned by rest.GetAccessToken.async_get_access_token()
         :param float ws_heartbeat_interval: Periodicity of keep-alive pings on the websocket in seconds.
-
+        :param loop: Event-loop for task execution. If None, the event loop in the current OS thread is used.
         """
         self.api_key = api_key
         self.token = token
         self.update_cbs = []
         self.ws_heartbeat_interval = ws_heartbeat_interval
+
+        if loop is None:
+            self.loop = asyncio.get_event_loop()
+        else:
+            self.loop = loop
 
         self.data = None
 
@@ -78,8 +84,8 @@ class AutomowerSession:
 
         self.data = await self.get_status()
 
-        self.ws_task = asyncio.create_task(self._ws_task())
-        self.token_task = asyncio.create_task(self._token_monitor_task())
+        self.ws_task = self.loop.create_task(self._ws_task())
+        self.token_task = self.loop.create_task(self._token_monitor_task())
         return True
 
     async def close(self):
@@ -216,8 +222,7 @@ class AutomowerSession:
                                     _LOGGER.debug("Got %s", j["type"])
                                     for cb in self.update_cbs:
                                         _LOGGER.debug("Schedule callback %s", cb)
-                                        loop = asyncio.get_event_loop()
-                                        loop.call_soon(cb, self.data)
+                                        self.loop.call_soon(cb, self.data)
                                 else:
                                     _LOGGER.info(
                                         "Received unknown ws type %s", j["type"]
