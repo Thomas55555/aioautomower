@@ -20,4 +20,7 @@ setuptools.setup(
     ],
     install_requires=list(val.strip() for val in open("requirements.txt")),
     version="main",
+    entry_points={
+        "console_scripts": ["automower=aioautomower.cli:main"],
+    },
 )
