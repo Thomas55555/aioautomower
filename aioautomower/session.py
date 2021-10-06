@@ -72,21 +72,16 @@ class AutomowerSession:
 
         This method handles the login and starts a task that keep the access
         token constantly fresh. Call this method before any other methods.
-
-        :return bool: True if connection went good. False if refresh_token is too old or invalid.
         """
         if self.token is None:
-            _LOGGER.debug("No token to connect with.")
-            return False
+            raise AttributeError("No token to connect with.")
         if time.time() > self.token["expires_at"]:
-            _LOGGER.info("Token has expired. Login again using username and password.")
-            return False
+            await self.refresh_token()
 
         self.data = await self.get_status()
 
         self.ws_task = self.loop.create_task(self._ws_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
-        return True
 
     async def close(self):
         for task in [self.ws_task, self.token_task]:
@@ -144,6 +139,14 @@ class AutomowerSession:
         )
         return await t.async_delete_access_token()
 
+    async def refresh_token(self):
+        if "refresh_token" not in self.token:
+            _LOGGER.warning("No refresh token available")
+            return None
+        _LOGGER.debug("Refresh access token")
+        r = rest.RefreshAccessToken(self.api_key, self.token["refresh_token"])
+        self.token = await r.async_refresh_access_token()
+
     async def _token_monitor_task(self):
         while True:
             MIN_SLEEP_TIME = 600.0  # Avoid hammering
@@ -158,16 +161,7 @@ class AutomowerSession:
 
             _LOGGER.debug("_token_monitor_task sleeping for %s sec", sleep_time)
             await asyncio.sleep(sleep_time)
-
-            r = rest.RefreshAccessToken(self.api_key, self.token["refresh_token"])
-            self.token = await r.async_refresh_access_token()
-
-            if self.token["status"] != 200:
-                _LOGGER.warning(
-                    "_token_monitor_task failed to refresh token %s", self.token
-                )
-            else:
-                _LOGGER.debug("_token_monitor_task got new token %s", self.token)
+            await self.refresh_token()
 
     def _update_data(self, j):
         if self.data is None:
