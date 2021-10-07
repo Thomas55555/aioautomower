@@ -15,8 +15,7 @@ async def run_tester(username: str, password: str, api_key: str):
 
     sess.register_cb(lambda x: logging.info("callback;%s" % x))
 
-    if not await sess.connect():
-        _LOGGER.warning("Connect failed")
+    await sess.connect()
 
     def sigusr1():
         asyncio.ensure_future(sess.invalidate_token())
