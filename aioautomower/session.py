@@ -42,13 +42,18 @@ class AutomowerSession:
         self.ws_task = None
         self.token_task = None
 
-    def register_cb(self, update_cb):
+    def register_cb(self, update_cb, schedule_immediately=False):
         """Register a update callback.
 
         :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        :param bool schedule_immediately: Schedule callback immediately (if data is available).
         """
         if update_cb not in self.update_cbs:
             self.update_cbs.append(update_cb)
+        if schedule_immediately:
+            self._schedule_callback(
+                update_cb, delay=1e-3
+            )  # Need a delay for home assistant to finish entity setup.
 
     async def login(self, username: str, password: str):
         """Login with username and password.
@@ -79,6 +84,7 @@ class AutomowerSession:
             await self.refresh_token()
 
         self.data = await self.get_status()
+        self._schedule_callbacks()
 
         self.ws_task = self.loop.create_task(self._ws_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
@@ -174,6 +180,17 @@ class AutomowerSession:
                 return
         _LOGGER.error("Failed to update data with ws response (id not found).")
 
+    def _schedule_callback(self, cb, delay=0.0):
+        if self.data is None:
+            _LOGGER.debug("No data available. Will not schedule callback.")
+            return
+        _LOGGER.debug("Schedule callback %s", cb)
+        self.loop.call_later(delay, cb, self.data)
+
+    def _schedule_callbacks(self):
+        for cb in self.update_cbs:
+            self._schedule_callback(cb)
+
     async def _ws_task(self):
         EVENT_TYPES = [
             "status-event",
@@ -214,9 +231,7 @@ class AutomowerSession:
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
                                     _LOGGER.debug("Got %s", j["type"])
-                                    for cb in self.update_cbs:
-                                        _LOGGER.debug("Schedule callback %s", cb)
-                                        self.loop.call_soon(cb, self.data)
+                                    self._schedule_callbacks()
                                 else:
                                     _LOGGER.info(
                                         "Received unknown ws type %s", j["type"]
