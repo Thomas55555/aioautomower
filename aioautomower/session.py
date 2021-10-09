@@ -189,6 +189,10 @@ class AutomowerSession:
         printed_err_msg = False
         async with aiohttp.ClientSession() as session:
             while True:
+                if self.token["scope"] != "iam:read amc:api":
+                    _LOGGER.error(
+                        "Your API-Key is not compatible to the websocket, please refresh it on the husqvarna website"
+                    )
                 if self.token is None or "access_token" not in self.token:
                     if not printed_err_msg:
                         # New login() needed but since we don't store username
@@ -215,7 +219,7 @@ class AutomowerSession:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             _LOGGER.debug("Received TEXT")
                             j = msg.json()
-                            # _LOGGER.debug(j)
+                            _LOGGER.debug(j)
                             if "type" in j:
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
