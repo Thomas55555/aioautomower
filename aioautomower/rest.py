@@ -99,7 +99,7 @@ class RefreshAccessToken:
                     result["expires_at"] = result["expires_in"] + time.time()
                     result["status"] = resp.status
                     return result
-                if resp.status in [400, 404]:
+                elif resp.status in [400, 401, 404]:
                     raise TokenRefreshError(
                         f"The token cannot be refreshed, respone from Husqvarna Automower API: {resp.status}"
                     )
