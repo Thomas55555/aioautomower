@@ -76,6 +76,11 @@ class AutomowerSession:
         if self.token is None:
             _LOGGER.debug("No token to connect with.")
             return False
+        if "amc:api" not in self.token["scope"]:
+            _LOGGER.error(
+                "Your API-Key is not compatible to the websocket, please refresh it on %s",
+                HUSQVARNA_URL,
+            )
         if time.time() > self.token["expires_at"]:
             _LOGGER.info("Token has expired. Login again using username and password.")
             return False
@@ -187,11 +192,6 @@ class AutomowerSession:
         printed_err_msg = False
         async with aiohttp.ClientSession() as session:
             while True:
-                if self.token["scope"] != "iam:read amc:api":
-                    _LOGGER.error(
-                        "Your API-Key is not compatible to the websocket, please refresh it on %s",
-                        HUSQVARNA_URL,
-                    )
                 if self.token is None or "access_token" not in self.token:
                     if not printed_err_msg:
                         # New login() needed but since we don't store username
