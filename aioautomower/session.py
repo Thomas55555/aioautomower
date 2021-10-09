@@ -5,11 +5,9 @@ import time
 import aiohttp
 
 from . import rest
+from .const import AUTH_HEADER_FMT, HUSQVARNA_URL, WS_URL
 
 _LOGGER = logging.getLogger(__name__)
-
-WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
-AUTH_HEADER_FMT = "Bearer {}"
 
 
 class AutomowerSession:
@@ -191,7 +189,8 @@ class AutomowerSession:
             while True:
                 if self.token["scope"] != "iam:read amc:api":
                     _LOGGER.error(
-                        "Your API-Key is not compatible to the websocket, please refresh it on the husqvarna website"
+                        "Your API-Key is not compatible to the websocket, please refresh it on %s",
+                        HUSQVARNA_URL,
                     )
                 if self.token is None or "access_token" not in self.token:
                     if not printed_err_msg:
