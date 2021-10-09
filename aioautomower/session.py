@@ -1,3 +1,4 @@
+"""Module to connect to Automower with websocket."""
 import asyncio
 import logging
 import time
@@ -5,12 +6,21 @@ import time
 import aiohttp
 
 from . import rest
-from .const import AUTH_HEADER_FMT, HUSQVARNA_URL, WS_URL
+from .const import (
+    AUTH_HEADER_FMT,
+    HUSQVARNA_URL,
+    WS_URL,
+    MIN_SLEEP_TIME,
+    MARGIN_TIME,
+    EVENT_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AutomowerSession:
+    """Session"""
+
     def __init__(
         self,
         api_key: str,
@@ -74,24 +84,26 @@ class AutomowerSession:
         :return bool: True if connection went good. False if refresh_token is too old or invalid.
         """
         if self.token is None:
-            _LOGGER.debug("No token to connect with.")
+            _LOGGER.debug("No token to connect with")
             return False
+        if time.time() > self.token["expires_at"]:
+            _LOGGER.info("Token has expired. Login again using username and password")
+            return False
+
+        self.data = await self.get_status()
+
         if "amc:api" not in self.token["scope"]:
             _LOGGER.error(
                 "Your API-Key is not compatible to the websocket, please refresh it on %s",
                 HUSQVARNA_URL,
             )
-        if time.time() > self.token["expires_at"]:
-            _LOGGER.info("Token has expired. Login again using username and password.")
-            return False
-
-        self.data = await self.get_status()
-
-        self.ws_task = self.loop.create_task(self._ws_task())
+        else:
+            self.ws_task = self.loop.create_task(self._ws_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
         return True
 
     async def close(self):
+        """Close the session."""
         for task in [self.ws_task, self.token_task]:
             tasks = []
             if task is not None:
@@ -104,6 +116,7 @@ class AutomowerSession:
             pass
 
     async def get_status(self):
+        """Get mower status via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
@@ -116,6 +129,7 @@ class AutomowerSession:
         return await d.async_mower_state()
 
     async def action(self, mower_id, payload):
+        """Send command to the mower via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
@@ -130,6 +144,7 @@ class AutomowerSession:
         return await a.async_mower_command()
 
     async def validate_token(self):
+        """Validate token via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
@@ -139,6 +154,7 @@ class AutomowerSession:
         return await t.async_validate_access_token()
 
     async def invalidate_token(self):
+        """Invalidate token via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
@@ -149,9 +165,6 @@ class AutomowerSession:
 
     async def _token_monitor_task(self):
         while True:
-            MIN_SLEEP_TIME = 600.0  # Avoid hammering
-            # Token is typically valid for 24h, request a new one some time before its expiration to avoid glitches.
-            MARGIN_TIME = 60.0
             if self.token["status"] == 200 and "expires_at" in self.token:
                 expires_at = self.token["expires_at"]
 
@@ -174,21 +187,16 @@ class AutomowerSession:
 
     def _update_data(self, j):
         if self.data is None:
-            _LOGGER.error("Failed to update data with ws response (no data).")
+            _LOGGER.error("Failed to update data with ws response (no data)")
             return
         for datum in self.data["data"]:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
                 for attrib in j["attributes"]:
                     datum["attributes"][attrib] = j["attributes"][attrib]
                 return
-        _LOGGER.error("Failed to update data with ws response (id not found).")
+        _LOGGER.error("Failed to update data with ws response (id not found)")
 
     async def _ws_task(self):
-        EVENT_TYPES = [
-            "status-event",
-            "positions-event",
-            "settings-event",
-        ]
         printed_err_msg = False
         async with aiohttp.ClientSession() as session:
             while True:
