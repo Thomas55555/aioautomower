@@ -42,13 +42,18 @@ class AutomowerSession:
         self.ws_task = None
         self.token_task = None
 
-    def register_cb(self, update_cb):
+    def register_cb(self, update_cb, schedule_immediately=False):
         """Register a update callback.
 
         :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        :param bool schedule_immediately: Schedule callback immediately (if data is available).
         """
         if update_cb not in self.update_cbs:
             self.update_cbs.append(update_cb)
+        if schedule_immediately:
+            self._schedule_callback(
+                update_cb, delay=1e-3
+            )  # Need a delay for home assistant to finish entity setup.
 
     async def login(self, username: str, password: str):
         """Login with username and password.
@@ -72,21 +77,17 @@ class AutomowerSession:
 
         This method handles the login and starts a task that keep the access
         token constantly fresh. Call this method before any other methods.
-
-        :return bool: True if connection went good. False if refresh_token is too old or invalid.
         """
         if self.token is None:
-            _LOGGER.debug("No token to connect with.")
-            return False
+            raise AttributeError("No token to connect with.")
         if time.time() > self.token["expires_at"]:
-            _LOGGER.info("Token has expired. Login again using username and password.")
-            return False
+            await self.refresh_token()
 
         self.data = await self.get_status()
+        self._schedule_callbacks()
 
         self.ws_task = self.loop.create_task(self._ws_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
-        return True
 
     async def close(self):
         for task in [self.ws_task, self.token_task]:
@@ -144,6 +145,14 @@ class AutomowerSession:
         )
         return await t.async_delete_access_token()
 
+    async def refresh_token(self):
+        if "refresh_token" not in self.token:
+            _LOGGER.warning("No refresh token available")
+            return None
+        _LOGGER.debug("Refresh access token")
+        r = rest.RefreshAccessToken(self.api_key, self.token["refresh_token"])
+        self.token = await r.async_refresh_access_token()
+
     async def _token_monitor_task(self):
         while True:
             MIN_SLEEP_TIME = 600.0  # Avoid hammering
@@ -158,16 +167,7 @@ class AutomowerSession:
 
             _LOGGER.debug("_token_monitor_task sleeping for %s sec", sleep_time)
             await asyncio.sleep(sleep_time)
-
-            r = rest.RefreshAccessToken(self.api_key, self.token["refresh_token"])
-            self.token = await r.async_refresh_access_token()
-
-            if self.token["status"] != 200:
-                _LOGGER.warning(
-                    "_token_monitor_task failed to refresh token %s", self.token
-                )
-            else:
-                _LOGGER.debug("_token_monitor_task got new token %s", self.token)
+            await self.refresh_token()
 
     def _update_data(self, j):
         if self.data is None:
@@ -179,6 +179,17 @@ class AutomowerSession:
                     datum["attributes"][attrib] = j["attributes"][attrib]
                 return
         _LOGGER.error("Failed to update data with ws response (id not found).")
+
+    def _schedule_callback(self, cb, delay=0.0):
+        if self.data is None:
+            _LOGGER.debug("No data available. Will not schedule callback.")
+            return
+        _LOGGER.debug("Schedule callback %s", cb)
+        self.loop.call_later(delay, cb, self.data)
+
+    def _schedule_callbacks(self):
+        for cb in self.update_cbs:
+            self._schedule_callback(cb)
 
     async def _ws_task(self):
         EVENT_TYPES = [
@@ -220,9 +231,7 @@ class AutomowerSession:
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
                                     _LOGGER.debug("Got %s", j["type"])
-                                    for cb in self.update_cbs:
-                                        _LOGGER.debug("Schedule callback %s", cb)
-                                        self.loop.call_soon(cb, self.data)
+                                    self._schedule_callbacks()
                                 else:
                                     _LOGGER.info(
                                         "Received unknown ws type %s", j["type"]

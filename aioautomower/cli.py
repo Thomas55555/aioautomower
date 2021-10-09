@@ -13,10 +13,11 @@ async def run_tester(username: str, password: str, api_key: str):
     sess = aioautomower.AutomowerSession(api_key, ws_heartbeat_interval=60)
     token = await sess.login(username, password)
 
-    sess.register_cb(lambda x: logging.info("callback;%s" % x))
+    sess.register_cb(
+        lambda x: logging.info("callback;%s" % x), schedule_immediately=False
+    )
 
-    if not await sess.connect():
-        _LOGGER.warning("Connect failed")
+    await sess.connect()
 
     def sigusr1():
         asyncio.ensure_future(sess.invalidate_token())
