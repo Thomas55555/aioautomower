@@ -5,17 +5,9 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
+from .const import AUTH_API_URL, AUTH_HEADERS, MOWER_API_BASE_URL, TOKEN_URL
+
 _LOGGER = logging.getLogger(__name__)
-
-
-AUTH_API_URL = "https://api.authentication.husqvarnagroup.dev/v1/oauth2/token"
-TOKEN_URL = "https://api.authentication.husqvarnagroup.dev/v1/token"
-AUTH_HEADERS = {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Accept": "application/json",
-}
-
-MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
 
 timeout = aiohttp.ClientTimeout(total=10)
 
