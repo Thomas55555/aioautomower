@@ -18,6 +18,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+class ApiKeyError(Exception):
+    """Raised when Husqvarna API-Key is not compatible to websocket."""
+
+    def __init__(self, status: str):
+        """Initialize."""
+        super().__init__(status)
+        self.status = status
+
+
 class AutomowerSession:
     """Session"""
 
@@ -95,9 +104,8 @@ class AutomowerSession:
         self._schedule_callbacks()
 
         if "amc:api" not in self.token["scope"]:
-            _LOGGER.error(
-                "Your API-Key is not compatible to the websocket, please refresh it on %s",
-                HUSQVARNA_URL,
+            raise ApiKeyError(
+                "Your API-Key is not compatible to the websocket, please refresh it on https://developer.husqvarnagroup.cloud/"
             )
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
