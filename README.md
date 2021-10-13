@@ -72,7 +72,8 @@ class SendingCommand:
                 self.access_token,
                 self.provider,
                 self.token_type,
-                self.mower_id ,
+                self.mower_id,
+                self.payload
             )
             send = await send.async_mower_command()
         except Exception:
@@ -93,9 +94,11 @@ mower_output = asyncio.run(example2.mowers())
 print(mower_output)
 
 mower_id = mower_output["data"][0]["id"] ## '0' is your first mower
-print (mower_id)
+print ("Mower ID:", mower_id)
 payload = '{"data": {"type": "ResumeSchedule"}}'  ## For more commands see: https://developer.husqvarnagroup.cloud/apis/Automower+Connect+API#/swagger
-SendingCommand(api_key, access_token, provider, token_type, mower_id, payload)
+example3 = SendingCommand(api_key, access_token, provider, token_type, mower_id, payload)
+result = asyncio.run(example3.mowers())
+print (result)  ## if, 202, then okay
 ```
 
 ## AutomowerSession examples
