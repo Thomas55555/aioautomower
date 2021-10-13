@@ -13,8 +13,11 @@ async def run_tester(username: str, password: str, api_key: str):
     sess = aioautomower.AutomowerSession(api_key, ws_heartbeat_interval=60)
     token = await sess.login(username, password)
 
-    sess.register_cb(
-        lambda x: logging.info("callback;%s" % x), schedule_immediately=False
+    sess.register_data_callback(
+        lambda x: logging.info("data callback;%s" % x), schedule_immediately=False
+    )
+    sess.register_token_callback(
+        lambda x: logging.info("token callback;%s" % x), schedule_immediately=True
     )
 
     await sess.connect()

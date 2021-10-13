@@ -37,7 +37,8 @@ class AutomowerSession:
         """
         self.api_key = api_key
         self.token = token
-        self.update_cbs = []
+        self.data_update_cbs = []
+        self.token_update_cbs = []
         self.ws_heartbeat_interval = ws_heartbeat_interval
 
         if loop is None:
@@ -53,14 +54,37 @@ class AutomowerSession:
     def register_cb(self, update_cb, schedule_immediately=False):
         """Register a update callback.
 
+        This method is deprecated. Use register_data_callback instead.
+
         :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
         :param bool schedule_immediately: Schedule callback immediately (if data is available).
         """
-        if update_cb not in self.update_cbs:
-            self.update_cbs.append(update_cb)
+        return self.register_data_callback(update_cb, schedule_immediately)
+
+    def register_data_callback(self, callback, schedule_immediately=False):
+        """Register a data update callback.
+
+        :param func callback: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        :param bool schedule_immediately: Schedule callback immediately (if data is available).
+        """
+        if callback not in self.data_update_cbs:
+            self.data_update_cbs.append(callback)
         if schedule_immediately:
-            self._schedule_callback(
-                update_cb, delay=1e-3
+            self._schedule_data_callback(
+                callback, delay=1e-3
+            )  # Need a delay for home assistant to finish entity setup.
+
+    def register_token_callback(self, callback, schedule_immediately=False):
+        """Register a token update callback.
+
+        :param func callback: Callback fired on token updates. Takes one dict argument which is the newly received token.
+        :param bool schedule_immediately: Schedule callback immediately (if token is available).
+        """
+        if callback not in self.token_update_cbs:
+            self.token_update_cbs.append(callback)
+        if schedule_immediately:
+            self._schedule_token_callback(
+                callback, delay=1e-3
             )  # Need a delay for home assistant to finish entity setup.
 
     async def login(self, username: str, password: str):
@@ -78,6 +102,7 @@ class AutomowerSession:
         """
         a = rest.GetAccessToken(self.api_key, username, password)
         self.token = await a.async_get_access_token()
+        self._schedule_token_callbacks()
         return self.token
 
     async def connect(self):
@@ -92,7 +117,7 @@ class AutomowerSession:
             await self.refresh_token()
 
         self.data = await self.get_status()
-        self._schedule_callbacks()
+        self._schedule_data_callbacks()
 
         if "amc:api" not in self.token["scope"]:
             _LOGGER.error(
@@ -171,6 +196,7 @@ class AutomowerSession:
         _LOGGER.debug("Refresh access token")
         r = rest.RefreshAccessToken(self.api_key, self.token["refresh_token"])
         self.token = await r.async_refresh_access_token()
+        self._schedule_token_callbacks()
 
     async def _token_monitor_task(self):
         while True:
@@ -196,16 +222,27 @@ class AutomowerSession:
                 return
         _LOGGER.error("Failed to update data with ws response (id not found)")
 
-    def _schedule_callback(self, cb, delay=0.0):
+    def _schedule_token_callback(self, cb, delay=0.0):
+        if self.token is None:
+            _LOGGER.debug("No token available. Will not schedule callback.")
+            return
+        _LOGGER.debug("Schedule token callback %s", cb)
+        self.loop.call_later(delay, cb, self.token)
+
+    def _schedule_token_callbacks(self):
+        for cb in self.token_update_cbs:
+            self._schedule_token_callback(cb)
+
+    def _schedule_data_callback(self, cb, delay=0.0):
         if self.data is None:
             _LOGGER.debug("No data available. Will not schedule callback.")
             return
-        _LOGGER.debug("Schedule callback %s", cb)
+        _LOGGER.debug("Schedule data callback %s", cb)
         self.loop.call_later(delay, cb, self.data)
 
-    def _schedule_callbacks(self):
-        for cb in self.update_cbs:
-            self._schedule_callback(cb)
+    def _schedule_data_callbacks(self):
+        for cb in self.data_update_cbs:
+            self._schedule_data_callback(cb)
 
     async def _ws_task(self):
         printed_err_msg = False
@@ -242,7 +279,7 @@ class AutomowerSession:
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
                                     _LOGGER.debug("Got %s", j["type"])
-                                    self._schedule_callbacks()
+                                    self._schedule_data_callbacks()
                                 else:
                                     _LOGGER.info(
                                         "Received unknown ws type %s", j["type"]
