@@ -2,22 +2,25 @@
 import asyncio
 import logging
 import signal
+import json
 
 import aioautomower
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def run_tester(username: str, password: str, api_key: str):
-
-    sess = aioautomower.AutomowerSession(api_key, ws_heartbeat_interval=60)
-    token = await sess.login(username, password)
+async def run_tester(username: str, password: str, api_key: str, token: dict):
+    sess = aioautomower.AutomowerSession(api_key, token, ws_heartbeat_interval=60)
+    if sess.token is None:
+        token = await sess.login(username, password)
 
     sess.register_data_callback(
-        lambda x: logging.info("data callback;%s" % x), schedule_immediately=False
+        lambda x: logging.info("data callback;%s" % json.dumps(x)),
+        schedule_immediately=False,
     )
     sess.register_token_callback(
-        lambda x: logging.info("token callback;%s" % x), schedule_immediately=True
+        lambda x: logging.info("token callback;%s" % json.dumps(x)),
+        schedule_immediately=True,
     )
 
     await sess.connect()
@@ -58,8 +61,18 @@ def main():
         "-p", "--password", required=True, help="Husqvarna app password"
     )
     parser.add_argument("-k", "--api-key", required=True, help="Husqvarna API key")
+    parser.add_argument(
+        "-t",
+        "--token",
+        nargs="?",
+        type=argparse.FileType("r"),
+        default=None,
+        help="Optional access token. If provided, username and password will not be used.",
+    )
 
     args = parser.parse_args()
 
+    token = json.load(args.token) if args.token is not None else None
+
     logging.basicConfig(level="DEBUG", format="%(asctime)s;%(levelname)s;%(message)s")
-    asyncio.run(run_tester(args.username, args.password, args.api_key))
+    asyncio.run(run_tester(args.username, args.password, args.api_key, token))
