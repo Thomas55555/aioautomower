@@ -57,13 +57,14 @@ class MowerData:
 
 class SendingCommand:
     """Returns the data of all mowers as dict."""
-    def __init__(self, api_key, access_token, provider, token_type, mower_id, payload):
+    def __init__(self, api_key, access_token, provider, token_type, mower_id, payload, command_type):
         self.api_key = api_key
         self.access_token = access_token
         self.provider = provider
         self.token_type = token_type
         self.mower_id = mower_id
         self.payload = payload
+        self.command_type = command_type
 
     async def mowers(self):
         try:
@@ -74,6 +75,7 @@ class SendingCommand:
                 self.token_type,
                 self.mower_id,
                 self.payload
+                self.command_type
             )
             send = await send.async_mower_command()
         except Exception:
@@ -95,8 +97,9 @@ print(mower_output)
 
 mower_id = mower_output["data"][0]["id"] ## '0' is your first mower
 print ("Mower ID:", mower_id)
+command_type = "actions"
 payload = '{"data": {"type": "ResumeSchedule"}}'  ## For more commands see: https://developer.husqvarnagroup.cloud/apis/Automower+Connect+API#/swagger
-example3 = SendingCommand(api_key, access_token, provider, token_type, mower_id, payload)
+example3 = SendingCommand(api_key, access_token, provider, token_type, mower_id, payload, command_type)
 result = asyncio.run(example3.mowers())
 print (result)  ## if, 202, then okay
 ```
