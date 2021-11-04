@@ -160,6 +160,7 @@ class GetMowerData:
                 _LOGGER.debug("Resp.status mower data: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
+                    _LOGGER.debug("Result: %s", result)
                 if resp.status >= 400:
                     resp.raise_for_status()
         result["status"] = resp.status

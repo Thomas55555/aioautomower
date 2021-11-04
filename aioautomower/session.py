@@ -207,7 +207,7 @@ class AutomowerSession:
             else:
                 sleep_time = MIN_SLEEP_TIME
 
-            _LOGGER.debug("_token_monitor_task sleeping for %s sec", sleep_time)
+            _LOGGER.debug("token_monitor_task sleeping for %s sec", sleep_time)
             await asyncio.sleep(sleep_time)
             await self.refresh_token()
 
