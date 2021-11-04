@@ -170,13 +170,23 @@ class GetMowerData:
 class Return:
     """Class to send commands to the Automower Connect API."""
 
-    def __init__(self, api_key, access_token, provider, token_type, mower_id, payload):
+    def __init__(
+        self,
+        api_key,
+        access_token,
+        provider,
+        token_type,
+        mower_id,
+        payload,
+        command_type,
+    ):
         """Initialize the API and store the auth so we can send commands."""
         self.api_key = api_key
         self.access_token = access_token
         self.provider = provider
         self.token_type = token_type
         self.mower_id = mower_id
+        self.command_type = command_type
         self.mower_headers = {
             "Authorization": "{0} {1}".format(self.token_type, self.access_token),
             "Authorization-Provider": "{0}".format(self.provider),
@@ -184,7 +194,9 @@ class Return:
             "accept": "*/*",
             "X-Api-Key": "{0}".format(self.api_key),
         }
-        self.mower_action_url = f"{MOWER_API_BASE_URL}{self.mower_id}/actions"
+        self.mower_action_url = (
+            f"{MOWER_API_BASE_URL}{self.mower_id}/{self.command_type}"
+        )
         self.payload = payload
 
     async def async_mower_command(self):
@@ -192,6 +204,7 @@ class Return:
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.post(self.mower_action_url, data=self.payload) as resp:
                 result = await session.close()
+        _LOGGER.debug("Mower Action URL: %s", self.mower_action_url)
         _LOGGER.debug("Sent payload: %s", self.payload)
         _LOGGER.debug("Resp status mower command: %s", resp.status)
         return resp.status

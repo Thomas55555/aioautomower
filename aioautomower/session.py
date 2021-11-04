@@ -8,11 +8,11 @@ import aiohttp
 from . import rest
 from .const import (
     AUTH_HEADER_FMT,
-    HUSQVARNA_URL,
-    WS_URL,
-    MIN_SLEEP_TIME,
-    MARGIN_TIME,
     EVENT_TYPES,
+    HUSQVARNA_URL,
+    MARGIN_TIME,
+    MIN_SLEEP_TIME,
+    WS_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,7 +154,7 @@ class AutomowerSession:
         )
         return await d.async_mower_state()
 
-    async def action(self, mower_id, payload):
+    async def action(self, mower_id, payload, command_type):
         """Send command to the mower via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
@@ -166,6 +166,7 @@ class AutomowerSession:
             self.token["token_type"],
             mower_id,
             payload,
+            command_type,
         )
         return await a.async_mower_command()
 
