@@ -203,11 +203,12 @@ class Return:
         """Send a payload to the mower to execute a command."""
         async with aiohttp.ClientSession(headers=self.mower_headers) as session:
             async with session.post(self.mower_action_url, data=self.payload) as resp:
-                result = await session.close()
+                await session.close()
         _LOGGER.debug("Mower Action URL: %s", self.mower_action_url)
         _LOGGER.debug("Sent payload: %s", self.payload)
         _LOGGER.debug("Resp status mower command: %s", resp.status)
-        return resp.status
+        if resp.status >= 400:
+            resp.raise_for_status()
 
 
 class DeleteAccessToken:
