@@ -270,7 +270,7 @@ class AutomowerSession:
                     },
                     heartbeat=self.ws_heartbeat_interval,
                 ) as ws:
-                    _LOGGER.info("Websocket (re)connected")
+                    _LOGGER.debug("Websocket (re)connected")
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             _LOGGER.debug("Received TEXT")
@@ -281,7 +281,7 @@ class AutomowerSession:
                                     _LOGGER.debug("Got %s, data: %s", j["type"], j)
                                     self._schedule_data_callbacks()
                                 else:
-                                    _LOGGER.info(
+                                    _LOGGER.warning(
                                         "Received unknown ws type %s", j["type"]
                                     )
                             elif "ready" in j and "connectionId" in j:
