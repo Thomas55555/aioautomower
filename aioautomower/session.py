@@ -277,6 +277,24 @@ class AutomowerSession:
                             j = msg.json()
                             if "type" in j:
                                 if j["type"] in EVENT_TYPES:
+                                    if j["type"] in "settings-event":
+                                        j["attributes"]["settings"] = {}
+                                        if "headlight" in j["attributes"]:
+                                            j["attributes"]["settings"][
+                                                "headlight"
+                                            ] = {}
+                                            j["attributes"]["settings"][
+                                                "headlight"
+                                            ] = j["attributes"]["headlight"]
+                                            j["attributes"].pop("headlight")
+                                        if "cuttingHeight" in j["attributes"]:
+                                            j["attributes"]["settings"][
+                                                "cuttingHeight"
+                                            ] = {}
+                                            j["attributes"]["settings"][
+                                                "cuttingHeight"
+                                            ] = j["attributes"]["cuttingHeight"]
+                                            j["attributes"].pop("cuttingHeight")
                                     self._update_data(j)
                                     _LOGGER.debug("Got %s, data: %s", j["type"], j)
                                     self._schedule_data_callbacks()
