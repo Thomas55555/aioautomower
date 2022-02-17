@@ -225,6 +225,7 @@ class AutomowerSession:
         if self.token is None:
             _LOGGER.debug("No token available. Will not schedule callback.")
             return
+        _LOGGER.debug("Schedule token callback %s", cb)
         self.loop.call_later(delay, cb, self.token)
 
     def _schedule_token_callbacks(self):
@@ -235,7 +236,6 @@ class AutomowerSession:
         if self.data is None:
             _LOGGER.debug("No data available. Will not schedule callback.")
             return
-        _LOGGER.debug("Schedule data callback %s", cb)
         self.loop.call_later(delay, cb, self.data)
 
     def _schedule_data_callbacks(self):
