@@ -51,16 +51,6 @@ class AutomowerSession:
         self.ws_task = None
         self.token_task = None
 
-    def register_cb(self, update_cb, schedule_immediately=False):
-        """Register a update callback.
-
-        This method is deprecated. Use register_data_callback instead.
-
-        :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
-        :param bool schedule_immediately: Schedule callback immediately (if data is available).
-        """
-        return self.register_data_callback(update_cb, schedule_immediately)
-
     def register_data_callback(self, callback, schedule_immediately=False):
         """Register a data update callback.
 
