@@ -19,7 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=list(val.strip() for val in open("requirements.txt")),
-    version="2021.11.1",
+    version="2022.2.1",
     entry_points={
         "console_scripts": ["automower=aioautomower.cli:main"],
     },
