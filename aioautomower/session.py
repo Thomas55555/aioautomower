@@ -64,6 +64,14 @@ class AutomowerSession:
                 callback, delay=1e-3
             )  # Need a delay for home assistant to finish entity setup.
 
+    def unregister_data_callback(self, callback):
+        """Unregister a data update callback.
+
+        :param func callback: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        """
+        if callback in self.data_update_cbs:
+            self.data_update_cbs.remove(callback)
+
     def register_token_callback(self, callback, schedule_immediately=False):
         """Register a token update callback.
 
