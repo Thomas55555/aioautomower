@@ -51,16 +51,6 @@ class AutomowerSession:
         self.ws_task = None
         self.token_task = None
 
-    def register_cb(self, update_cb, schedule_immediately=False):
-        """Register a update callback.
-
-        This method is deprecated. Use register_data_callback instead.
-
-        :param func update_cb: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
-        :param bool schedule_immediately: Schedule callback immediately (if data is available).
-        """
-        return self.register_data_callback(update_cb, schedule_immediately)
-
     def register_data_callback(self, callback, schedule_immediately=False):
         """Register a data update callback.
 
@@ -73,6 +63,14 @@ class AutomowerSession:
             self._schedule_data_callback(
                 callback, delay=1e-3
             )  # Need a delay for home assistant to finish entity setup.
+
+    def unregister_data_callback(self, callback):
+        """Unregister a data update callback.
+
+        :param func callback: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        """
+        if callback in self.data_update_cbs:
+            self.data_update_cbs.remove(callback)
 
     def register_token_callback(self, callback, schedule_immediately=False):
         """Register a token update callback.
@@ -237,7 +235,6 @@ class AutomowerSession:
         if self.data is None:
             _LOGGER.debug("No data available. Will not schedule callback.")
             return
-        _LOGGER.debug("Schedule data callback %s", cb)
         self.loop.call_later(delay, cb, self.data)
 
     def _schedule_data_callbacks(self):
