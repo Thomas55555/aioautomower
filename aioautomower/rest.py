@@ -5,7 +5,7 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
-from .const import AUTH_API_URL, AUTH_HEADERS, MOWER_API_BASE_URL, TOKEN_URL
+from .const import AUTH_API_URL, AUTH_HEADERS, MOWER_API_BASE_URL, TOKEN_URL, USER_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +135,33 @@ class ValidateAccessToken:
         return result
 
 
+class DeleteAccessToken:
+    """Class to invalidate an access token."""
+
+    def __init__(self, api_key, provider, access_token):
+        """Initialize the Auth-API and store the auth so we can make requests."""
+        self.api_key = api_key
+        self.provider = provider
+        self.delete_headers = {
+            "Authorization-Provider": "{0}".format(self.provider),
+            "X-Api-Key": "{0}".format(self.api_key),
+            "Accept": "application/json",
+        }
+        self.access_token = access_token
+        self.delete_url = f"{TOKEN_URL}/{self.access_token}"
+
+    async def async_delete_access_token(self):
+        """Delete the token."""
+        async with aiohttp.ClientSession(headers=self.delete_headers) as session:
+            async with session.delete(self.delete_url) as resp:
+                _LOGGER.debug("Resp.status delete token: %i", resp.status)
+                if resp.status == 204:
+                    result = await resp.json(encoding="UTF-8")
+                if resp.status >= 400:
+                    resp.raise_for_status()
+        return result
+
+
 class GetMowerData:
     """Class to communicate with the Automower Connect API."""
 
@@ -211,28 +238,34 @@ class Return:
             resp.raise_for_status()
 
 
-class DeleteAccessToken:
-    """Class to invalidate an access token."""
+class GetUserInformation:
+    """Class to get user information."""
 
-    def __init__(self, api_key, provider, access_token):
+    def __init__(self, api_key, access_token, provider, token_type, user_id):
         """Initialize the Auth-API and store the auth so we can make requests."""
         self.api_key = api_key
         self.provider = provider
-        self.delete_headers = {
+        self.token_type = token_type
+        self.access_token = access_token
+        self.user_id = user_id
+        self.user_headers = {
+            "Authorization": "{0} {1}".format(self.token_type, self.access_token),
             "Authorization-Provider": "{0}".format(self.provider),
             "X-Api-Key": "{0}".format(self.api_key),
             "Accept": "application/json",
         }
-        self.access_token = access_token
-        self.delete_url = f"{TOKEN_URL}/{self.access_token}"
+        self.user_url = f"{USER_URL}/{self.user_id}"
+        _LOGGER.debug("user headers: %s", self.user_headers)
+        _LOGGER.debug("user url: %s", self.user_url)
 
-    async def async_delete_access_token(self):
-        """Delete the token."""
-        async with aiohttp.ClientSession(headers=self.delete_headers) as session:
-            async with session.delete(self.delete_url) as resp:
-                _LOGGER.debug("Resp.status delete token: %i", resp.status)
-                if resp.status == 204:
+    async def async_get_user_information(self):
+        """Get user information."""
+        async with aiohttp.ClientSession(headers=self.user_headers) as session:
+            async with session.get(self.user_url) as resp:
+                _LOGGER.debug("Resp.status get user information: %i", resp.status)
+                if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
+                    _LOGGER.debug("User information: %s", result)
                 if resp.status >= 400:
                     resp.raise_for_status()
         return result
