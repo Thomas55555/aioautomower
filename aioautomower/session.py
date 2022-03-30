@@ -173,20 +173,20 @@ class AutomowerSession:
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
-        t = rest.ValidateAccessToken(
+        token = rest.HandleAccessToken(
             self.api_key, self.token["access_token"], self.token["provider"]
         )
-        return await t.async_validate_access_token()
+        return await token.async_validate_access_token()
 
     async def invalidate_token(self):
         """Invalidate token via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
-        t = rest.DeleteAccessToken(
-            self.api_key, self.token["provider"], self.token["access_token"]
+        token = rest.HandleAccessToken(
+            self.api_key, self.token["access_token"], self.token["provider"]
         )
-        return await t.async_delete_access_token()
+        return await token.async_delete_access_token()
 
     async def refresh_token(self):
         if "refresh_token" not in self.token:
