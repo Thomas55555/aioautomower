@@ -122,6 +122,9 @@ class ValidateAccessToken:
 
     async def async_validate_access_token(self):
         """Returns information about the current token."""
+        _LOGGER.warning(
+            "The class 'DeleteAccessToken' is depracated, use 'HandleAccessToken' instead"
+        )
         async with aiohttp.ClientSession(headers=self.token_headers) as session:
             async with session.get(self.token_url) as resp:
                 _LOGGER.debug("Resp.status validate token: %i", resp.status)
@@ -152,8 +155,52 @@ class DeleteAccessToken:
 
     async def async_delete_access_token(self):
         """Delete the token."""
+        _LOGGER.warning(
+            "The class 'DeleteAccessToken' is depracated, use 'HandleAccessToken' instead"
+        )
         async with aiohttp.ClientSession(headers=self.delete_headers) as session:
             async with session.delete(self.delete_url) as resp:
+                _LOGGER.debug("Resp.status delete token: %i", resp.status)
+                if resp.status == 204:
+                    result = await resp.json(encoding="UTF-8")
+                if resp.status >= 400:
+                    resp.raise_for_status()
+        return result
+
+
+class HandleAccessToken:
+    """Class to validate and invalidate an access token."""
+
+    def __init__(self, api_key, access_token, provider):
+        """Initialize the Auth-API and store the auth so we can make requests."""
+        self.api_key = api_key
+        self.access_token = access_token
+        self.provider = provider
+        self.token_url = f"{TOKEN_URL}/{self.access_token}"
+        self.token_headers = {
+            "Authorization-Provider": "{0}".format(self.provider),
+            "Accept": "application/json",
+            "X-Api-Key": "{0}".format(self.api_key),
+        }
+
+    async def async_validate_access_token(self):
+        """Returns information about the current token."""
+        async with aiohttp.ClientSession(headers=self.token_headers) as session:
+            async with session.get(self.token_url) as resp:
+                _LOGGER.debug("Resp.status validate token: %i", resp.status)
+                if resp.status == 200:
+                    result = await resp.json(encoding="UTF-8")
+                if resp.status == 404:
+                    raise TokenValidationError(
+                        f"The token is probably expired or invalid, respone from Husqvarna Automower API: {resp.status}"
+                    )
+        result["status"] = resp.status
+        return result
+
+    async def async_delete_access_token(self):
+        """Delete the token."""
+        async with aiohttp.ClientSession(headers=self.token_headers) as session:
+            async with session.delete(self.token_url) as resp:
                 _LOGGER.debug("Resp.status delete token: %i", resp.status)
                 if resp.status == 204:
                     result = await resp.json(encoding="UTF-8")
