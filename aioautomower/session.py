@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import time
-
+import datetime
 import aiohttp
 
 from . import rest
@@ -40,6 +40,7 @@ class AutomowerSession:
         self.data_update_cbs = []
         self.token_update_cbs = []
         self.ws_heartbeat_interval = ws_heartbeat_interval
+        self.websocket_status = None
 
         if loop is None:
             self.loop = asyncio.get_event_loop()
@@ -125,6 +126,9 @@ class AutomowerSession:
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
+        self.websocket_monitor_task = self.loop.create_task(
+            self._websocket_monitor_task()
+        )
 
     async def close(self):
         """Close the session."""
@@ -307,3 +311,45 @@ class AutomowerSession:
                             _LOGGER.debug("Received CLOSED")
                         else:
                             _LOGGER.debug("Received msg.type=%d", msg.type)
+
+    async def _rest_task(self):
+        """Poll data periodically via Rest."""
+        async with aiohttp.ClientSession() as session:
+            while True:
+                _LOGGER.debug("Rest is running.")
+                self.data = await self.get_status()
+                self._schedule_data_callbacks()
+                await asyncio.sleep(1 * 60)
+
+    async def _websocket_monitor_task(self):
+        while True:
+            self.websocket_status = True
+            timestamp = (
+                self.data["data"][0]["attributes"]["metadata"]["statusTimestamp"] / 1000
+            )
+            utz_now = datetime.datetime.utcnow().timestamp()
+            _LOGGER.debug("Timestamp: %i", timestamp)
+            _LOGGER.debug("jetzt: %i", utz_now)
+            timedelata_in_sec = utz_now - timestamp
+            _LOGGER.debug("Age in sec: %i", timedelata_in_sec)
+            if timedelata_in_sec > (40):  ##target: 840 + 60
+                _LOGGER.debug("No websockets updates anymore")
+                rest_info = await self.get_status()
+                rest_connected = rest_info["data"][0]["attributes"]["metadata"][
+                    "connected"
+                ]
+                _LOGGER.debug("rest_connected: %s", rest_connected)
+                if rest_connected:
+                    _LOGGER.debug(
+                        "No websockets updates anymore, but mower connected, websocket probably down."
+                    )
+                    self.websocket_status = False
+            if not self.websocket_status:  # also check if task is already  running
+                rest_task = self.loop.create_task(self._rest_task())
+                _LOGGER.debug("rest_task: %s", rest_task._state)
+
+            if self.websocket_status:  # also check if task is already  running
+                # if timedelata_in_sec > (800):
+                res = rest_task.cancel()
+                _LOGGER.debug("cancel: %s", res)
+            await asyncio.sleep(10)  # target: 60
