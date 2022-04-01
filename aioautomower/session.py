@@ -13,6 +13,9 @@ from .const import (
     HUSQVARNA_URL,
     MARGIN_TIME,
     MIN_SLEEP_TIME,
+    MIN_SLEEP_TIME_WS_MONITOR,
+    REST_POLL_CYCLE,
+    WS_STATUS_UPDATE_CYLE,
     WS_URL,
 )
 
@@ -319,22 +322,23 @@ class AutomowerSession:
             _LOGGER.debug("Rest is running")
             self.data = await self.get_status()
             self._schedule_data_callbacks()
-            await asyncio.sleep(300)
+            await asyncio.sleep(REST_POLL_CYCLE)
 
     async def _websocket_monitor_task(self):
+        """Monitor, if the websocket still sends updates. If not, check, via REST,
+        if the mower is connected. If there are no recent updates, Start REST task
+        to get information"""
         rest_task_created = False
         while True:
             timestamp = (
                 self.data["data"][0]["attributes"]["metadata"]["statusTimestamp"] / 1000
             )
-            utz_now = datetime.datetime.utcnow().timestamp()
-            _LOGGER.debug("Timestamp: %i", timestamp)
-            _LOGGER.debug("jetzt: %i", utz_now)
-            timedelata_in_sec = utz_now - timestamp
-            _LOGGER.debug("Age in sec: %i", timedelata_in_sec)
-            if timedelata_in_sec <= (840 + 1):
+            utc_now = datetime.datetime.utcnow().timestamp()
+            age = utc_now - timestamp
+            _LOGGER.debug("Age in sec: %i", age)
+            if age <= (WS_STATUS_UPDATE_CYLE + 1):
                 self.websocket_status = True
-            if timedelata_in_sec > (840 + 1):
+            if age > (WS_STATUS_UPDATE_CYLE + 1):
                 if not rest_task_created:
                     _LOGGER.debug("No websockets updates anymore")
                     rest_info = await self.get_status()
@@ -344,7 +348,7 @@ class AutomowerSession:
                     _LOGGER.debug("rest_connected: %s", rest_connected)
                     if rest_connected:
                         _LOGGER.debug(
-                            "No websockets updates anymore, but mower connected, websocket probably down."
+                            "No ws updates anymore, but mower connected, ws probably down."
                         )
                         self.websocket_status = False
                         rest_task_watcher = self.loop.create_task(self._rest_task())
@@ -355,10 +359,10 @@ class AutomowerSession:
                     res = rest_task_watcher.cancel()
                     rest_task_created = False
                     _LOGGER.debug("cancel: %s", res)
-            ws_montitor_sleep_time = max(840 - timedelata_in_sec, 60)
-
+            ws_montitor_sleep_time = max(
+                WS_STATUS_UPDATE_CYLE - age + 1, MIN_SLEEP_TIME_WS_MONITOR
+            )
             _LOGGER.debug(
                 "websocket_monitor_task sleeping for %s sec", ws_montitor_sleep_time
             )
-
             await asyncio.sleep(ws_montitor_sleep_time)

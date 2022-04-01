@@ -1,24 +1,23 @@
 """The constants for aioautomower."""
-# Base component constants
-HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
 AUTH_API_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
-TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
-USER_URL = f"{AUTH_API_BASE_URL}/users"
 AUTH_HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
     "Accept": "application/json",
 }
-
-MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
-WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
 AUTH_HEADER_FMT = "Bearer {}"
-
-# Constants for websocket
-MIN_SLEEP_TIME = 600.0  # Avoid hammering
-MARGIN_TIME = 60.0  # Token is typically valid for 24h, request a new one some time before its expiration to avoid glitches.
 EVENT_TYPES = [
     "status-event",
     "positions-event",
     "settings-event",
 ]
+HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
+MARGIN_TIME = 60.0  # Token is typically valid for 24h, request a new one some time before its expiration to avoid glitches.
+MIN_SLEEP_TIME = 600.0  # Avoid hammering
+MIN_SLEEP_TIME_WS_MONITOR = 60.0  # Avoid hammering
+MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
+REST_POLL_CYCLE = 300.0
+TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
+USER_URL = f"{AUTH_API_BASE_URL}/users"
+WS_STATUS_UPDATE_CYLE = 840.0
+WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
