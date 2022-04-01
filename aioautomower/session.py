@@ -359,10 +359,10 @@ class AutomowerSession:
                     res = rest_task_watcher.cancel()
                     rest_task_created = False
                     _LOGGER.debug("cancel: %s", res)
-            ws_montitor_sleep_time = max(
+            ws_monitor_sleep_time = max(
                 WS_STATUS_UPDATE_CYLE - age + 1, MIN_SLEEP_TIME_WS_MONITOR
             )
             _LOGGER.debug(
-                "websocket_monitor_task sleeping for %s sec", ws_montitor_sleep_time
+                "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
             )
-            await asyncio.sleep(ws_montitor_sleep_time)
+            await asyncio.sleep(ws_monitor_sleep_time)
