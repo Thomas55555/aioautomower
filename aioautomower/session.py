@@ -1,8 +1,9 @@
 """Module to connect to Automower with websocket."""
 import asyncio
+import datetime
 import logging
 import time
-import datetime
+
 import aiohttp
 
 from . import rest
@@ -41,7 +42,7 @@ class AutomowerSession:
         self.token_update_cbs = []
         self.ws_heartbeat_interval = ws_heartbeat_interval
         self.websocket_status = None
-
+        self.rest_task = False
         if loop is None:
             self.loop = asyncio.get_event_loop()
         else:
@@ -314,16 +315,15 @@ class AutomowerSession:
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""
-        async with aiohttp.ClientSession() as session:
-            while True:
-                _LOGGER.debug("Rest is running.")
-                self.data = await self.get_status()
-                self._schedule_data_callbacks()
-                await asyncio.sleep(1 * 60)
+        while True:
+            _LOGGER.debug("Rest is running")
+            self.data = await self.get_status()
+            self._schedule_data_callbacks()
+            await asyncio.sleep(300)
 
     async def _websocket_monitor_task(self):
+        rest_task_created = False
         while True:
-            self.websocket_status = True
             timestamp = (
                 self.data["data"][0]["attributes"]["metadata"]["statusTimestamp"] / 1000
             )
@@ -332,24 +332,33 @@ class AutomowerSession:
             _LOGGER.debug("jetzt: %i", utz_now)
             timedelata_in_sec = utz_now - timestamp
             _LOGGER.debug("Age in sec: %i", timedelata_in_sec)
-            if timedelata_in_sec > (40):  ##target: 840 + 60
-                _LOGGER.debug("No websockets updates anymore")
-                rest_info = await self.get_status()
-                rest_connected = rest_info["data"][0]["attributes"]["metadata"][
-                    "connected"
-                ]
-                _LOGGER.debug("rest_connected: %s", rest_connected)
-                if rest_connected:
-                    _LOGGER.debug(
-                        "No websockets updates anymore, but mower connected, websocket probably down."
-                    )
-                    self.websocket_status = False
-            if not self.websocket_status:  # also check if task is already  running
-                rest_task = self.loop.create_task(self._rest_task())
-                _LOGGER.debug("rest_task: %s", rest_task._state)
+            if timedelata_in_sec <= (840 + 1):
+                self.websocket_status = True
+            if timedelata_in_sec > (840 + 1):
+                if not rest_task_created:
+                    _LOGGER.debug("No websockets updates anymore")
+                    rest_info = await self.get_status()
+                    rest_connected = rest_info["data"][0]["attributes"]["metadata"][
+                        "connected"
+                    ]
+                    _LOGGER.debug("rest_connected: %s", rest_connected)
+                    if rest_connected:
+                        _LOGGER.debug(
+                            "No websockets updates anymore, but mower connected, websocket probably down."
+                        )
+                        self.websocket_status = False
+                        rest_task_watcher = self.loop.create_task(self._rest_task())
+                        rest_task_created = True
+                        _LOGGER.debug("Rest task created")
+            if self.websocket_status:
+                if rest_task_created:
+                    res = rest_task_watcher.cancel()
+                    rest_task_created = False
+                    _LOGGER.debug("cancel: %s", res)
+            ws_montitor_sleep_time = max(840 - timedelata_in_sec, 60)
 
-            if self.websocket_status:  # also check if task is already  running
-                # if timedelata_in_sec > (800):
-                res = rest_task.cancel()
-                _LOGGER.debug("cancel: %s", res)
-            await asyncio.sleep(10)  # target: 60
+            _LOGGER.debug(
+                "websocket_monitor_task sleeping for %s sec", ws_montitor_sleep_time
+            )
+
+            await asyncio.sleep(ws_montitor_sleep_time)
