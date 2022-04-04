@@ -322,6 +322,7 @@ class AutomowerSession:
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""
+        self.rest_task_created = True
         while self.rest_task_created:
             _LOGGER.debug("Rest fallback is running")
             self.data = await self.get_status()
