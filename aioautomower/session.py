@@ -13,7 +13,7 @@ from .const import (
     HUSQVARNA_URL,
     MARGIN_TIME,
     MIN_SLEEP_TIME,
-    MIN_SLEEP_TIME_WS_MONITOR,
+    WS_TOLERANCE_TIME,
     REST_POLL_CYCLE,
     WS_STATUS_UPDATE_CYLE,
     WS_URL,
@@ -130,10 +130,10 @@ class AutomowerSession:
             )
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
+            self.websocket_monitor_task = self.loop.create_task(
+                self._websocket_monitor_task()
+            )
         self.token_task = self.loop.create_task(self._token_monitor_task())
-        self.websocket_monitor_task = self.loop.create_task(
-            self._websocket_monitor_task()
-        )
 
     async def close(self):
         """Close the session."""
@@ -320,7 +320,7 @@ class AutomowerSession:
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
-            _LOGGER.debug("Rest is running")
+            _LOGGER.debug("Rest fallback is running")
             self.data = await self.get_status()
             self._schedule_data_callbacks()
             await asyncio.sleep(REST_POLL_CYCLE)
@@ -331,7 +331,6 @@ class AutomowerSession:
         to get information"""
         rest_task_created = False
         message_sent = []
-        _LOGGER.debug("self.data['data'] %s", self.data["data"])
         for idx, ent in enumerate(self.data["data"]):
             message_sent.append(
                 not (self.data["data"][idx]["attributes"]["metadata"]["connected"])
@@ -360,28 +359,30 @@ class AutomowerSession:
                 utc_now = datetime.datetime.utcnow().timestamp()
                 age = utc_now - timestamp
                 _LOGGER.debug("Age in sec: %i", age)
-                if age <= (WS_STATUS_UPDATE_CYLE + 1):
+                if age <= (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
                     self.websocket_status = True
-                if age > (WS_STATUS_UPDATE_CYLE + 1):
+                if age > (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
                     if not rest_task_created:
                         if not mower_connected:
                             _LOGGER.debug(
                                 "No ws updates anymore, and mower disconnected"
                             )
                         if mower_connected:
-                            _LOGGER.warning(
+                            _LOGGER.debug(
                                 "No ws updates anymore, but mower connected, ws probably down"
                             )
                             self.websocket_status = False
-                            rest_task_watcher = self.loop.create_task(self._rest_task())
-                            rest_task_created = True
-                            _LOGGER.debug("Rest task created")
+                            if not rest_task_created:
+                                rest_task_created = True
+                                rest_task_watcher = self.loop.create_task(
+                                    self._rest_task()
+                                )
                 if (self.websocket_status or not mower_connected) and rest_task_created:
                     res = rest_task_watcher.cancel()
                     rest_task_created = False
                     _LOGGER.debug("cancel: %s", res)
                 ws_monitor_sleep_time = max(
-                    WS_STATUS_UPDATE_CYLE - age + 1, MIN_SLEEP_TIME_WS_MONITOR
+                    WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age, REST_POLL_CYCLE
                 )
                 _LOGGER.debug(
                     "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
