@@ -330,38 +330,60 @@ class AutomowerSession:
         if the mower is connected. If there are no recent updates, Start REST task
         to get information"""
         rest_task_created = False
+        message_sent = []
+        _LOGGER.debug("self.data['data'] %s", self.data["data"])
+        for idx, ent in enumerate(self.data["data"]):
+            message_sent.append(
+                not (self.data["data"][idx]["attributes"]["metadata"]["connected"])
+            )
         while True:
-            mower_connected = self.data["data"][0]["attributes"]["metadata"][
-                "connected"
-            ]
-            timestamp = (
-                self.data["data"][0]["attributes"]["metadata"]["statusTimestamp"] / 1000
-            )
-            utc_now = datetime.datetime.utcnow().timestamp()
-            age = utc_now - timestamp
-            _LOGGER.debug("Age in sec: %i", age)
-            if age <= (WS_STATUS_UPDATE_CYLE + 1):
-                self.websocket_status = True
-            if age > (WS_STATUS_UPDATE_CYLE + 1):
-                if not rest_task_created:
-                    if not mower_connected:
-                        _LOGGER.debug("No ws updates anymore, and mower disconnected")
-                    if mower_connected:
-                        _LOGGER.warning(
-                            "No ws updates anymore, but mower connected, ws probably down"
-                        )
-                        self.websocket_status = False
-                        rest_task_watcher = self.loop.create_task(self._rest_task())
-                        rest_task_created = True
-                        _LOGGER.debug("Rest task created")
-            if (self.websocket_status or not mower_connected) and rest_task_created:
-                res = rest_task_watcher.cancel()
-                rest_task_created = False
-                _LOGGER.debug("cancel: %s", res)
-            ws_monitor_sleep_time = max(
-                WS_STATUS_UPDATE_CYLE - age + 1, MIN_SLEEP_TIME_WS_MONITOR
-            )
-            _LOGGER.debug(
-                "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
-            )
-            await asyncio.sleep(ws_monitor_sleep_time)
+            for idx, ent in enumerate(self.data["data"]):
+                mower_connected = self.data["data"][idx]["attributes"]["metadata"][
+                    "connected"
+                ]
+                if not mower_connected and not message_sent[idx]:
+                    message_sent[idx] = True
+                    _LOGGER.warning(
+                        "Connection to %s lost",
+                        self.data["data"][idx]["attributes"]["system"]["name"],
+                    )
+                if mower_connected and message_sent[idx]:
+                    message_sent[idx] = False
+                    _LOGGER.info(
+                        "Connected to %s again",
+                        self.data["data"][idx]["attributes"]["system"]["name"],
+                    )
+                timestamp = (
+                    self.data["data"][idx]["attributes"]["metadata"]["statusTimestamp"]
+                    / 1000
+                )
+                utc_now = datetime.datetime.utcnow().timestamp()
+                age = utc_now - timestamp
+                _LOGGER.debug("Age in sec: %i", age)
+                if age <= (WS_STATUS_UPDATE_CYLE + 1):
+                    self.websocket_status = True
+                if age > (WS_STATUS_UPDATE_CYLE + 1):
+                    if not rest_task_created:
+                        if not mower_connected:
+                            _LOGGER.debug(
+                                "No ws updates anymore, and mower disconnected"
+                            )
+                        if mower_connected:
+                            _LOGGER.warning(
+                                "No ws updates anymore, but mower connected, ws probably down"
+                            )
+                            self.websocket_status = False
+                            rest_task_watcher = self.loop.create_task(self._rest_task())
+                            rest_task_created = True
+                            _LOGGER.debug("Rest task created")
+                if (self.websocket_status or not mower_connected) and rest_task_created:
+                    res = rest_task_watcher.cancel()
+                    rest_task_created = False
+                    _LOGGER.debug("cancel: %s", res)
+                ws_monitor_sleep_time = max(
+                    WS_STATUS_UPDATE_CYLE - age + 1, MIN_SLEEP_TIME_WS_MONITOR
+                )
+                _LOGGER.debug(
+                    "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
+                )
+                await asyncio.sleep(ws_monitor_sleep_time)
