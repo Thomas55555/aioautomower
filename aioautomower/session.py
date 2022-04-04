@@ -356,8 +356,8 @@ class AutomowerSession:
                     self.data["data"][idx]["attributes"]["metadata"]["statusTimestamp"]
                     / 1000
                 )
-                utc_now = datetime.datetime.utcnow().timestamp()
-                age = utc_now - timestamp
+                now = datetime.datetime.now().timestamp()
+                age = now - timestamp
                 _LOGGER.debug("Age in sec: %i", age)
                 if age <= (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
                     self.websocket_status = True
