@@ -340,8 +340,6 @@ class AutomowerSession:
             mower_connected.append(
                 self.data["data"][idx]["attributes"]["metadata"]["connected"]
             )
-            if not mower_connected:
-                all_mowers_connected = False
             message_sent.append(not mower_connected)
         while True:
             for idx, ent in enumerate(self.data["data"]):
@@ -381,8 +379,8 @@ class AutomowerSession:
                                 self.rest_task_watcher = self.loop.create_task(
                                     self._rest_task()
                                 )
-            all_mowers_connected = all(mower_connected)
-            if not all_mowers_connected and self.rest_task_created:
+            any_mowers_connected = any(mower_connected)
+            if not any_mowers_connected and self.rest_task_created:
                 self.rest_task_watcher.cancel()
             ws_monitor_sleep_time = WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age
             _LOGGER.debug(
