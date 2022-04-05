@@ -335,22 +335,26 @@ class AutomowerSession:
         if the mower is connected. If there are no recent updates, Start REST task
         to get information"""
         message_sent = []
+        mower_connected = []
         for idx, ent in enumerate(self.data["data"]):
-            message_sent.append(
-                not (self.data["data"][idx]["attributes"]["metadata"]["connected"])
+            mower_connected.append(
+                self.data["data"][idx]["attributes"]["metadata"]["connected"]
             )
+            if not mower_connected:
+                all_mowers_connected = False
+            message_sent.append(not mower_connected)
         while True:
             for idx, ent in enumerate(self.data["data"]):
-                mower_connected = self.data["data"][idx]["attributes"]["metadata"][
+                mower_connected[idx] = self.data["data"][idx]["attributes"]["metadata"][
                     "connected"
                 ]
-                if not mower_connected and not message_sent[idx]:
+                if not mower_connected[idx] and not message_sent[idx]:
                     message_sent[idx] = True
                     _LOGGER.warning(
                         "Connection to %s lost",
                         self.data["data"][idx]["attributes"]["system"]["name"],
                     )
-                if mower_connected and message_sent[idx]:
+                if mower_connected[idx] and message_sent[idx]:
                     message_sent[idx] = False
                     _LOGGER.info(
                         "Connected to %s again",
@@ -365,11 +369,11 @@ class AutomowerSession:
                 _LOGGER.debug("Age in sec: %i", age)
                 if age > (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
                     if not self.rest_task_created:
-                        if not mower_connected:
+                        if not mower_connected[idx]:
                             _LOGGER.debug(
                                 "No ws updates anymore, and mower disconnected"
                             )
-                        if mower_connected:
+                        if mower_connected[idx]:
                             _LOGGER.debug(
                                 "No ws updates anymore, but mower connected, ws probably down"
                             )
@@ -377,11 +381,11 @@ class AutomowerSession:
                                 self.rest_task_watcher = self.loop.create_task(
                                     self._rest_task()
                                 )
-                all_mowers_connected = all(mower_connected)
-                if not all_mowers_connected and self.rest_task_created:
-                    self.rest_task_watcher.cancel()
-                ws_monitor_sleep_time = WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age
-                _LOGGER.debug(
-                    "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
-                )
-                await asyncio.sleep(ws_monitor_sleep_time)
+            all_mowers_connected = all(mower_connected)
+            if not all_mowers_connected and self.rest_task_created:
+                self.rest_task_watcher.cancel()
+            ws_monitor_sleep_time = WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age
+            _LOGGER.debug(
+                "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
+            )
+            await asyncio.sleep(ws_monitor_sleep_time)
