@@ -57,6 +57,7 @@ class AutomowerSession:
         self.websocket_monitor_task = None
         self.rest_task_created = False
         self.rest_task_watcher = False
+        self.event = asyncio.Event()
 
     def register_data_callback(self, callback, schedule_immediately=False):
         """Register a data update callback.
@@ -279,11 +280,13 @@ class AutomowerSession:
                     _LOGGER.debug("Websocket (re)connected")
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
-                            if self.rest_task_created:
-                                self.rest_task_watcher.cancel()
-                            _LOGGER.debug("Received TEXT")
                             j = msg.json()
                             if "type" in j:
+                                self.event.set()
+                                _LOGGER.debug("Event gesetzt")
+                                if self.rest_task_created:
+                                    self.rest_task_watcher.cancel()
+                                _LOGGER.debug("Received TEXT")
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
                                     _LOGGER.debug("Got %s, data: %s", j["type"], j)
@@ -340,7 +343,7 @@ class AutomowerSession:
             mower_connected.append(
                 self.data["data"][idx]["attributes"]["metadata"]["connected"]
             )
-            message_sent.append(not mower_connected)
+            message_sent.append(not mower_connected[idx])
         while True:
             for idx, ent in enumerate(self.data["data"]):
                 mower_connected[idx] = self.data["data"][idx]["attributes"]["metadata"][
@@ -383,7 +386,12 @@ class AutomowerSession:
             if not any_mowers_connected and self.rest_task_created:
                 self.rest_task_watcher.cancel()
             ws_monitor_sleep_time = WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age
-            _LOGGER.debug(
-                "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
-            )
-            await asyncio.sleep(ws_monitor_sleep_time)
+            if ws_monitor_sleep_time > 0:
+                _LOGGER.debug(
+                    "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
+                )
+                await asyncio.sleep(ws_monitor_sleep_time)
+            else:
+                _LOGGER.debug("Waiting for websocket message")
+                await self.event.wait()
+                self.event.clear()
