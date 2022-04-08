@@ -234,6 +234,12 @@ class GetMowerData:
                 _LOGGER.debug("Resp.status mower data: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
+                    _LOGGER.debug("Result unfiltered: %s", result)
+                    for idx, ent in enumerate(result["data"]):
+                        result["data"][idx]["attributes"].update(
+                            result["data"][idx]["attributes"]["settings"]
+                        )
+                        del result["data"][idx]["attributes"]["settings"]
                     _LOGGER.debug("Result: %s", result)
                 if resp.status >= 400:
                     resp.raise_for_status()
