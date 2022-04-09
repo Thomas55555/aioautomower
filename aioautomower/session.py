@@ -283,7 +283,7 @@ class AutomowerSession:
                             j = msg.json()
                             if "type" in j:
                                 self.event.set()
-                                _LOGGER.debug("Event gesetzt")
+                                _LOGGER.debug("Event trigered by ws")
                                 if self.rest_task_created:
                                     self.rest_task_watcher.cancel()
                                 _LOGGER.debug("Received TEXT")
@@ -330,6 +330,8 @@ class AutomowerSession:
             _LOGGER.debug("Rest fallback is running")
             self.data = await self.get_status()
             self._schedule_data_callbacks()
+            self.event.set()
+            _LOGGER.debug("Event trigered by Rest")
             await asyncio.sleep(REST_POLL_CYCLE)
         self.rest_task_created = False
 
@@ -388,10 +390,10 @@ class AutomowerSession:
             ws_monitor_sleep_time = WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age
             if ws_monitor_sleep_time > 0:
                 _LOGGER.debug(
-                    "websocket_monitor_task sleeping for %s sec", ws_monitor_sleep_time
+                    "websocket_monitor_task sleeping for %ss", ws_monitor_sleep_time
                 )
                 await asyncio.sleep(ws_monitor_sleep_time)
             else:
-                _LOGGER.debug("Waiting for websocket message")
+                _LOGGER.debug("Waiting for new data")
                 await self.event.wait()
                 self.event.clear()
