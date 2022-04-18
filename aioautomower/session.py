@@ -15,6 +15,7 @@ from .const import (
     MIN_SLEEP_TIME,
     WS_TOLERANCE_TIME,
     REST_POLL_CYCLE,
+    REST_POLL_CYCLE_GUARD,
     WS_STATUS_UPDATE_CYLE,
     WS_URL,
 )
@@ -55,9 +56,8 @@ class AutomowerSession:
         self.ws_task = None
         self.token_task = None
         self.websocket_monitor_task = None
-        self.rest_task_created = False
-        self.rest_task_watcher = False
-        self.event = asyncio.Event()
+        self.rest_task_watcher = None
+        self.rest_current_poll_time = REST_POLL_CYCLE_GUARD
 
     def register_data_callback(self, callback, schedule_immediately=False):
         """Register a data update callback.
@@ -132,9 +132,7 @@ class AutomowerSession:
             )
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
-            self.websocket_monitor_task = self.loop.create_task(
-                self._websocket_monitor_task()
-            )
+        self.rest_task_watcher = self.loop.create_task(self._rest_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
 
     async def close(self):
@@ -254,6 +252,9 @@ class AutomowerSession:
 
     async def _ws_task(self):
         printed_err_msg = False
+        self.websocket_monitor_task = self.loop.create_task(
+            self._websocket_monitor_task()
+        )
         async with aiohttp.ClientSession() as session:
             while True:
                 if self.token is None or "access_token" not in self.token:
@@ -282,10 +283,6 @@ class AutomowerSession:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             j = msg.json()
                             if "type" in j:
-                                self.event.set()
-                                _LOGGER.debug("Event trigered by ws")
-                                if self.rest_task_created:
-                                    self.rest_task_watcher.cancel()
                                 _LOGGER.debug("Received TEXT")
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
@@ -325,15 +322,11 @@ class AutomowerSession:
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""
-        self.rest_task_created = True
-        while self.rest_task_created:
-            _LOGGER.debug("Rest fallback is running")
+        while True:
             self.data = await self.get_status()
             self._schedule_data_callbacks()
-            self.event.set()
-            _LOGGER.debug("Event trigered by Rest")
-            await asyncio.sleep(REST_POLL_CYCLE)
-        self.rest_task_created = False
+            _LOGGER.debug("Rest poll cycle: %s", self.rest_current_poll_time)
+            await asyncio.sleep(self.rest_current_poll_time)
 
     async def _websocket_monitor_task(self):
         """Monitor, if the websocket still sends updates. If not, check, via REST,
@@ -370,30 +363,22 @@ class AutomowerSession:
                 now = datetime.datetime.now().timestamp()
                 age = now - timestamp
                 _LOGGER.debug("Age in sec: %i", age)
-                if age > (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
-                    if not self.rest_task_created:
-                        if not mower_connected[idx]:
-                            _LOGGER.debug(
-                                "No ws updates anymore, and mower disconnected"
-                            )
-                        if mower_connected[idx]:
-                            _LOGGER.debug(
-                                "No ws updates anymore, but mower connected, ws probably down"
-                            )
-                            if not self.rest_task_created:
-                                self.rest_task_watcher = self.loop.create_task(
-                                    self._rest_task()
-                                )
-            any_mowers_connected = any(mower_connected)
-            if not any_mowers_connected and self.rest_task_created:
-                self.rest_task_watcher.cancel()
-            ws_monitor_sleep_time = WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age
-            if ws_monitor_sleep_time > 0:
+            ws_monitor_sleep_time = min(
+                max(WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age, REST_POLL_CYCLE),
+                WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME,
+            )
+            if age < (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
                 _LOGGER.debug(
                     "websocket_monitor_task sleeping for %ss", ws_monitor_sleep_time
                 )
-                await asyncio.sleep(ws_monitor_sleep_time)
-            else:
-                _LOGGER.debug("Waiting for new data")
-                await self.event.wait()
-                self.event.clear()
+            any_mowers_connected = any(mower_connected)
+            if age > (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
+                if not any_mowers_connected:
+                    _LOGGER.debug("No ws updates anymore, and mower disconnected")
+                    self.rest_current_poll_time = REST_POLL_CYCLE_GUARD
+                if any_mowers_connected:
+                    _LOGGER.debug(
+                        "No ws updates anymore, but mower connected, ws probably down"
+                    )
+                    self.rest_current_poll_time = REST_POLL_CYCLE
+            await asyncio.sleep(ws_monitor_sleep_time)

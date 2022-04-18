@@ -16,6 +16,7 @@ MARGIN_TIME = 60.0  # Token is typically valid for 24h, request a new one some t
 MIN_SLEEP_TIME = 600.0  # Avoid hammering
 MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
 REST_POLL_CYCLE = 300.0
+REST_POLL_CYCLE_GUARD = 10800.0
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
 USER_URL = f"{AUTH_API_BASE_URL}/users"
 WS_STATUS_UPDATE_CYLE = 840.0
