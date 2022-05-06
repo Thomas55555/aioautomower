@@ -211,7 +211,7 @@ class AutomowerSession:
             if self.token["status"] == 200 and "expires_at" in self.token:
                 expires_at = self.token["expires_at"]
 
-                sleep_time = max(MIN_SLEEP_TIME, expires_at - time.time() - MARGIN_TIME)
+                sleep_time = max(0, expires_at - time.time() - MARGIN_TIME)
             else:
                 sleep_time = MIN_SLEEP_TIME
 
