@@ -13,10 +13,9 @@ from .const import (
     HUSQVARNA_URL,
     MARGIN_TIME,
     MIN_SLEEP_TIME,
-    WS_TOLERANCE_TIME,
     REST_POLL_CYCLE,
-    REST_POLL_CYCLE_GUARD,
     WS_STATUS_UPDATE_CYLE,
+    WS_TOLERANCE_TIME,
     WS_URL,
 )
 
@@ -56,8 +55,7 @@ class AutomowerSession:
         self.ws_task = None
         self.token_task = None
         self.websocket_monitor_task = None
-        self.rest_task_watcher = None
-        self.rest_current_poll_time = REST_POLL_CYCLE_GUARD
+        self.rest_task = None
 
     def register_data_callback(self, callback, schedule_immediately=False):
         """Register a data update callback.
@@ -119,7 +117,7 @@ class AutomowerSession:
         """
         if self.token is None:
             raise AttributeError("No token to connect with.")
-        if time.time() > self.token["expires_at"]:
+        if time.time() > (self.token["expires_at"] - MARGIN_TIME):
             await self.refresh_token()
 
         self.data = await self.get_status()
@@ -132,12 +130,17 @@ class AutomowerSession:
             )
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
-        self.rest_task_watcher = self.loop.create_task(self._rest_task())
+        self.rest_task = self.loop.create_task(self._rest_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
 
     async def close(self):
         """Close the session."""
-        for task in [self.ws_task, self.token_task]:
+        for task in [
+            self.ws_task,
+            self.token_task,
+            self.websocket_monitor_task,
+            self.rest_task,
+        ]:
             tasks = []
             if task is not None:
                 tasks.append(task)
@@ -325,8 +328,7 @@ class AutomowerSession:
         while True:
             self.data = await self.get_status()
             self._schedule_data_callbacks()
-            _LOGGER.debug("Rest poll cycle: %s", self.rest_current_poll_time)
-            await asyncio.sleep(self.rest_current_poll_time)
+            await asyncio.sleep(REST_POLL_CYCLE)
 
     async def _websocket_monitor_task(self):
         """Monitor, if the websocket still sends updates. If not, check, via REST,
@@ -375,10 +377,8 @@ class AutomowerSession:
             if age > (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
                 if not any_mowers_connected:
                     _LOGGER.debug("No ws updates anymore, and mower disconnected")
-                    self.rest_current_poll_time = REST_POLL_CYCLE_GUARD
                 if any_mowers_connected:
                     _LOGGER.debug(
-                        "No ws updates anymore, but mower connected, ws probably down"
+                        "No ws updates anymore and mower connected, ws probably down or mower shortly before disconnecting"
                     )
-                    self.rest_current_poll_time = REST_POLL_CYCLE
             await asyncio.sleep(ws_monitor_sleep_time)
