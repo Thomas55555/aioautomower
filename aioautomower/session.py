@@ -201,6 +201,7 @@ class AutomowerSession:
         return await token.async_delete_access_token()
 
     async def refresh_token(self):
+        """Refresh token via Rest."""
         if "refresh_token" not in self.token:
             _LOGGER.warning("No refresh token available")
             return None
@@ -230,9 +231,9 @@ class AutomowerSession:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
                 for attrib in j["attributes"]:
                     if "tasks" in j["attributes"][attrib]:
-                        if j["attributes"][attrib]["tasks"] == []:
+                        if len(j["attributes"][attrib]["tasks"]) == 0:
                             pass
-                        if j["attributes"][attrib]["tasks"] != []:
+                        if len(j["attributes"][attrib]["tasks"]) >= 0:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     if not "tasks" in j["attributes"][attrib]:
                         datum["attributes"][attrib] = j["attributes"][attrib]
@@ -241,7 +242,7 @@ class AutomowerSession:
 
     def _schedule_token_callback(self, cb, delay=0.0):
         if self.token is None:
-            _LOGGER.debug("No token available. Will not schedule callback.")
+            _LOGGER.debug("No token available. Will not schedule callback")
             return
         self.loop.call_later(delay, cb, self.token)
 
@@ -251,7 +252,7 @@ class AutomowerSession:
 
     def _schedule_data_callback(self, cb, delay=0.0):
         if self.data is None:
-            _LOGGER.debug("No data available. Will not schedule callback.")
+            _LOGGER.debug("No data available. Will not schedule callback")
             return
         self.loop.call_later(delay, cb, self.data)
 
