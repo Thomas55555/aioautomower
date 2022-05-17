@@ -229,7 +229,13 @@ class AutomowerSession:
         for datum in self.data["data"]:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
                 for attrib in j["attributes"]:
-                    datum["attributes"][attrib] = j["attributes"][attrib]
+                    if "tasks" in j["attributes"][attrib]:
+                        if j["attributes"][attrib]["tasks"] == []:
+                            pass
+                        if j["attributes"][attrib]["tasks"] != []:
+                            datum["attributes"][attrib] = j["attributes"][attrib]
+                    if not "tasks" in j["attributes"][attrib]:
+                        datum["attributes"][attrib] = j["attributes"][attrib]
                 return
         _LOGGER.error("Failed to update data with ws response (id not found)")
 
