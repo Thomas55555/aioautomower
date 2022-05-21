@@ -233,7 +233,7 @@ class AutomowerSession:
                     if "tasks" in j["attributes"][attrib]:
                         if len(j["attributes"][attrib]["tasks"]) == 0:
                             pass
-                        if len(j["attributes"][attrib]["tasks"]) >= 0:
+                        if len(j["attributes"][attrib]["tasks"]) > 0:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     if not "tasks" in j["attributes"][attrib]:
                         datum["attributes"][attrib] = j["attributes"][attrib]
