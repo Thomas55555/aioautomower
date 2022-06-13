@@ -54,6 +54,7 @@ class GetAccessToken:
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
+                await resp.json()
                 _LOGGER.debug("Resp.status get access token: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
@@ -86,6 +87,7 @@ class RefreshAccessToken:
         """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
+                await resp.json()
                 _LOGGER.debug("Resp.status refresh token: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
@@ -117,6 +119,7 @@ class HandleAccessToken:
         """Returns information about the current token."""
         async with aiohttp.ClientSession(headers=self.token_headers) as session:
             async with session.get(self.token_url) as resp:
+                await resp.json()
                 _LOGGER.debug("Resp.status validate token: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
@@ -131,6 +134,7 @@ class HandleAccessToken:
         """Delete the token."""
         async with aiohttp.ClientSession(headers=self.token_headers) as session:
             async with session.delete(self.token_url) as resp:
+                await resp.json()
                 _LOGGER.debug("Resp.status delete token: %i", resp.status)
                 if resp.status == 204:
                     result = await resp.json(encoding="UTF-8")
@@ -161,6 +165,7 @@ class GetMowerData:
             headers=self.mower_headers, timeout=timeout
         ) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
+                await resp.json()
                 _LOGGER.debug("Resp.status mower data: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
@@ -244,6 +249,7 @@ class GetUserInformation:
         """Get user information."""
         async with aiohttp.ClientSession(headers=self.user_headers) as session:
             async with session.get(self.user_url) as resp:
+                await resp.json()
                 _LOGGER.debug("Resp.status get user information: %i", resp.status)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
