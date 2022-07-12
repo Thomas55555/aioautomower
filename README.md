@@ -11,23 +11,20 @@ from aiohttp.client_exceptions import ClientConnectorError
 import asyncio
 
 api_key = "12345678-abcd-1234-a1a1-efghijklmnop" ## Your API-Key
-username = "username" ## Your username
-password = "password" ## Your password
+client_secret = "client_secret" ## Your client_secret
 
 
 class ExampleToken:
     """Returns the access token as dict."""
-    def __init__(self, api_key, username, password):
-        self.api_key = api_key
-        self.username = username
-        self.password = password
+    def __init__(self, api_key, client_secret):
+        self.client_id = api_key
+        self.client_secret = client_secret
 
     async def token(self):
         try:
             get_token = GetAccessToken(
-                self.api_key,
-                self.username,
-                self.password,
+                self.client_id,
+                self.client_secret,
             )
             access_token_raw = await get_token.async_get_access_token()
         except (ClientConnectorError, ClientError):
@@ -83,7 +80,7 @@ class SendingCommand:
         return send
 
 
-example = ExampleToken(api_key, username, password)
+example = ExampleToken(api_key, client_id)
 token_output = asyncio.run(example.token())
 print(token_output)
 
@@ -116,8 +113,7 @@ import logging
 
 import aioautomower
 
-USERNAME = "user@name.com"
-PASSWORD = "mystringpassword"
+CLIENT_SECRET = "mystringpassword"
 API_KEY = "12312312-0126-6222-2662-3e6c49f0012c"
 
 
@@ -131,7 +127,7 @@ async def main():
     # If no token was passed to the constructor, we need to call login()
     # before connect(). The token can be stored somewhere and passed to
     # the constructor later on.
-    token = await sess.login(USERNAME, PASSWORD)
+    token = await sess.logincc(CLIENT_SECRET)
 
     if not await sess.connect():
         # If the token is still None or too old, the connect will fail.
