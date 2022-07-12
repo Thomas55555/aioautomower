@@ -165,8 +165,8 @@ class GetMowerData:
             headers=self.mower_headers, timeout=timeout
         ) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
-                await resp.json()
-                _LOGGER.debug("Resp.status mower data: %i", resp.status)
+                await resp.json(encoding="UTF-8")
+                _LOGGER.debug("Response mower data: %s", resp)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                     for idx, ent in enumerate(result["data"]):
@@ -174,10 +174,9 @@ class GetMowerData:
                             result["data"][idx]["attributes"]["settings"]
                         )
                         del result["data"][idx]["attributes"]["settings"]
-                    _LOGGER.debug("Result: %s", result)
+                    _LOGGER.debug("Result mower data: %s", result)
                 if resp.status >= 400:
-                    resp.raise_for_status()
-        result["status"] = resp.status
+                    _LOGGER.error("Response mower data: %s", resp)
         return result
 
 

@@ -292,7 +292,6 @@ class AutomowerSession:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             j = msg.json()
                             if "type" in j:
-                                _LOGGER.debug("Received TEXT")
                                 if j["type"] in EVENT_TYPES:
                                     self._update_data(j)
                                     _LOGGER.debug("Got %s, data: %s", j["type"], j)
