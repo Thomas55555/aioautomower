@@ -109,6 +109,24 @@ class AutomowerSession:
         self._schedule_token_callbacks()
         return self.token
 
+    async def logincc(self, client_secret: str) -> dict:
+        """Login with client credentials.
+
+        This method updates the stored token. If connect() returns False. Call
+        this method and call connect() again.
+
+        :param str username: Your client_id/api_key
+        :param str password: Your client_secret
+        :return dict: The token as returned by
+        rest.GetAccessTokenClientCredentials.async_get_access_token().
+        You can store this persistently and pass it to the constructor
+        on subsequent instantiations.
+        """
+        a = rest.GetAccessTokenClientCredentials(self.api_key, client_secret)
+        self.token = await a.async_get_access_token()
+        self._schedule_token_callbacks()
+        return self.token
+
     async def connect(self):
         """Connect to the API.
 
