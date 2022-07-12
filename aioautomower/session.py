@@ -120,8 +120,7 @@ class AutomowerSession:
         if time.time() > (self.token["expires_at"] - MARGIN_TIME):
             await self.refresh_token()
 
-        self.data = await self.get_status()
-        self._schedule_data_callbacks()
+        self.rest_task = self.loop.create_task(self._rest_task())
 
         if "amc:api" not in self.token["scope"]:
             _LOGGER.error(
@@ -130,7 +129,6 @@ class AutomowerSession:
             )
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
-        self.rest_task = self.loop.create_task(self._rest_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
 
     async def close(self):
