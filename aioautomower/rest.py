@@ -53,6 +53,42 @@ class GetAccessToken:
     async def async_get_access_token(self) -> dict:
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
+            _LOGGER.warning(
+                "Log-in with api-key/username/password is depracted, please use `GetAccessTokenClientCredentials` instead"
+            )
+            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
+                await resp.json()
+                _LOGGER.debug("Resp.status get access token: %i", resp.status)
+                if resp.status == 200:
+                    result = await resp.json(encoding="UTF-8")
+                    result["expires_at"] = result["expires_in"] + time.time()
+                if resp.status >= 400:
+                    raise TokenError(
+                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                    )
+        result["status"] = resp.status
+        return result
+
+
+class GetAccessTokenClientCredentials:
+    """Class to get an acces token from the Authentication API with client_credentials.
+    This grant type is intended only for you. If you want other users to use your application,
+    then they should login using Authorization Code Grant."""
+
+    def __init__(self, client_id, client_secret) -> None:
+        """Initialize the Auth-API and store the auth so we can make requests."""
+        self.auth_data = urlencode(
+            {
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+            },
+            quote_via=quote_plus,
+        )
+
+    async def async_get_access_token(self) -> dict:
+        """Return the token."""
+        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
                 await resp.json()
                 _LOGGER.debug("Resp.status get access token: %i", resp.status)
@@ -118,6 +154,9 @@ class HandleAccessToken:
     async def async_validate_access_token(self) -> dict:
         """Returns information about the current token."""
         async with aiohttp.ClientSession(headers=self.token_headers) as session:
+            _LOGGER.warning(
+                "`async_validate_access_token` is depracted, please use JWT information instead"
+            )
             async with session.get(self.token_url) as resp:
                 await resp.json()
                 _LOGGER.debug("Resp.status validate token: %i", resp.status)
@@ -248,6 +287,9 @@ class GetUserInformation:
     async def async_get_user_information(self) -> dict:
         """Get user information."""
         async with aiohttp.ClientSession(headers=self.user_headers) as session:
+            _LOGGER.warning(
+                "`async_get_user_information` is depracted, please use JWT information instead"
+            )
             async with session.get(self.user_url) as resp:
                 await resp.json()
                 _LOGGER.debug("Resp.status get user information: %i", resp.status)
