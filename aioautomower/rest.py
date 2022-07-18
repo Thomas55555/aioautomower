@@ -32,44 +32,6 @@ class TokenValidationError(Exception):
         self.status = status
 
 
-class GetAccessToken:
-    """Class to get an acces token from the Authentication API."""
-
-    def __init__(self, api_key, username, password) -> None:
-        """Initialize the Auth-API and store the auth so we can make requests."""
-        self.username = username
-        self.password = password
-        self.api_key = api_key
-        self.auth_data = urlencode(
-            {
-                "client_id": self.api_key,
-                "grant_type": "password",
-                "username": self.username,
-                "password": self.password,
-            },
-            quote_via=quote_plus,
-        )
-
-    async def async_get_access_token(self) -> dict:
-        """Return the token."""
-        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            _LOGGER.warning(
-                "Log-in with api-key/username/password is depracted, please use `GetAccessTokenClientCredentials` instead"
-            )
-            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                await resp.json()
-                _LOGGER.debug("Resp.status get access token: %i", resp.status)
-                if resp.status == 200:
-                    result = await resp.json(encoding="UTF-8")
-                    result["expires_at"] = result["expires_in"] + time.time()
-                if resp.status >= 400:
-                    raise TokenError(
-                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
-                    )
-        result["status"] = resp.status
-        return result
-
-
 class GetAccessTokenClientCredentials:
     """Class to get an acces token from the Authentication API with client_credentials.
     This grant type is intended only for you. If you want other users to use your application,
