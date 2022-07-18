@@ -91,32 +91,13 @@ class AutomowerSession:
                 callback, delay=1e-3
             )  # Need a delay for home assistant to finish entity setup.
 
-    async def login(self, username: str, password: str):
-        """Login with username and password.
-
-        This method updates the stored token. If connect() returns False. Call
-        this method and call connect() again.
-
-        :param str username: Your username
-        :param str password: Your password
-        :return dict: The token as returned by
-        rest.GetAccessToken.async_get_access_token(). You can store this
-        persistently and pass it to the constructor on subsequent
-        instantiations.
-        """
-        a = rest.GetAccessToken(self.api_key, username, password)
-        self.token = await a.async_get_access_token()
-        self._schedule_token_callbacks()
-        return self.token
-
     async def logincc(self, client_secret: str) -> dict:
         """Login with client credentials.
 
         This method updates the stored token. If connect() returns False. Call
         this method and call connect() again.
 
-        :param str username: Your client_id/api_key
-        :param str password: Your client_secret
+        :param str client_secret: Your client_secret
         :return dict: The token as returned by
         rest.GetAccessTokenClientCredentials.async_get_access_token().
         You can store this persistently and pass it to the constructor
