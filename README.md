@@ -143,3 +143,9 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## AutomowerCLI example
+
+An AutomowerSession that provides you with the data in a CLI
+
+`automower --client_secret 12312312-12ec-486b-a7a7-9d9b06644a14  --api-key 12312312-0126-6222-2662-3e6c49f0012c`

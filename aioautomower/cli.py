@@ -9,10 +9,10 @@ import aioautomower
 _LOGGER = logging.getLogger(__name__)
 
 
-async def run_tester(username: str, password: str, api_key: str, token: dict):
+async def run_tester(client_secret: str, api_key: str, token: dict):
     sess = aioautomower.AutomowerSession(api_key, token, ws_heartbeat_interval=60)
     if sess.token is None:
-        token = await sess.login(username, password)
+        token = await sess.logincc(client_secret)
 
     sess.register_data_callback(
         lambda x: logging.info("data callback;%s" % json.dumps(x)),
@@ -55,10 +55,7 @@ def main():
         description=main.__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "-u", "--username", required=True, help="Husqvarna app username"
-    )
-    parser.add_argument(
-        "-p", "--password", required=True, help="Husqvarna app password"
+        "-s", "--client_secret", required=True, help="Husqvarna app username"
     )
     parser.add_argument("-k", "--api-key", required=True, help="Husqvarna API key")
     parser.add_argument(
@@ -75,4 +72,4 @@ def main():
     token = json.load(args.token) if args.token is not None else None
 
     logging.basicConfig(level="DEBUG", format="%(asctime)s;%(levelname)s;%(message)s")
-    asyncio.run(run_tester(args.username, args.password, args.api_key, token))
+    asyncio.run(run_tester(args.client_secret, args.api_key, token))
