@@ -5,8 +5,6 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
-
 from .const import AUTH_API_URL, AUTH_HEADERS, MOWER_API_BASE_URL, TOKEN_URL, USER_URL
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +16,15 @@ class TokenError(Exception):
     """Raised when Husqvarna Authentication API request ended in error 400."""
 
     def __init__(self, status: str) -> None:
+        """Initialize."""
+        super().__init__(status)
+        self.status = status
+
+
+class TokenRefreshError(Exception):
+    """Raised when Husqvarna Authentication API is not able to refresh the token (Error 400 or 404)."""
+
+    def __init__(self, status: str):
         """Initialize."""
         super().__init__(status)
         self.status = status
@@ -93,7 +100,7 @@ class RefreshAccessToken:
                     result["status"] = resp.status
                     return result
                 elif resp.status in [400, 401, 404]:
-                    raise ConfigEntryAuthFailed(
+                    raise TokenRefreshError(
                         f"The token cannot be refreshed, respone from Husqvarna Automower API: {resp.status}"
                     )
 
