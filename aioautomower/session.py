@@ -231,7 +231,9 @@ class AutomowerSession:
                     try:
                         tasks = j["attributes"]["calendar"]["tasks"]
                         if len(tasks) == 0:
-                            pass
+                            temp_task = datum["attributes"]["calendar"]["tasks"]
+                            datum["attributes"][attrib] = j["attributes"][attrib]
+                            datum["attributes"]["calendar"]["tasks"] = temp_task
                         if len(tasks) > 0:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     except KeyError:
