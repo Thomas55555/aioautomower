@@ -180,16 +180,6 @@ class AutomowerSession:
         )
         return await a.async_mower_command()
 
-    async def validate_token(self):
-        """Validate token via Rest."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
-        token = rest.HandleAccessToken(
-            self.api_key, self.token["access_token"], self.token["provider"]
-        )
-        return await token.async_validate_access_token()
-
     async def invalidate_token(self):
         """Invalidate token via Rest."""
         if self.token is None:
