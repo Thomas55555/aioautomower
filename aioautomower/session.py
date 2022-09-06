@@ -94,8 +94,8 @@ class AutomowerSession:
     async def logincc(self, client_secret: str) -> dict:
         """Login with client credentials.
 
-        This method updates the stored token. If connect() returns False. Call
-        this method and call connect() again.
+        This method gets an access token with a client_id (Api key) and a client_secret.
+        This token can't be refreshed. Create a new one after it is expired.
 
         :param str client_secret: Your client_secret
         :return dict: The token as returned by
@@ -112,7 +112,8 @@ class AutomowerSession:
         """Connect to the API.
 
         This method handles the login and starts a task that keep the access
-        token constantly fresh. Call this method before any other methods.
+        token constantly fresh. This method works only, if the token is created with the
+        Authorization Code Grant. Call this method before any other methods.
         """
         if self.token is None:
             raise AttributeError("No token to connect with.")
