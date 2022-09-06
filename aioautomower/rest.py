@@ -1,4 +1,6 @@
 """Automower library using aiohttp."""
+from __future__ import annotations
+
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
