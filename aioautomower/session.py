@@ -14,6 +14,7 @@ from .const import (
     MARGIN_TIME,
     MIN_SLEEP_TIME,
     REST_POLL_CYCLE,
+    REST_POLL_CYCLE_LE,
     WS_STATUS_UPDATE_CYLE,
     WS_TOLERANCE_TIME,
     WS_URL,
@@ -29,6 +30,7 @@ class AutomowerSession:
         self,
         api_key: str,
         token: dict = None,
+        low_energy=True,
         ws_heartbeat_interval: float = 60.0,
         loop=None,
     ):
@@ -45,6 +47,7 @@ class AutomowerSession:
         self.token_update_cbs = []
         self.ws_heartbeat_interval = ws_heartbeat_interval
         self.rest_task = False
+        self.low_energy = low_energy
         if loop is None:
             self.loop = asyncio.get_event_loop()
         else:
@@ -324,7 +327,14 @@ class AutomowerSession:
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
-            await asyncio.sleep(REST_POLL_CYCLE)
+            _LOGGER.debug(
+                "LE: %s",
+                self.low_energy,
+            )
+            if self.low_energy is True:
+                await asyncio.sleep(REST_POLL_CYCLE_LE)
+            if self.low_energy is False:
+                await asyncio.sleep(REST_POLL_CYCLE)
             self.data = await self.get_status()
             self._schedule_data_callbacks()
 
