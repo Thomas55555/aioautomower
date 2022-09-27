@@ -5,7 +5,7 @@ Asynchronous library to communicate with the Automower Connect API
 ## REST API Examples
 
 ```python
-from aioautomower import GetAccessToken, GetMowerData, Return
+from aioautomower import GetAccessTokenClientCredentials, GetMowerData, Return
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 import asyncio
@@ -22,7 +22,7 @@ class ExampleToken:
 
     async def token(self):
         try:
-            get_token = GetAccessToken(
+            get_token = GetAccessTokenClientCredentials(
                 self.client_id,
                 self.client_secret,
             )
