@@ -1,6 +1,7 @@
 """The constants for aioautomower."""
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
-AUTH_API_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
+AUTH_API_TOKEN_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
+AUTH_API_REVOKE_URL = f"{AUTH_API_BASE_URL}/oauth2/revoke"
 AUTH_HEADERS = {
     "Content-Type": "application/x-www-form-urlencoded",
     "Accept": "application/json",

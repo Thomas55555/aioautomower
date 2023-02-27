@@ -7,7 +7,15 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
-from .const import AUTH_API_URL, AUTH_HEADERS, MOWER_API_BASE_URL, TOKEN_URL, USER_URL
+from .const import (
+    AUTH_API_REVOKE_URL,
+    AUTH_API_TOKEN_URL,
+    AUTH_HEADERS,
+    MOWER_API_BASE_URL,
+    TOKEN_URL,
+    # AUTH_HEADERS_ALL,
+    AUTH_HEADER_FMT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +34,7 @@ class TokenError(Exception):
 class TokenRefreshError(Exception):
     """Raised when Husqvarna Authentication API is not able to refresh the token (Error 400 or 404)."""
 
-    def __init__(self, status: str):
+    def __init__(self, status: str) -> None:
         """Initialize."""
         super().__init__(status)
         self.status = status
@@ -60,7 +68,7 @@ class GetAccessTokenClientCredentials:
     async def async_get_access_token(self) -> dict:
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
+            async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
                 await resp.json()
                 _LOGGER.debug("Resp.status get access token: %i", resp.status)
                 if resp.status == 200:
@@ -93,7 +101,7 @@ class RefreshAccessToken:
     async def async_refresh_access_token(self) -> dict:
         """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
+            async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
                 await resp.json()
                 _LOGGER.debug("Resp.status refresh token: %i", resp.status)
                 if resp.status == 200:
@@ -107,28 +115,28 @@ class RefreshAccessToken:
                     )
 
 
-class HandleAccessToken:
+class RevokeAccessToken:
     """Class to invalidate an access token."""
 
-    def __init__(self, api_key, access_token, provider) -> None:
+    def __init__(self, access_token) -> None:
         """Initialize the Auth-API and store the auth so we can make requests."""
-        self.api_key = api_key
         self.access_token = access_token
-        self.provider = provider
-        self.token_url = f"{TOKEN_URL}/{self.access_token}"
-        self.token_headers = {
-            "Authorization-Provider": "{0}".format(self.provider),
-            "Accept": "application/json",
-            "X-Api-Key": "{0}".format(self.api_key),
+        self.auth_data = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": "Bearer {0}".format(self.access_token),
+            "Accept": "*/*",
         }
 
     async def async_delete_access_token(self) -> dict:
         """Delete the token."""
-        async with aiohttp.ClientSession(headers=self.token_headers) as session:
-            async with session.delete(self.token_url) as resp:
-                await resp.json()
+        async with aiohttp.ClientSession(headers=self.auth_data) as session:
+            async with session.post(
+                AUTH_API_REVOKE_URL, data=(f"token={self.access_token}")
+            ) as resp:
+                saf = await resp.json()
                 _LOGGER.debug("Resp.status delete token: %i", resp.status)
-                if resp.status == 204:
+                _LOGGER.debug("Resp.status delete token: %i", resp.status)
+                if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                 if resp.status >= 400:
                     resp.raise_for_status()

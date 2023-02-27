@@ -138,6 +138,8 @@ class AutomowerSession:
 
     async def close(self):
         """Close the session."""
+        revoke = rest.RevokeAccessToken(self.token["access_token"])
+        await revoke.async_delete_access_token()
         for task in [
             self.ws_task,
             self.token_task,
@@ -188,9 +190,10 @@ class AutomowerSession:
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
-        token = rest.HandleAccessToken(
-            self.api_key, self.token["access_token"], self.token["provider"]
-        )
+        # token = rest.HandleAccessToken(
+        #     self.api_key, self.token["access_token"], self.token["provider"]
+        # )
+        token = rest.RevokeAccessToken(self.token["access_token"])
         return await token.async_delete_access_token()
 
     async def refresh_token(self):
