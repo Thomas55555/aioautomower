@@ -7,7 +7,13 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
-from .const import AUTH_API_URL, AUTH_HEADERS, MOWER_API_BASE_URL, TOKEN_URL, USER_URL
+from .const import (
+    AUTH_API_REVOKE_URL,
+    AUTH_API_TOKEN_URL,
+    AUTH_HEADERS,
+    MOWER_API_BASE_URL,
+    TOKEN_URL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +32,7 @@ class TokenError(Exception):
 class TokenRefreshError(Exception):
     """Raised when Husqvarna Authentication API is not able to refresh the token (Error 400 or 404)."""
 
-    def __init__(self, status: str):
+    def __init__(self, status: str) -> None:
         """Initialize."""
         super().__init__(status)
         self.status = status
@@ -60,15 +66,15 @@ class GetAccessTokenClientCredentials:
     async def async_get_access_token(self) -> dict:
         """Return the token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                await resp.json()
-                _LOGGER.debug("Resp.status get access token: %i", resp.status)
+            async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
+                result = await resp.json(encoding="UTF-8")
+                _LOGGER.debug("Resp.status get access token: %i", result)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
                 if resp.status >= 400:
                     raise TokenError(
-                        f"The token is invalid, respone from Husqvarna Automower API: {resp.status}"
+                        f"The token is invalid, respone from Husqvarna Automower API: {result}"
                     )
         result["status"] = resp.status
         return result
@@ -93,45 +99,42 @@ class RefreshAccessToken:
     async def async_refresh_access_token(self) -> dict:
         """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            async with session.post(AUTH_API_URL, data=self.auth_data) as resp:
-                await resp.json()
-                _LOGGER.debug("Resp.status refresh token: %i", resp.status)
+            async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
+                result = await resp.json(encoding="UTF-8")
+                _LOGGER.debug("Resp.status refresh token: %i", result)
                 if resp.status == 200:
-                    result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
                     result["status"] = resp.status
                     return result
-                elif resp.status in [400, 401, 404]:
+                if resp.status in [400, 401, 404]:
                     raise TokenRefreshError(
-                        f"The token cannot be refreshed, respone from Husqvarna Automower API: {resp.status}"
+                        f"The token cannot be refreshed, respone from Husqvarna Automower API: {result}"
                     )
 
 
-class HandleAccessToken:
+class RevokeAccessToken:
     """Class to invalidate an access token."""
 
-    def __init__(self, api_key, access_token, provider) -> None:
+    def __init__(self, access_token) -> None:
         """Initialize the Auth-API and store the auth so we can make requests."""
-        self.api_key = api_key
         self.access_token = access_token
-        self.provider = provider
-        self.token_url = f"{TOKEN_URL}/{self.access_token}"
-        self.token_headers = {
-            "Authorization-Provider": "{0}".format(self.provider),
-            "Accept": "application/json",
-            "X-Api-Key": "{0}".format(self.api_key),
+        self.auth_data = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": "Bearer {0}".format(self.access_token),
+            "Accept": "*/*",
         }
 
     async def async_delete_access_token(self) -> dict:
         """Delete the token."""
-        async with aiohttp.ClientSession(headers=self.token_headers) as session:
-            async with session.delete(self.token_url) as resp:
-                await resp.json()
+        async with aiohttp.ClientSession(headers=self.auth_data) as session:
+            async with session.post(
+                AUTH_API_REVOKE_URL, data=(f"token={self.access_token}")
+            ) as resp:
+                result = await resp.json(encoding="UTF-8")
                 _LOGGER.debug("Resp.status delete token: %i", resp.status)
-                if resp.status == 204:
-                    result = await resp.json(encoding="UTF-8")
                 if resp.status >= 400:
                     resp.raise_for_status()
+                    _LOGGER.error("Response body delete token: %s", result)
         return result
 
 
@@ -157,7 +160,7 @@ class GetMowerData:
             headers=self.mower_headers, timeout=timeout
         ) as session:
             async with session.get(MOWER_API_BASE_URL) as resp:
-                await resp.json(encoding="UTF-8")
+                result = await resp.json(encoding="UTF-8")
                 _LOGGER.debug("Response mower data: %s", resp)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
@@ -168,7 +171,7 @@ class GetMowerData:
                         del result["data"][idx]["attributes"]["settings"]
                     _LOGGER.debug("Result mower data: %s", result)
                 if resp.status >= 400:
-                    _LOGGER.error("Response mower data: %s", resp)
+                    _LOGGER.error("Response mower data: %s", result)
         return result
 
 
