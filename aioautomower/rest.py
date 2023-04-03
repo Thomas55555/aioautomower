@@ -68,7 +68,7 @@ class GetAccessTokenClientCredentials:
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
                 result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Resp.status get access token: %i", result)
+                _LOGGER.debug("Resp.status get access token: %s", result)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
                     result["expires_at"] = result["expires_in"] + time.time()
@@ -101,7 +101,7 @@ class RefreshAccessToken:
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
             async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
                 result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Resp.status refresh token: %i", result)
+                _LOGGER.debug("Resp.status refresh token: %s", result)
                 if resp.status == 200:
                     result["expires_at"] = result["expires_in"] + time.time()
                     result["status"] = resp.status
@@ -131,7 +131,7 @@ class RevokeAccessToken:
                 AUTH_API_REVOKE_URL, data=(f"token={self.access_token}")
             ) as resp:
                 result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Resp.status delete token: %i", resp.status)
+                _LOGGER.debug("Resp.status delete token: %s", resp.status)
                 if resp.status >= 400:
                     resp.raise_for_status()
                     _LOGGER.error("Response body delete token: %s", result)
