@@ -138,7 +138,6 @@ class AutomowerSession:
 
     async def close(self):
         """Close the session."""
-        await self.invalidate_token()
         for task in [
             self.ws_task,
             self.token_task,
