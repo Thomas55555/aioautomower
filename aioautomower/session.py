@@ -115,8 +115,10 @@ class AutomowerSession:
         """Connect to the API.
 
         This method handles the login and starts a task that keep the access
-        token constantly fresh. This method works only, if the token is created with the
-        Authorization Code Grant. Call this method before any other methods.
+        token constantly fresh. Also a REST taks will be started, which
+        periodically polls the REST endpoint. This method works only, if the
+        token is created with the Authorization Code Grant. Call this method
+        before any other methods.
         """
         if self.token is None:
             raise AttributeError("No token to connect with.")
@@ -134,6 +136,27 @@ class AutomowerSession:
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
         self.rest_task = self.loop.create_task(self._rest_task())
+        self.token_task = self.loop.create_task(self._token_monitor_task())
+
+    async def ws_and_token_session(self):
+        """Connect to the API.
+
+        This method handles the login and starts a task that keep the access
+        token constantly fresh. This method works only, if the token is created with the
+        Authorization Code Grant. Call this method before any other methods.
+        """
+        if self.token is None:
+            raise AttributeError("No token to connect with.")
+        if time.time() > (self.token["expires_at"] - MARGIN_TIME):
+            await self.refresh_token()
+
+        self.data = await self.get_status()
+        self._schedule_data_callbacks()
+
+        if "amc:api" not in self.token["scope"]:
+            raise NotImplementedError()
+        else:
+            self.ws_task = self.loop.create_task(self._ws_task())
         self.token_task = self.loop.create_task(self._token_monitor_task())
 
     async def close(self):
