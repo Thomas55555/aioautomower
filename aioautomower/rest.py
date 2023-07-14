@@ -38,8 +38,8 @@ class TokenRefreshError(Exception):
         self.status = status
 
 
-class TokenValidationError(Exception):
-    """Raised when Husqvarna Authentication API token request ended in error 404. The reason might be an invalid token or that a refresh is needed"""
+class MowerApiConnectionsError(Exception):
+    """Raised when Husqvarna Connect API request ended in error 403."""
 
     def __init__(self, status: str) -> None:
         """Initialize."""
@@ -172,6 +172,10 @@ class GetMowerData:
                     _LOGGER.debug("Result mower data: %s", result)
                 if resp.status >= 400:
                     _LOGGER.error("Response mower data: %s", result)
+                    if resp.status == 403:
+                        raise MowerApiConnectionsError(
+                            f"Error {resp.status}, the mower state can't be fetched: {result}"
+                        )
         return result
 
 
