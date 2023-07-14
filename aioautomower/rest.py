@@ -47,15 +47,6 @@ class TokenValidationError(Exception):
         self.status = status
 
 
-class MowerApiConnectionsError(Exception):
-    """Raised when Husqvarna Connect API request ended in error 403."""
-
-    def __init__(self, status: str) -> None:
-        """Initialize."""
-        super().__init__(status)
-        self.status = status
-
-
 class GetAccessTokenClientCredentials:
     """Class to get an acces token from the Authentication API with client_credentials.
     This grant type is intended only for you. If you want other users to use your application,
@@ -181,10 +172,6 @@ class GetMowerData:
                     _LOGGER.debug("Result mower data: %s", result)
                 if resp.status >= 400:
                     _LOGGER.error("Response mower data: %s", result)
-                    if resp.status == 403:
-                        raise MowerApiConnectionsError(
-                            f"Error {resp.status}, the mower state can't be fetched: {result}"
-                        )
         return result
 
 

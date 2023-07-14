@@ -23,15 +23,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class RefresehdTokenNotWorkingError(Exception):
-    """Raised when token is refresehd 5 times, but Connect API still raises an exception."""
-
-    def __init__(self, status: str) -> None:
-        """Initialize."""
-        super().__init__(status)
-        self.status = status
-
-
 class AutomowerSession:
     """Session"""
 
@@ -68,7 +59,6 @@ class AutomowerSession:
         self.token_task = None
         self.websocket_monitor_task = None
         self.rest_task = None
-        self.mower_connection_error_count = 0
 
     def register_data_callback(self, callback, schedule_immediately=False):
         """Register a data update callback.
@@ -335,20 +325,16 @@ class AutomowerSession:
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
+            _LOGGER.debug(
+                "LE: %s",
+                self.low_energy,
+            )
             if self.low_energy is True:
                 await asyncio.sleep(REST_POLL_CYCLE_LE)
             if self.low_energy is False:
                 await asyncio.sleep(REST_POLL_CYCLE)
-            try:
-                self.data = await self.get_status()
-                self._schedule_data_callbacks()
-                self.mower_connection_error_count = 0
-            except rest.MowerApiConnectionsError:
-                self.mower_connection_error_count += 1
-                if self.mower_connection_error_count < 5:
-                    self.refresh_token()
-                if self.mower_connection_error_count == 5:
-                    raise RefresehdTokenNotWorkingError
+            self.data = await self.get_status()
+            self._schedule_data_callbacks()
 
     async def _websocket_monitor_task(self):
         """Monitor, if the websocket still sends updates. If not, check, via REST,
