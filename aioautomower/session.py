@@ -242,6 +242,19 @@ class AutomowerSession:
             return
         for datum in self.data["data"]:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
+                if j["type"] == "positions-event":
+                    last_pos_identical = (
+                        datum["attributes"]["positions"][0]
+                        == j["attributes"]["positions"][0]
+                    )
+                    if not last_pos_identical:
+                        j["attributes"]["positions"].extend(
+                            datum["attributes"]["positions"]
+                        )
+                        _LOGGER.debug(
+                            "j['attributes']['positions']: %s",
+                            j["attributes"]["positions"],
+                        )
                 for attrib in j["attributes"]:
                     try:
                         tasks = j["attributes"]["calendar"]["tasks"]
