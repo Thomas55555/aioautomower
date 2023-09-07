@@ -1,6 +1,7 @@
 """Module to connect to Automower with websocket."""
 import asyncio
 import datetime
+import json
 import logging
 import time
 
@@ -18,9 +19,19 @@ from .const import (
     WS_STATUS_UPDATE_CYLE,
     WS_TOLERANCE_TIME,
     WS_URL,
+    HeadlightModes,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class CommandNotPossibleError(Exception):
+    """Raised when command couldn't be send to the mower que."""
+
+    def __init__(self, status: str) -> None:
+        """Initialize."""
+        super().__init__(status)
+        self.status = status
 
 
 class AutomowerSession:
@@ -33,7 +44,7 @@ class AutomowerSession:
         low_energy=True,
         ws_heartbeat_interval: float = 60.0,
         loop=None,
-    ):
+    ) -> None:
         """Create a session.
 
         :param str api_key: A 36 digit api key.
@@ -190,7 +201,7 @@ class AutomowerSession:
         )
         return await d.async_mower_state()
 
-    async def action(self, mower_id, payload, command_type):
+    async def action(self, mower_id: str, payload: str, command_type: str):
         """Send command to the mower via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
@@ -205,6 +216,76 @@ class AutomowerSession:
             command_type,
         )
         return await a.async_mower_command()
+
+    async def resume_schedule(self, mower_id: str):
+        """Removes any ovveride on the Planner and let the mower
+        resume to the schedule set by the Calendar"""
+        if self.token is None:
+            _LOGGER.warning("No token available")
+            return None
+        command_type = "actions"
+        payload = '{"data": {"type": "ResumeSchedule"}}'
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def pause_mowing(self, mower_id: str):
+        """Send pause mowing command to the mower via Rest."""
+        if self.token is None:
+            _LOGGER.warning("No token available")
+            return None
+        command_type = "actions"
+        payload = '{"data": {"type": "Pause"}}'
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def park_until_next_schedule(self, mower_id: str):
+        """Send park until next schedule command to the mower."""
+        if self.token is None:
+            _LOGGER.warning("No token available")
+            return None
+        command_type = "actions"
+        payload = '{"data": {"type": "ParkUntilNextSchedule"}}'
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def park_until_further_notice(self, mower_id: str):
+        """Send park until further notice command to the mower."""
+        if self.token is None:
+            _LOGGER.warning("No token available")
+            return None
+        command_type = "actions"
+        payload = '{"data": {"type": "ParkUntilFurtherNotice"}}'
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def select_headlight_mode(self, mower_id: str, headlight_mode: str):
+        """Send headlight mode to the mower."""
+        if self.token is None:
+            _LOGGER.warning("No token available")
+            return None
+        command_type = "settings"
+        payload = {
+            "data": {
+                "type": "settings",
+                "attributes": {"headlight": {"mode": headlight_mode}},
+            }
+        }
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def send_command_via_rest(
+        self, mower_id: str, payload: dict, command_type: str
+    ):
+        """Send a command to the mower."""
+        json_payload = json.dumps(payload)
+        rest_init = rest.Return(
+            self.api_key,
+            self.token["access_token"],
+            self.token["provider"],
+            self.token["token_type"],
+            mower_id,
+            json_payload,
+            command_type,
+        )
+        try:
+            await rest_init.async_mower_command()
+        except aiohttp.ClientResponseError as exception:
+            raise CommandNotPossibleError
 
     async def invalidate_token(self):
         """Invalidate token via Rest."""
