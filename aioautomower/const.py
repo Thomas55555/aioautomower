@@ -1,4 +1,6 @@
 """The constants for aioautomower."""
+from enum import StrEnum
+
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
 AUTH_API_TOKEN_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
 AUTH_API_REVOKE_URL = f"{AUTH_API_BASE_URL}/oauth2/revoke"
@@ -23,3 +25,12 @@ USER_URL = f"{AUTH_API_BASE_URL}/users"
 WS_STATUS_UPDATE_CYLE = 840.0
 WS_TOLERANCE_TIME = 20.0
 WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
+
+
+class HeadlightModes(StrEnum):
+    """Headlight modes of a lawn mower."""
+
+    ALWAYS_ON = "ALWAYS_ON"
+    ALWAYS_OFF = "ALWAYS_OFF"
+    EVENING_ONLY = "EVENING_ONLY"
+    EVENING_AND_NIGHT = "EVENING_AND_NIGHT"
