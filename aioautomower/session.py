@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import time
+from typing import Literal
 
 import aiohttp
 
@@ -23,15 +24,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class CommandNotPossibleError(Exception):
-    """Raised when command couldn't be send to the mower que."""
-
-    def __init__(self, status: str) -> None:
-        """Initialize."""
-        super().__init__(status)
-        self.status = status
 
 
 class AutomowerSession:
@@ -220,50 +212,96 @@ class AutomowerSession:
     async def resume_schedule(self, mower_id: str):
         """Removes any ovveride on the Planner and let the mower
         resume to the schedule set by the Calendar"""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
         command_type = "actions"
-        payload = '{"data": {"type": "ResumeSchedule"}}'
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        payload = {"data": {"type": "ResumeSchedule"}}
+        try:
+            await self.send_command_via_rest(mower_id, payload, command_type)
+        except rest.CommandNotPossibleError as exception:
+            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
 
     async def pause_mowing(self, mower_id: str):
         """Send pause mowing command to the mower via Rest."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
         command_type = "actions"
-        payload = '{"data": {"type": "Pause"}}'
+        payload = {"data": {"type": "Pause"}}
         await self.send_command_via_rest(mower_id, payload, command_type)
 
     async def park_until_next_schedule(self, mower_id: str):
         """Send park until next schedule command to the mower."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
         command_type = "actions"
-        payload = '{"data": {"type": "ParkUntilNextSchedule"}}'
+        payload = {"data": {"type": "ParkUntilNextSchedule"}}
         await self.send_command_via_rest(mower_id, payload, command_type)
 
     async def park_until_further_notice(self, mower_id: str):
         """Send park until further notice command to the mower."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
         command_type = "actions"
-        payload = '{"data": {"type": "ParkUntilFurtherNotice"}}'
+        payload = {"data": {"type": "ParkUntilFurtherNotice"}}
         await self.send_command_via_rest(mower_id, payload, command_type)
 
-    async def select_headlight_mode(self, mower_id: str, headlight_mode: str):
+    async def park_for(self, mower_id: str, duration_in_min: int):
+        """Parks the mower for a period of minutes. The mower will drive to
+        the charching station and park for the duration set by the command."""
+        command_type = "actions"
+        payload = {
+            "data": {
+                "type": "Park",
+                "attributes": {"duration": duration_in_min},
+            }
+        }
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def start_for(self, mower_id: str, duration_in_min: int):
+        """Start the mower for a period of minutes."""
+        command_type = "actions"
+        payload = {
+            "data": {
+                "type": "Park",
+                "attributes": {"duration": duration_in_min},
+            }
+        }
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def set_cutting_height(self, mower_id: str, cutting_height: int):
+        """Start the mower for a period of minutes."""
+        command_type = "settings"
+        payload = {
+            "data": {
+                "type": "settings",
+                "attributes": {"cuttingHeight": cutting_height},
+            }
+        }
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def set_headlight_mode(
+        self,
+        mower_id: str,
+        headlight_mode: Literal[
+            HeadlightModes.ALWAYS_OFF,
+            HeadlightModes.ALWAYS_ON,
+            HeadlightModes.EVENING_AND_NIGHT,
+            HeadlightModes.EVENING_ONLY,
+        ],
+    ):
         """Send headlight mode to the mower."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
         command_type = "settings"
         payload = {
             "data": {
                 "type": "settings",
                 "attributes": {"headlight": {"mode": headlight_mode}},
+            }
+        }
+        await self.send_command_via_rest(mower_id, payload, command_type)
+
+    async def set_calendar(
+        self,
+        mower_id: str,
+        task_list: list,
+    ):
+        """Send calendar task to the mower."""
+        command_type = "calendar"
+        payload = {
+            "data": {
+                "type": "calendar",
+                "attributes": {"tasks": task_list},
             }
         }
         await self.send_command_via_rest(mower_id, payload, command_type)
@@ -284,8 +322,8 @@ class AutomowerSession:
         )
         try:
             await rest_init.async_mower_command()
-        except aiohttp.ClientResponseError as exception:
-            raise CommandNotPossibleError
+        except rest.CommandNotPossibleError as exception:
+            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
 
     async def invalidate_token(self):
         """Invalidate token via Rest."""
@@ -505,3 +543,4 @@ class AutomowerSession:
                         "No ws updates anymore and mower connected, ws probably down or mower shortly before disconnecting"
                     )
             await asyncio.sleep(ws_monitor_sleep_time)
+
