@@ -4,8 +4,9 @@ import datetime
 import json
 import logging
 import time
-from typing import Literal
-
+from typing import Literal, Any, Optional
+from dataclasses import dataclass
+from dacite import from_dict
 import aiohttp
 
 from . import rest
@@ -56,7 +57,9 @@ class AutomowerSession:
         else:
             self.loop = loop
 
-        self.data = None
+        self.data = {}
+        self.dataclass = list()
+        self.all_mowers = []
 
         self.ws_task = None
         self.token_task = None
@@ -123,12 +126,15 @@ class AutomowerSession:
         token is created with the Authorization Code Grant. Call this method
         before any other methods.
         """
+        _LOGGER.debug("1")
         if self.token is None:
             raise AttributeError("No token to connect with.")
         if time.time() > (self.token["expires_at"] - MARGIN_TIME):
             await self.refresh_token()
 
+        _LOGGER.debug("2")
         self.data = await self.get_status()
+        self.dataclass = from_dict(data_class=MowerList, data=self.data)
         self._schedule_data_callbacks()
 
         if "amc:api" not in self.token["scope"]:
@@ -154,7 +160,6 @@ class AutomowerSession:
             await self.refresh_token()
 
         self.data = await self.get_status()
-        self._schedule_data_callbacks()
 
         if "amc:api" not in self.token["scope"]:
             raise NotImplementedError()
@@ -359,6 +364,7 @@ class AutomowerSession:
         if self.data is None:
             _LOGGER.error("Failed to update data with ws response (no data)")
             return
+        _LOGGER.debug("5")
         for datum in self.data["data"]:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
                 if j["type"] == "positions-event":
@@ -392,6 +398,7 @@ class AutomowerSession:
         if self.token is None:
             _LOGGER.debug("No token available. Will not schedule callback")
             return
+        self.dataclass = from_dict(data_class=MowerList, data=self.data)
         self.loop.call_later(delay, cb, self.token)
 
     def _schedule_token_callbacks(self):
@@ -544,3 +551,139 @@ class AutomowerSession:
                     )
             await asyncio.sleep(ws_monitor_sleep_time)
 
+
+@dataclass
+class System:
+    name: str
+    model: str
+    serialNumber: int
+
+
+@dataclass
+class Battery:
+    batteryPercent: int
+
+
+@dataclass
+class Capabilities:
+    headlights: bool
+    workAreas: bool
+    position: bool
+    stayOutZones: bool
+
+
+@dataclass
+class Mower:
+    mode: str
+    activity: str
+    state: str
+    errorCode: int
+    errorCodeTimestamp: int
+
+
+@dataclass
+class Calendar:
+    start: int
+    duration: int
+    monday: bool
+    tuesday: bool
+    wednesday: bool
+    thursday: bool
+    friday: bool
+    saturday: bool
+    sunday: bool
+
+
+@dataclass
+class Tasks:
+    tasks: list[Calendar]
+
+
+@dataclass
+class Override:
+    action: str
+
+
+@dataclass
+class Planner:
+    nextStartTimestamp: int
+    override: Override
+    restrictedReason: str
+
+
+@dataclass
+class Metadata:
+    connected: bool
+    statusTimestamp: int
+
+
+@dataclass
+class Positions:
+    latitude: float
+    longitude: float
+
+
+@dataclass
+class Statistics:
+    cuttingBladeUsageTime: Optional[int]
+    numberOfChargingCycles: int
+    numberOfCollisions: int
+    totalChargingTime: int
+    totalCuttingTime: int
+    totalDriveDistance: int
+    totalRunningTime: int
+    totalSearchingTime: int
+
+
+@dataclass
+class Headlight:
+    mode: Optional[str]
+
+
+@dataclass
+class Zones:
+    Id: str
+    name: str
+    enabled: bool
+
+
+@dataclass
+class StayOutZones:
+    dirty: bool
+    zones: list[Zones]
+
+
+@dataclass
+class WorkAreas:
+    workAreaId: int
+    name: str
+    cuttingHeight: int
+
+
+@dataclass
+class MowerAttributes:
+    system: System
+    battery: Battery
+    capabilities: Capabilities
+    mower: Mower
+    calendar: Tasks
+    planner: Planner
+    metadata: Metadata
+    positions: Optional[list[Positions]]
+    statistics: Statistics
+    cuttingHeight: Optional[int]
+    headlight: Headlight
+    stayOutZones: Optional[StayOutZones]
+    workAreas: Optional[WorkAreas]
+
+
+@dataclass
+class MowerData:
+    type: str
+    id: str
+    attributes: MowerAttributes
+
+
+@dataclass
+class MowerList:
+    data: list[MowerData]
