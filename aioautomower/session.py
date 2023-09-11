@@ -4,10 +4,11 @@ import datetime
 import json
 import logging
 import time
-from typing import Literal, Any, Optional
 from dataclasses import dataclass
-from dacite import from_dict
+from typing import Literal, Optional
+
 import aiohttp
+from dacite import from_dict
 
 from . import rest
 from .const import (
@@ -58,8 +59,7 @@ class AutomowerSession:
             self.loop = loop
 
         self.data = {}
-        self.dataclass = list()
-        self.all_mowers = []
+        self.dataclass = []
 
         self.ws_task = None
         self.token_task = None
@@ -126,13 +126,11 @@ class AutomowerSession:
         token is created with the Authorization Code Grant. Call this method
         before any other methods.
         """
-        _LOGGER.debug("1")
         if self.token is None:
             raise AttributeError("No token to connect with.")
         if time.time() > (self.token["expires_at"] - MARGIN_TIME):
             await self.refresh_token()
 
-        _LOGGER.debug("2")
         self.data = await self.get_status()
         self.dataclass = from_dict(data_class=MowerList, data=self.data)
         self._schedule_data_callbacks()
@@ -364,7 +362,6 @@ class AutomowerSession:
         if self.data is None:
             _LOGGER.error("Failed to update data with ws response (no data)")
             return
-        _LOGGER.debug("5")
         for datum in self.data["data"]:
             if datum["type"] == "mower" and datum["id"] == j["id"]:
                 if j["type"] == "positions-event":
