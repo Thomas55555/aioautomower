@@ -1,5 +1,5 @@
 """The constants for aioautomower."""
-from enum import StrEnum
+from enum import StrEnum, Enum
 
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
 AUTH_API_TOKEN_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
@@ -88,6 +88,14 @@ class RestrictedReasons(StrEnum):
     FROST = "FROST"
     ALL_WORK_AREAS_COMPLETED = "ALL_WORK_AREAS_COMPLETED"
     EXTERNAL = "EXTERNAL"
+
+
+class Actions(StrEnum):
+    """Actions in the planner of lawn mower."""
+
+    NOT_ACTIVE = "NOT_ACTIVE"
+    FORCE_PARK = "FORCE_PARK"
+    FORCE_MOW = "FORCE_MOW"
 
 
 class ExternalReasons(Enum):
