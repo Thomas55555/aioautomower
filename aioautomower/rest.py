@@ -12,7 +12,6 @@ from .const import (
     AUTH_API_TOKEN_URL,
     AUTH_HEADERS,
     MOWER_API_BASE_URL,
-    TOKEN_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,7 +162,7 @@ class GetMowerData:
             "X-Api-Key": "{0}".format(self.api_key),
         }
 
-    async def async_mower_state(self) -> list[dict]:
+    async def async_mower_state(self) -> dict[str, list]:
         """Return the mowers data as a list of mowers."""
         async with aiohttp.ClientSession(
             headers=self.mower_headers, timeout=timeout
