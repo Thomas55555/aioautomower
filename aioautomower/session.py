@@ -388,6 +388,7 @@ class AutomowerSession:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     except KeyError:
                         datum["attributes"][attrib] = j["attributes"][attrib]
+                self.dataclass = from_dict(data_class=MowerList, data=self.data)
                 return
         _LOGGER.error("Failed to update data with ws response (id not found)")
 
@@ -395,7 +396,6 @@ class AutomowerSession:
         if self.token is None:
             _LOGGER.debug("No token available. Will not schedule callback")
             return
-        self.dataclass = from_dict(data_class=MowerList, data=self.data)
         self.loop.call_later(delay, cb, self.token)
 
     def _schedule_token_callbacks(self):
