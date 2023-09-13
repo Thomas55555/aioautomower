@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Literal, Optional
 
@@ -28,6 +29,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+class AbstractAuth(ABC):
+    """Abstract class to make authenticated requests."""
+
+    def __init__(self, websession: aiohttp.ClientSession) -> None:
+        """Initialize the auth."""
+        self.websession = websession
+
+
 class AutomowerSession:
     """Session"""
 
@@ -38,6 +47,7 @@ class AutomowerSession:
         low_energy=True,
         ws_heartbeat_interval: float = 60.0,
         loop=None,
+        handle_token=True,
     ) -> None:
         """Create a session.
 
@@ -47,6 +57,7 @@ class AutomowerSession:
         :param loop: Event-loop for task execution. If None, the event loop in the current OS thread is used.
         """
         self.api_key = api_key
+        self.handle_token = handle_token
         self.token = token
         self.data_update_cbs = []
         self.token_update_cbs = []
@@ -62,6 +73,7 @@ class AutomowerSession:
         self.dataclass = []
 
         self.ws_task = None
+
         self.token_task = None
         self.websocket_monitor_task = None
         self.rest_task = None
@@ -128,8 +140,10 @@ class AutomowerSession:
         """
         if self.token is None:
             raise AttributeError("No token to connect with.")
-        if time.time() > (self.token["expires_at"] - MARGIN_TIME):
-            await self.refresh_token()
+
+        if self.handle_token:
+            if time.time() > (self.token["expires_at"] - MARGIN_TIME):
+                await self.refresh_token()
 
         self.data = await self.get_status()
         self.dataclass = from_dict(data_class=MowerList, data=self.data)
@@ -143,7 +157,9 @@ class AutomowerSession:
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
         self.rest_task = self.loop.create_task(self._rest_task())
-        self.token_task = self.loop.create_task(self._token_monitor_task())
+
+        if self.handle_token:
+            self.token_task = self.loop.create_task(self._token_monitor_task())
 
     async def ws_and_token_session(self):
         """Connect to the API.
