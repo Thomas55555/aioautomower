@@ -70,7 +70,7 @@ class AutomowerSession:
             self.loop = loop
 
         self.data = {}
-        self.dataclass = []
+        self.mowers = []
 
         self.ws_task = None
 
@@ -146,7 +146,7 @@ class AutomowerSession:
                 await self.refresh_token()
 
         self.data = await self.get_status()
-        self.dataclass = from_dict(data_class=MowerList, data=self.data)
+        self.mowers = from_dict(data_class=MowerList, data=self.data)
         self._schedule_data_callbacks()
 
         if "amc:api" not in self.token["scope"]:
@@ -404,7 +404,7 @@ class AutomowerSession:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     except KeyError:
                         datum["attributes"][attrib] = j["attributes"][attrib]
-                self.dataclass = from_dict(data_class=MowerList, data=self.data)
+                self.mowers = from_dict(data_class=MowerList, data=self.data)
                 return
         _LOGGER.error("Failed to update data with ws response (id not found)")
 
