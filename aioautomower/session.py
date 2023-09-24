@@ -5,7 +5,6 @@ import json
 import logging
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Literal, Optional
 
 import aiohttp
@@ -24,6 +23,7 @@ from .const import (
     WS_TOLERANCE_TIME,
     WS_URL,
     HeadlightModes,
+    MowerList,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -563,140 +563,3 @@ class AutomowerSession:
                         "No ws updates anymore and mower connected, ws probably down or mower shortly before disconnecting"
                     )
             await asyncio.sleep(ws_monitor_sleep_time)
-
-
-@dataclass
-class System:
-    name: str
-    model: str
-    serialNumber: int
-
-
-@dataclass
-class Battery:
-    batteryPercent: int
-
-
-@dataclass
-class Capabilities:
-    headlights: bool
-    workAreas: bool
-    position: bool
-    stayOutZones: bool
-
-
-@dataclass
-class Mower:
-    mode: str
-    activity: str
-    state: str
-    errorCode: int
-    errorCodeTimestamp: int
-
-
-@dataclass
-class Calendar:
-    start: int
-    duration: int
-    monday: bool
-    tuesday: bool
-    wednesday: bool
-    thursday: bool
-    friday: bool
-    saturday: bool
-    sunday: bool
-
-
-@dataclass
-class Tasks:
-    tasks: list[Calendar]
-
-
-@dataclass
-class Override:
-    action: str
-
-
-@dataclass
-class Planner:
-    nextStartTimestamp: int
-    override: Override
-    restrictedReason: str
-
-
-@dataclass
-class Metadata:
-    connected: bool
-    statusTimestamp: int
-
-
-@dataclass
-class Positions:
-    latitude: float
-    longitude: float
-
-
-@dataclass
-class Statistics:
-    cuttingBladeUsageTime: Optional[int]
-    numberOfChargingCycles: int
-    numberOfCollisions: int
-    totalChargingTime: int
-    totalCuttingTime: int
-    totalDriveDistance: int
-    totalRunningTime: int
-    totalSearchingTime: int
-
-
-@dataclass
-class Headlight:
-    mode: Optional[str]
-
-
-@dataclass
-class Zones:
-    Id: str
-    name: str
-    enabled: bool
-
-
-@dataclass
-class StayOutZones:
-    dirty: bool
-    zones: list[Zones]
-
-
-@dataclass
-class WorkAreas:
-    workAreaId: int
-    name: str
-    cuttingHeight: int
-
-
-@dataclass
-class MowerAttributes:
-    system: System
-    battery: Battery
-    capabilities: Capabilities
-    mower: Mower
-    calendar: Tasks
-    planner: Planner
-    metadata: Metadata
-    positions: Optional[list[Positions]]
-    statistics: Statistics
-    cuttingHeight: Optional[int]
-    headlight: Headlight
-    stayOutZones: Optional[StayOutZones]
-    workAreas: Optional[WorkAreas]
-
-
-@dataclass
-class MowerData:
-    type: str
-    id: str
-    attributes: MowerAttributes
-
-
-@dataclass
-class MowerList:
-    data: list[MowerData]

@@ -1,5 +1,7 @@
 """The constants for aioautomower."""
-from enum import StrEnum, Enum
+from dataclasses import dataclass
+from enum import Enum, StrEnum
+from typing import Literal, Optional
 
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
 AUTH_API_TOKEN_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
@@ -107,6 +109,179 @@ class ExternalReasons(Enum):
     IFTT_FROST_AND_RAIN = 4002
     IFTT_CALENDAR_CONNECTION = 4003
     IFTT_APPLETS = range(100000, 199999)
+
+
+@dataclass
+class System:
+    """DataClass for System attributes."""
+
+    name: str
+    model: str
+    serialNumber: int
+
+
+@dataclass
+class Battery:
+    """DataClass for Battery attributes."""
+
+    batteryPercent: int
+
+
+@dataclass
+class Capabilities:
+    """DataClass for Capability attributes."""
+
+    headlights: bool
+    workAreas: bool
+    position: bool
+    stayOutZones: bool
+
+
+@dataclass
+class Mower:
+    """DataClass for Mower values."""
+
+    mode: str
+    activity: str
+    state: str
+    errorCode: int
+    errorCodeTimestamp: int
+
+
+@dataclass
+class Calendar:
+    """DataClass for Calendar values."""
+
+    start: int
+    duration: int
+    monday: bool
+    tuesday: bool
+    wednesday: bool
+    thursday: bool
+    friday: bool
+    saturday: bool
+    sunday: bool
+
+
+@dataclass
+class Tasks:
+    """DataClass for Task values."""
+
+    tasks: list[Calendar]
+
+
+@dataclass
+class Override:
+    """DataClass for Override values."""
+
+    action: str
+
+
+@dataclass
+class Planner:
+    """DataClass for Planner values."""
+
+    nextStartTimestamp: int
+    override: Override
+    restrictedReason: str
+
+
+@dataclass
+class Metadata:
+    """DataClass for Metadata values."""
+
+    connected: bool
+    statusTimestamp: int
+
+
+@dataclass
+class Positions:
+    """DataClass for Position values."""
+
+    latitude: float
+    longitude: float
+
+
+@dataclass
+class Statistics:
+    """DataClass for Statistics values."""
+
+    cuttingBladeUsageTime: Optional[int]
+    numberOfChargingCycles: int
+    numberOfCollisions: int
+    totalChargingTime: int
+    totalCuttingTime: int
+    totalDriveDistance: int
+    totalRunningTime: int
+    totalSearchingTime: int
+
+
+@dataclass
+class Headlight:
+    """DataClass for Headlight values."""
+
+    mode: Optional[str]
+
+
+@dataclass
+class Zones:
+    """DataClass for Zone values."""
+
+    Id: str
+    name: str
+    enabled: bool
+
+
+@dataclass
+class StayOutZones:
+    """DataClass for StayOutZone values."""
+
+    dirty: bool
+    zones: list[Zones]
+
+
+@dataclass
+class WorkAreas:
+    """DataClass for WorkAreas values."""
+
+    workAreaId: int
+    name: str
+    cuttingHeight: int
+
+
+@dataclass
+class MowerAttributes:
+    """DataClass for MowerAttributes."""
+
+    system: System
+    battery: Battery
+    capabilities: Capabilities
+    mower: Mower
+    calendar: Tasks
+    planner: Planner
+    metadata: Metadata
+    positions: Optional[list[Positions]]
+    statistics: Statistics
+    cuttingHeight: Optional[int]
+    headlight: Headlight
+    stayOutZones: Optional[StayOutZones]
+    workAreas: Optional[WorkAreas]
+
+
+@dataclass
+class MowerData:
+    """DataClass for MowerData values."""
+
+    type: str
+    id: str
+    attributes: MowerAttributes
+
+
+@dataclass
+class MowerList:
+    """DataClass for a list of all mowers."""
+
+    data: list[MowerData]
 
 
 ERRORCODES = {
