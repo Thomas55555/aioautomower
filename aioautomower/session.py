@@ -199,18 +199,19 @@ class AutomowerSession:
         except asyncio.CancelledError:
             pass
 
-    async def get_status(self):
+    async def get_status(self) -> MowerList:
         """Get mower status via Rest."""
         if self.token is None:
             _LOGGER.warning("No token available")
             return None
-        d = rest.GetMowerData(
+        mower_list_init = rest.GetMowerData(
             self.api_key,
             self.token["access_token"],
             self.token["provider"],
             self.token["token_type"],
         )
-        return await d.async_mower_state()
+        mower_list = await mower_list_init.async_mower_state()
+        return from_dict(data_class=MowerList, data=mower_list)
 
     async def action(self, mower_id: str, payload: str, command_type: str):
         """Send command to the mower via Rest."""

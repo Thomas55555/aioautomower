@@ -5,7 +5,6 @@ import logging
 import time
 from urllib.parse import quote_plus, urlencode
 
-from dacite import from_dict
 import aiohttp
 
 from .const import (
@@ -13,7 +12,6 @@ from .const import (
     AUTH_API_TOKEN_URL,
     AUTH_HEADERS,
     MOWER_API_BASE_URL,
-    MowerList,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -180,7 +178,6 @@ class GetMowerData:
                         )
                         del result["data"][idx]["attributes"]["settings"]
                     _LOGGER.debug("Result mower data: %s", result)
-                    return from_dict(data_class=MowerList, data=result)
                 if resp.status >= 400:
                     _LOGGER.error("Response mower data: %s", result)
                     if resp.status == 403:
