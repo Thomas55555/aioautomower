@@ -1,9 +1,10 @@
 """Module to connect to Automower with websocket."""
+from abc import ABC
 import asyncio
+import contextlib
 import json
 import logging
 import time
-from abc import ABC, abstractmethod
 from typing import Literal
 
 import aiohttp
@@ -20,8 +21,8 @@ from .const import (
     REST_POLL_CYCLE_LE,
     WS_URL,
     HeadlightModes,
-    MowerList,
     MowerData,
+    MowerList,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class AbstractAuth(ABC):
 
 
 class AutomowerSession:
-    """Session"""
+    """Session."""
 
     def __init__(
         self,
@@ -175,10 +176,8 @@ class AutomowerSession:
                 tasks.append(task)
                 if not task.cancelled():
                     task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await asyncio.gather(*tasks)
-        except asyncio.CancelledError:
-            pass
 
     async def get_status(self) -> MowerList:
         """Get mower status via Rest."""
@@ -212,7 +211,8 @@ class AutomowerSession:
 
     async def resume_schedule(self, mower_id: str):
         """Removes any ovveride on the Planner and let the mower
-        resume to the schedule set by the Calendar"""
+        resume to the schedule set by the Calendar.
+        """
         command_type = "actions"
         payload = {"data": {"type": "ResumeSchedule"}}
         try:
@@ -240,7 +240,8 @@ class AutomowerSession:
 
     async def park_for(self, mower_id: str, duration_in_min: int):
         """Parks the mower for a period of minutes. The mower will drive to
-        the charching station and park for the duration set by the command."""
+        the charching station and park for the duration set by the command.
+        """
         command_type = "actions"
         payload = {
             "data": {

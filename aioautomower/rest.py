@@ -58,7 +58,8 @@ class MowerApiConnectionsError(Exception):
 class GetAccessTokenClientCredentials:
     """Class to get an acces token from the Authentication API with client_credentials.
     This grant type is intended only for you. If you want other users to use your application,
-    then they should login using Authorization Code Grant."""
+    then they should login using Authorization Code Grant.
+    """
 
     def __init__(self, client_id, client_secret) -> None:
         """Initialize the Auth-API and store the auth so we can make requests."""
@@ -128,7 +129,7 @@ class RevokeAccessToken:
         self.access_token = access_token
         self.auth_data = {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": "Bearer {0}".format(self.access_token),
+            "Authorization": f"Bearer {self.access_token}",
             "Accept": "*/*",
         }
 
@@ -156,10 +157,10 @@ class GetMowerData:
         self.provider = provider
         self.token_type = token_type
         self.mower_headers = {
-            "Authorization": "{0} {1}".format(self.token_type, self.access_token),
-            "Authorization-Provider": "{0}".format(self.provider),
+            "Authorization": f"{self.token_type} {self.access_token}",
+            "Authorization-Provider": f"{self.provider}",
             "Content-Type": "application/vnd.api+json",
-            "X-Api-Key": "{0}".format(self.api_key),
+            "X-Api-Key": f"{self.api_key}",
         }
 
     async def async_mower_state(self) -> dict[str, list]:
@@ -172,7 +173,7 @@ class GetMowerData:
                 _LOGGER.debug("Response mower data: %s", resp)
                 if resp.status == 200:
                     result = await resp.json(encoding="UTF-8")
-                    for idx, ent in enumerate(result["data"]):
+                    for idx, _ent in enumerate(result["data"]):
                         result["data"][idx]["attributes"].update(
                             result["data"][idx]["attributes"]["settings"]
                         )
@@ -208,11 +209,11 @@ class Return:
         self.mower_id = mower_id
         self.command_type = command_type
         self.mower_headers = {
-            "Authorization": "{0} {1}".format(self.token_type, self.access_token),
-            "Authorization-Provider": "{0}".format(self.provider),
+            "Authorization": f"{self.token_type} {self.access_token}",
+            "Authorization-Provider": f"{self.provider}",
             "Content-Type": "application/vnd.api+json",
             "accept": "*/*",
-            "X-Api-Key": "{0}".format(self.api_key),
+            "X-Api-Key": f"{self.api_key}",
         }
         self.mower_action_url = (
             f"{MOWER_API_BASE_URL}{self.mower_id}/{self.command_type}"
