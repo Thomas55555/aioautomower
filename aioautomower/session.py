@@ -1,5 +1,5 @@
 """Module to connect to Automower with websocket."""
-from abc import ABC, abstractmethod
+from abc import ABC
 import asyncio
 import contextlib
 import json
