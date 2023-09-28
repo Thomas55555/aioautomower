@@ -1,7 +1,7 @@
 """The constants for aioautomower."""
 from dataclasses import dataclass
 from enum import Enum, StrEnum
-from typing import Literal, Optional
+from typing import Optional
 
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
 AUTH_API_TOKEN_URL = f"{AUTH_API_BASE_URL}/oauth2/token"
@@ -151,7 +151,8 @@ class Calendar:
     """Information about the calendar tasks. An Automower
     can have several tasks. If the mower supports work areas
     the property workAreaId is required to connect the task
-    to an work area."""
+    to an work area.
+    """
 
     start: int
     duration: int
@@ -202,7 +203,8 @@ class Positions:
     array and the oldest last in the array.
     Max number of positions is 50 after
     that the latest position is removed
-    from the array."""
+    from the array.
+    """
 
     latitude: float
     longitude: float

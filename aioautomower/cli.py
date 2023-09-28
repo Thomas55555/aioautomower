@@ -40,7 +40,7 @@ async def run_tester(client_secret: str, api_key: str, token: dict):
 
 
 def main():
-    """Tester for the Husqvarna Automower API
+    """Tester for the Husqvarna Automower API.
 
     The tester will login using username and password and connect to a
     websocket listening for mower updates.
@@ -48,7 +48,8 @@ def main():
     The tester listens to two signals on which it performs the following
     requests:
     SIGUSR1: Invalidate token
-    SIGUSR2: Get status"""
+    SIGUSR2: Get status
+    """
     import argparse
 
     parser = argparse.ArgumentParser(
