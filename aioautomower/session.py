@@ -1,11 +1,10 @@
 """Module to connect to Automower with websocket."""
 import asyncio
-import datetime
 import json
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Literal, Optional
+from typing import Literal
 
 import aiohttp
 from dacite import from_dict
@@ -19,11 +18,10 @@ from .const import (
     MIN_SLEEP_TIME,
     REST_POLL_CYCLE,
     REST_POLL_CYCLE_LE,
-    WS_STATUS_UPDATE_CYLE,
-    WS_TOLERANCE_TIME,
     WS_URL,
     HeadlightModes,
     MowerList,
+    MowerData,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +46,7 @@ class AutomowerSession:
         ws_heartbeat_interval: float = 60.0,
         loop=None,
         handle_token=True,
+        handle_rest=True,
     ) -> None:
         """Create a session.
 
@@ -58,6 +57,7 @@ class AutomowerSession:
         """
         self.api_key = api_key
         self.handle_token = handle_token
+        self.handle_rest = handle_rest
         self.token = token
         self.data_update_cbs = []
         self.token_update_cbs = []
@@ -73,6 +73,7 @@ class AutomowerSession:
         self.mowers = []
 
         self.ws_task = None
+        self.ws_data = None
 
         self.token_task = None
         self.websocket_monitor_task = None
@@ -144,10 +145,14 @@ class AutomowerSession:
         if self.handle_token:
             if time.time() > (self.token["expires_at"] - MARGIN_TIME):
                 await self.refresh_token()
+            self.token_task = self.loop.create_task(self._token_monitor_task())
 
-        self.data = await self.get_status()
-        self.mowers = from_dict(data_class=MowerList, data=self.data)
         self._schedule_data_callbacks()
+
+        if self.handle_rest:
+            self.data = await self.get_status()
+            self.mowers = from_dict(data_class=MowerList, data=self.data)
+            self.rest_task = self.loop.create_task(self._rest_task())
 
         if "amc:api" not in self.token["scope"]:
             _LOGGER.error(
@@ -156,30 +161,6 @@ class AutomowerSession:
             )
         else:
             self.ws_task = self.loop.create_task(self._ws_task())
-        self.rest_task = self.loop.create_task(self._rest_task())
-
-        if self.handle_token:
-            self.token_task = self.loop.create_task(self._token_monitor_task())
-
-    async def ws_and_token_session(self):
-        """Connect to the API.
-
-        This method handles the login and starts a task that keep the access
-        token constantly fresh. This method works only, if the token is created with the
-        Authorization Code Grant. Call this method before any other methods.
-        """
-        if self.token is None:
-            raise AttributeError("No token to connect with.")
-        if time.time() > (self.token["expires_at"] - MARGIN_TIME):
-            await self.refresh_token()
-
-        self.data = await self.get_status()
-
-        if "amc:api" not in self.token["scope"]:
-            raise NotImplementedError()
-        else:
-            self.ws_task = self.loop.create_task(self._ws_task())
-        self.token_task = self.loop.create_task(self._token_monitor_task())
 
     async def close(self):
         """Close the session."""
@@ -420,10 +401,11 @@ class AutomowerSession:
             self._schedule_token_callback(cb)
 
     def _schedule_data_callback(self, cb, delay=0.0):
-        if self.data is None:
-            _LOGGER.debug("No data available. Will not schedule callback")
-            return
-        self.loop.call_later(delay, cb, self.data)
+        if self.handle_rest:
+            if self.data is None:
+                _LOGGER.debug("No data available. Will not schedule callback")
+                return
+        self.loop.call_later(delay, cb, self.ws_data)
 
     def _schedule_data_callbacks(self):
         for cb in self.data_update_cbs:
@@ -431,9 +413,6 @@ class AutomowerSession:
 
     async def _ws_task(self):
         printed_err_msg = False
-        self.websocket_monitor_task = self.loop.create_task(
-            self._websocket_monitor_task()
-        )
         async with aiohttp.ClientSession() as session:
             while True:
                 if self.token is None or "access_token" not in self.token:
@@ -463,8 +442,10 @@ class AutomowerSession:
                             j = msg.json()
                             if "type" in j:
                                 if j["type"] in EVENT_TYPES:
-                                    self._update_data(j)
                                     _LOGGER.debug("Got %s, data: %s", j["type"], j)
+                                    self.ws_data = from_dict(
+                                        data_class=MowerData, data=j
+                                    )
                                     self._schedule_data_callbacks()
                                 else:
                                     _LOGGER.warning(
@@ -511,56 +492,3 @@ class AutomowerSession:
                 await asyncio.sleep(REST_POLL_CYCLE)
             self.data = await self.get_status()
             self._schedule_data_callbacks()
-
-    async def _websocket_monitor_task(self):
-        """Monitor, if the websocket still sends updates. If not, check, via REST,
-        if the mower is connected. If there are no recent updates, Start REST task
-        to get information"""
-        message_sent = []
-        mower_connected = []
-        for idx, ent in enumerate(self.data["data"]):
-            mower_connected.append(
-                self.data["data"][idx]["attributes"]["metadata"]["connected"]
-            )
-            message_sent.append(not mower_connected[idx])
-        while True:
-            for idx, ent in enumerate(self.data["data"]):
-                mower_connected[idx] = self.data["data"][idx]["attributes"]["metadata"][
-                    "connected"
-                ]
-                if not mower_connected[idx] and not message_sent[idx]:
-                    message_sent[idx] = True
-                    _LOGGER.warning(
-                        "Connection to %s lost",
-                        self.data["data"][idx]["attributes"]["system"]["name"],
-                    )
-                if mower_connected[idx] and message_sent[idx]:
-                    message_sent[idx] = False
-                    _LOGGER.info(
-                        "Connected to %s again",
-                        self.data["data"][idx]["attributes"]["system"]["name"],
-                    )
-                timestamp = (
-                    self.data["data"][idx]["attributes"]["metadata"]["statusTimestamp"]
-                    / 1000
-                )
-                now = datetime.datetime.now().timestamp()
-                age = now - timestamp
-                _LOGGER.debug("Age in sec: %i", age)
-            ws_monitor_sleep_time = min(
-                max(WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME - age, REST_POLL_CYCLE),
-                WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME,
-            )
-            if age < (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
-                _LOGGER.debug(
-                    "websocket_monitor_task sleeping for %ss", ws_monitor_sleep_time
-                )
-            any_mowers_connected = any(mower_connected)
-            if age > (WS_STATUS_UPDATE_CYLE + WS_TOLERANCE_TIME):
-                if not any_mowers_connected:
-                    _LOGGER.debug("No ws updates anymore, and mower disconnected")
-                if any_mowers_connected:
-                    _LOGGER.debug(
-                        "No ws updates anymore and mower connected, ws probably down or mower shortly before disconnecting"
-                    )
-            await asyncio.sleep(ws_monitor_sleep_time)

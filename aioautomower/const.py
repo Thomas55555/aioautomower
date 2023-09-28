@@ -24,8 +24,6 @@ REST_POLL_CYCLE = 300
 REST_POLL_CYCLE_LE = 86400
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
 USER_URL = f"{AUTH_API_BASE_URL}/users"
-WS_STATUS_UPDATE_CYLE = 840.0
-WS_TOLERANCE_TIME = 20.0
 WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
 
 
@@ -113,7 +111,7 @@ class ExternalReasons(Enum):
 
 @dataclass
 class System:
-    """DataClass for System attributes."""
+    """System information about a Automower."""
 
     name: str
     model: str
@@ -122,14 +120,14 @@ class System:
 
 @dataclass
 class Battery:
-    """DataClass for Battery attributes."""
+    """Information about the battery in the Automower."""
 
     batteryPercent: int
 
 
 @dataclass
 class Capabilities:
-    """DataClass for Capability attributes."""
+    """Information about what capabilities the Automower has."""
 
     headlights: bool
     workAreas: bool
@@ -139,7 +137,7 @@ class Capabilities:
 
 @dataclass
 class Mower:
-    """DataClass for Mower values."""
+    """Information about the mowers current status."""
 
     mode: str
     activity: str
@@ -150,7 +148,10 @@ class Mower:
 
 @dataclass
 class Calendar:
-    """DataClass for Calendar values."""
+    """Information about the calendar tasks. An Automower
+    can have several tasks. If the mower supports work areas
+    the property workAreaId is required to connect the task
+    to an work area."""
 
     start: int
     duration: int
@@ -196,7 +197,12 @@ class Metadata:
 
 @dataclass
 class Positions:
-    """DataClass for Position values."""
+    """List of the GPS positions. Latest
+    registered position is first in the
+    array and the oldest last in the array.
+    Max number of positions is 50 after
+    that the latest position is removed
+    from the array."""
 
     latitude: float
     longitude: float
@@ -253,17 +259,17 @@ class WorkAreas:
 class MowerAttributes:
     """DataClass for MowerAttributes."""
 
-    system: System
-    battery: Battery
-    capabilities: Capabilities
-    mower: Mower
-    calendar: Tasks
-    planner: Planner
-    metadata: Metadata
+    system: Optional[System]
+    battery: Optional[Battery]
+    capabilities: Optional[Capabilities]
+    mower: Optional[Mower]
+    calendar: Optional[Tasks]
+    planner: Optional[Planner]
+    metadata: Optional[Metadata]
     positions: Optional[list[Positions]]
-    statistics: Statistics
+    statistics: Optional[Statistics]
     cuttingHeight: Optional[int]
-    headlight: Headlight
+    headlight: Optional[Headlight]
     stayOutZones: Optional[StayOutZones]
     workAreas: Optional[WorkAreas]
 
