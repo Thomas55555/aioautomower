@@ -310,7 +310,7 @@ class AutomowerSession:
     async def send_command_via_rest(
         self, mower_id: str, payload: dict, command_type: str
     ):
-        """Send a command to the mower."""
+        """Send command to the mower."""
         json_payload = json.dumps(payload)
         rest_init = rest.Return(
             self.api_key,
