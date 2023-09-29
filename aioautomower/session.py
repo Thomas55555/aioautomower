@@ -152,7 +152,6 @@ class AutomowerSession:
 
         if self.handle_rest:
             self.data = await self.get_status()
-            self.mowers = from_dict(data_class=MowerList, data=self.data)
             self.rest_task = self.loop.create_task(self._rest_task())
 
         if "amc:api" not in self.token["scope"]:
@@ -191,7 +190,8 @@ class AutomowerSession:
             self.token["token_type"],
         )
         mower_list = await mower_list_init.async_mower_state()
-        return from_dict(data_class=MowerList, data=mower_list)
+        self.mowers = from_dict(data_class=MowerList, data=mower_list)
+        return self.mowers
 
     async def action(self, mower_id: str, payload: str, command_type: str):
         """Send command to the mower via Rest."""
@@ -444,9 +444,7 @@ class AutomowerSession:
                             if "type" in j:
                                 if j["type"] in EVENT_TYPES:
                                     _LOGGER.debug("Got %s, data: %s", j["type"], j)
-                                    self.ws_data = from_dict(
-                                        data_class=MowerData, data=j
-                                    )
+                                    self._update_data(j)
                                     self._schedule_data_callbacks()
                                 else:
                                     _LOGGER.warning(
