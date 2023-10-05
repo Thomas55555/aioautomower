@@ -387,10 +387,8 @@ class AutomowerSession:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     except KeyError:
                         datum["attributes"][attrib] = j["attributes"][attrib]
-                self.mowers = from_dict(data_class=MowerList, data=self.data)
-                self._schedule_data_callbacks()
-                return
-        _LOGGER.error("Failed to update data with ws response (id not found)")
+        self.mowers = from_dict(data_class=MowerList, data=self.data)
+        self._schedule_data_callbacks()
 
     def _schedule_token_callback(self, cb, delay=0.0):
         if self.token is None:
