@@ -261,17 +261,17 @@ class WorkAreas:
 class MowerAttributes:
     """DataClass for MowerAttributes."""
 
-    system: Optional[System]
-    battery: Optional[Battery]
-    capabilities: Optional[Capabilities]
-    mower: Optional[Mower]
-    calendar: Optional[Tasks]
-    planner: Optional[Planner]
-    metadata: Optional[Metadata]
+    system: System
+    battery: Battery
+    capabilities: Capabilities
+    mower: Mower
+    calendar: Tasks
+    planner: Planner
+    metadata: Metadata
     positions: Optional[list[Positions]]
-    statistics: Optional[Statistics]
+    statistics: Statistics
     cuttingHeight: Optional[int]
-    headlight: Optional[Headlight]
+    headlight: Headlight
     stayOutZones: Optional[StayOutZones]
     workAreas: Optional[WorkAreas]
 
