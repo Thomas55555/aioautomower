@@ -387,6 +387,7 @@ class AutomowerSession:
                             datum["attributes"][attrib] = j["attributes"][attrib]
                     except KeyError:
                         datum["attributes"][attrib] = j["attributes"][attrib]
+        _LOGGER.debug("session self data:%s", self.data)
         self.mowers = from_dict(data_class=MowerList, data=self.data)
         self._schedule_data_callbacks()
 
