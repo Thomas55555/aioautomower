@@ -190,6 +190,7 @@ class AutomowerSession:
             self.token["token_type"],
         )
         mower_list = await mower_list_init.async_mower_state()
+        self.data = mower_list
         self.mowers = from_dict(data_class=MowerList, data=mower_list)
         return self.mowers
 
@@ -361,33 +362,33 @@ class AutomowerSession:
         if self.data is None:
             _LOGGER.error("Failed to update data with ws response (no data)")
             return
-        for datum in self.data["data"]:
-            if datum["type"] == "mower" and datum["id"] == j["id"]:
-                if j["type"] == "positions-event":
-                    last_pos_identical = (
-                        datum["attributes"]["positions"][0]
-                        == j["attributes"]["positions"][0]
-                    )
-                    if not last_pos_identical:
-                        j["attributes"]["positions"].extend(
-                            datum["attributes"]["positions"]
+        if self.data is not None:
+            for datum in self.data["data"]:
+                if datum["type"] == "mower" and datum["id"] == j["id"]:
+                    if j["type"] == "positions-event":
+                        last_pos_identical = (
+                            datum["attributes"]["positions"][0]
+                            == j["attributes"]["positions"][0]
                         )
-                        _LOGGER.debug(
-                            "j['attributes']['positions']: %s",
-                            j["attributes"]["positions"],
-                        )
-                for attrib in j["attributes"]:
-                    try:
-                        tasks = j["attributes"]["calendar"]["tasks"]
-                        if len(tasks) == 0:
-                            temp_task = datum["attributes"]["calendar"]["tasks"]
+                        if not last_pos_identical:
+                            j["attributes"]["positions"].extend(
+                                datum["attributes"]["positions"]
+                            )
+                            _LOGGER.debug(
+                                "j['attributes']['positions']: %s",
+                                j["attributes"]["positions"],
+                            )
+                    for attrib in j["attributes"]:
+                        try:
+                            tasks = j["attributes"]["calendar"]["tasks"]
+                            if len(tasks) == 0:
+                                temp_task = datum["attributes"]["calendar"]["tasks"]
+                                datum["attributes"][attrib] = j["attributes"][attrib]
+                                datum["attributes"]["calendar"]["tasks"] = temp_task
+                            if len(tasks) > 0:
+                                datum["attributes"][attrib] = j["attributes"][attrib]
+                        except KeyError:
                             datum["attributes"][attrib] = j["attributes"][attrib]
-                            datum["attributes"]["calendar"]["tasks"] = temp_task
-                        if len(tasks) > 0:
-                            datum["attributes"][attrib] = j["attributes"][attrib]
-                    except KeyError:
-                        datum["attributes"][attrib] = j["attributes"][attrib]
-        _LOGGER.debug("session self data:%s", self.data)
         self.mowers = from_dict(data_class=MowerList, data=self.data)
         self._schedule_data_callbacks()
 
@@ -406,7 +407,7 @@ class AutomowerSession:
             if self.data is None:
                 _LOGGER.debug("No data available. Will not schedule callback")
                 return
-        self.loop.call_later(delay, cb, self.ws_data)
+        self.loop.call_later(delay, cb, self.data)
 
     def _schedule_data_callbacks(self):
         for cb in self.data_update_cbs:
