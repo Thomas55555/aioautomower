@@ -388,6 +388,7 @@ class AutomowerSession:
                     except KeyError:
                         datum["attributes"][attrib] = j["attributes"][attrib]
                 self.mowers = from_dict(data_class=MowerList, data=self.data)
+                self._schedule_data_callbacks()
                 return
         _LOGGER.error("Failed to update data with ws response (id not found)")
 
