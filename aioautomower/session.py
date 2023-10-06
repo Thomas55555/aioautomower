@@ -21,7 +21,6 @@ from .const import (
     REST_POLL_CYCLE_LE,
     WS_URL,
     HeadlightModes,
-    MowerData,
     MowerList,
 )
 
@@ -71,10 +70,9 @@ class AutomowerSession:
             self.loop = loop
 
         self.data = {}
-        self.mowers = []
+        self.mowers = {}
 
         self.ws_task = None
-        self.ws_data = None
 
         self.token_task = None
         self.websocket_monitor_task = None
@@ -191,7 +189,7 @@ class AutomowerSession:
         )
         mower_list = await mower_list_init.async_mower_state()
         self.data = mower_list
-        self.mowers = from_dict(data_class=MowerList, data=mower_list)
+        self.mower_as_dict_dataclass()
         return self.mowers
 
     async def action(self, mower_id: str, payload: str, command_type: str):
@@ -374,10 +372,6 @@ class AutomowerSession:
                             j["attributes"]["positions"].extend(
                                 datum["attributes"]["positions"]
                             )
-                            _LOGGER.debug(
-                                "j['attributes']['positions']: %s",
-                                j["attributes"]["positions"],
-                            )
                     for attrib in j["attributes"]:
                         try:
                             tasks = j["attributes"]["calendar"]["tasks"]
@@ -389,8 +383,14 @@ class AutomowerSession:
                                 datum["attributes"][attrib] = j["attributes"][attrib]
                         except KeyError:
                             datum["attributes"][attrib] = j["attributes"][attrib]
-        self.mowers = from_dict(data_class=MowerList, data=self.data)
+        self.mower_as_dict_dataclass()
         self._schedule_data_callbacks()
+
+    def mower_as_dict_dataclass(self):
+        """Convert mower data to a dictionary DataClass."""
+        mowers_list = from_dict(data_class=MowerList, data=self.data)
+        for mower in mowers_list.data:
+            self.mowers[mower.id] = mower.attributes
 
     def _schedule_token_callback(self, cb, delay=0.0):
         if self.token is None:
@@ -407,7 +407,7 @@ class AutomowerSession:
             if self.data is None:
                 _LOGGER.debug("No data available. Will not schedule callback")
                 return
-        self.loop.call_later(delay, cb, self.data)
+        self.loop.call_later(delay, cb, self.mowers)
 
     def _schedule_data_callbacks(self):
         for cb in self.data_update_cbs:
