@@ -18,7 +18,7 @@ EVENT_TYPES = [
 ]
 HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
 MARGIN_TIME = 60.0  # Token is typically valid for 24h, request a new one some time before its expiration to avoid glitches.
-MIN_SLEEP_TIME = 600.0  # Avoid hammering
+MIN_SLEEP_TIME = 10.0  # Avoid hammering
 MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
 REST_POLL_CYCLE = 300
 REST_POLL_CYCLE_LE = 86400
