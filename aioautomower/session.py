@@ -61,14 +61,12 @@ class AbstractAuth(ABC):
             raise AuthException(f"Access token failure: {err}") from err
 
         token_decoded = jwt.decode(access_token, options={"verify_signature": False})
-        _LOGGER.debug("token_decoded: %s", token_decoded["client_id"])
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Authorization-Provider": "husqvarna",
             "Content-Type": "application/vnd.api+json",
             "X-Api-Key": token_decoded["client_id"],
         }
-        _LOGGER.debug("access_token: %s", access_token)
         if not (url.startswith("http://") or url.startswith("https://")):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
@@ -265,13 +263,7 @@ class AutomowerSession:
             self.data = await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
-        if "amc:api" not in self.token["scope"]:
-            _LOGGER.error(
-                "Your API-Key is not compatible to the websocket, please refresh it on %s",
-                HUSQVARNA_URL,
-            )
-        else:
-            self.ws_task = self.loop.create_task(self._ws_task())
+        self.ws_task = self.loop.create_task(self._ws_task())
 
     async def close(self):
         """Close the session."""
@@ -322,64 +314,68 @@ class AutomowerSession:
         resume to the schedule set by the Calendar.
         """
         command_type = "actions"
-        payload = {"data": {"type": "ResumeSchedule"}}
-        try:
-            await self.send_command_via_rest(mower_id, payload, command_type)
-        except rest.CommandNotPossibleError as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+        data = {"data": {"type": "ResumeSchedule"}}
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def pause_mowing(self, mower_id: str):
         """Send pause mowing command to the mower via Rest."""
         command_type = "actions"
-        payload = {"data": {"type": "Pause"}}
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        data = {"data": {"type": "Pause"}}
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def park_until_next_schedule(self, mower_id: str):
         """Send park until next schedule command to the mower."""
         command_type = "actions"
-        payload = {"data": {"type": "ParkUntilNextSchedule"}}
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        data = {"data": {"type": "ParkUntilNextSchedule"}}
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def park_until_further_notice(self, mower_id: str):
         """Send park until further notice command to the mower."""
         command_type = "actions"
-        payload = {"data": {"type": "ParkUntilFurtherNotice"}}
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        data = {"data": {"type": "ParkUntilFurtherNotice"}}
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def park_for(self, mower_id: str, duration_in_min: int):
         """Parks the mower for a period of minutes. The mower will drive to
         the charching station and park for the duration set by the command.
         """
         command_type = "actions"
-        payload = {
+        data = {
             "data": {
                 "type": "Park",
                 "attributes": {"duration": duration_in_min},
             }
         }
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def start_for(self, mower_id: str, duration_in_min: int):
         """Start the mower for a period of minutes."""
         command_type = "actions"
-        payload = {
+        data = {
             "data": {
                 "type": "Park",
                 "attributes": {"duration": duration_in_min},
             }
         }
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def set_cutting_height(self, mower_id: str, cutting_height: int):
         """Start the mower for a period of minutes."""
         command_type = "settings"
-        payload = {
+        data = {
             "data": {
                 "type": "settings",
                 "attributes": {"cuttingHeight": cutting_height},
             }
         }
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def set_headlight_mode(
         self,
@@ -393,13 +389,14 @@ class AutomowerSession:
     ):
         """Send headlight mode to the mower."""
         command_type = "settings"
-        payload = {
+        data = {
             "data": {
                 "type": "settings",
                 "attributes": {"headlight": {"mode": headlight_mode}},
             }
         }
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def set_calendar(
         self,
@@ -408,13 +405,14 @@ class AutomowerSession:
     ):
         """Send calendar task to the mower."""
         command_type = "calendar"
-        payload = {
+        data = {
             "data": {
                 "type": "calendar",
                 "attributes": {"tasks": task_list},
             }
         }
-        await self.send_command_via_rest(mower_id, payload, command_type)
+        url = f"{MOWER_API_BASE_URL}{mower_id}/{command_type}"
+        await self.auth.post_json(url, json=data)
 
     async def send_command_via_rest(
         self, mower_id: str, payload: dict, command_type: str
