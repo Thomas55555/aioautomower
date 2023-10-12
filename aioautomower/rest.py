@@ -7,12 +7,7 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 
-from .const import (
-    AUTH_API_REVOKE_URL,
-    AUTH_API_TOKEN_URL,
-    AUTH_HEADERS,
-    MOWER_API_BASE_URL,
-)
+from .const import API_BASE_URL, AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,7 +211,7 @@ class Return:
             "X-Api-Key": f"{self.api_key}",
         }
         self.mower_action_url = (
-            f"{MOWER_API_BASE_URL}{self.mower_id}/{self.command_type}"
+            f"{API_BASE_URL}/mowers/{self.mower_id}/{self.command_type}"
         )
         self.payload = payload
 

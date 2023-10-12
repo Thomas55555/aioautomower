@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -18,7 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    install_requires=list(val.strip() for val in open("requirements.txt")),
+    install_requires=[val.strip() for val in open("requirements.txt")],
     version="2023.10.0b2",
     entry_points={
         "console_scripts": ["automower=aioautomower.cli:main"],

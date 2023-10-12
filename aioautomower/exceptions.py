@@ -1,21 +1,21 @@
-"""Library for exceptions using the Google Calendar API."""
+"""Library for exceptions using the Husqvarna Automower API."""
 
 
-class GoogleCalendarException(Exception):
+class HusqvarnaAAutomowerException(Exception):
     """Base class for all client exceptions."""
 
 
-class ApiException(GoogleCalendarException):
+class ApiException(HusqvarnaAAutomowerException):
     """Raised during problems talking to the API."""
 
 
-class AuthException(ApiException):
+class AuthException(HusqvarnaAAutomowerException):
     """Raised due to auth problems talking to API."""
 
 
-class InvalidSyncTokenException(ApiException):
+class InvalidSyncTokenException(HusqvarnaAAutomowerException):
     """Raised when the sync token is invalid."""
 
 
-class ApiForbiddenException(ApiException):
+class ApiForbiddenException(HusqvarnaAAutomowerException):
     """Raised due to permission errors talking to API."""
