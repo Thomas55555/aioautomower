@@ -151,49 +151,33 @@ class AutomowerSession:
         self.mower_as_dict_dataclass()
         return self.mowers
 
-    async def action(self, mower_id: str, payload: str, command_type: str):
-        """Send command to the mower via Rest."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
-        a = rest.Return(
-            self.api_key,
-            self.token["access_token"],
-            self.token["provider"],
-            self.token["token_type"],
-            mower_id,
-            payload,
-            command_type,
-        )
-        return await a.async_mower_command()
-
     async def resume_schedule(self, mower_id: str):
         """Resume schedule.
 
         Remove any ovveride on the Planner and let the mower
         resume to the schedule set by the Calendar.
         """
-        data = {"data": {"type": "ResumeSchedule"}}
+        body = {"data": {"type": "ResumeSchedule"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def pause_mowing(self, mower_id: str):
         """Send pause mowing command to the mower via Rest."""
-        data = {"data": {"type": "Pause"}}
+        body = {"data": {"type": "Pause"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def park_until_next_schedule(self, mower_id: str):
         """Send park until next schedule command to the mower."""
-        data = {"data": {"type": "ParkUntilNextSchedule"}}
+        body = {"data": {"type": "ParkUntilNextSchedule"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def park_until_further_notice(self, mower_id: str):
         """Send park until further notice command to the mower."""
-        data = {"data": {"type": "ParkUntilFurtherNotice"}}
+        body = {"data": {"type": "ParkUntilFurtherNotice"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def park_for(self, mower_id: str, duration_in_min: int):
         """Parks the mower for a period of minutes.
@@ -201,36 +185,36 @@ class AutomowerSession:
         The mower will drive to
         the charching station and park for the duration set by the command.
         """
-        data = {
+        body = {
             "data": {
                 "type": "Park",
                 "attributes": {"duration": duration_in_min},
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def start_for(self, mower_id: str, duration_in_min: int):
         """Start the mower for a period of minutes."""
-        data = {
+        body = {
             "data": {
                 "type": "Park",
                 "attributes": {"duration": duration_in_min},
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def set_cutting_height(self, mower_id: str, cutting_height: int):
         """Start the mower for a period of minutes."""
-        data = {
+        body = {
             "data": {
                 "type": "settings",
                 "attributes": {"cuttingHeight": cutting_height},
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def set_headlight_mode(
         self,
@@ -243,14 +227,14 @@ class AutomowerSession:
         ],
     ):
         """Send headlight mode to the mower."""
-        data = {
+        body = {
             "data": {
                 "type": "settings",
                 "attributes": {"headlight": {"mode": headlight_mode}},
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
     async def set_calendar(
         self,
@@ -258,33 +242,28 @@ class AutomowerSession:
         task_list: list,
     ):
         """Send calendar task to the mower."""
-        data = {
+        body = {
             "data": {
                 "type": "calendar",
                 "attributes": {"tasks": task_list},
             }
         }
         url = AutomowerEndpoint.calendar.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=data)
+        await self.auth.post_json(url, json=body)
 
-    async def send_command_via_rest(
-        self, mower_id: str, payload: dict, command_type: str
+    async def switch_stay_out_zone(
+        self, mower_id: str, stay_out_zone_id: str, switch: bool
     ):
-        """Send a command to the mower."""
-        json_payload = json.dumps(payload)
-        rest_init = rest.Return(
-            self.api_key,
-            self.token["access_token"],
-            self.token["provider"],
-            self.token["token_type"],
-            mower_id,
-            json_payload,
-            command_type,
-        )
-        try:
-            await rest_init.async_mower_command()
-        except rest.CommandNotPossibleError as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+        """Enable or disable a stay out zone."""
+        body = {
+            "data": {
+                "type": "stayOutZone",
+                "id": stay_out_zone_id,
+                "attributes": {"enable": switch},
+            }
+        }
+        url = AutomowerEndpoint.stay_out_zones.format(mower_id=mower_id)
+        await self.auth.post_json(url, json=body)
 
     async def invalidate_token(self):
         """Invalidate token via Rest."""
