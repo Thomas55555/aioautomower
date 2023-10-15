@@ -1,7 +1,6 @@
 """Module to connect to Automower with websocket."""
 import asyncio
 import contextlib
-import json
 import logging
 import time
 from typing import Literal

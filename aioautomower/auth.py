@@ -8,11 +8,10 @@ from typing import Any, Optional
 
 import aiohttp
 from aiohttp import ClientError, ClientResponse, ClientResponseError, ClientSession
-import jwt
 
 from .const import API_BASE_URL, AUTH_HEADER_FMT, EVENT_TYPES, WS_URL
 from .exceptions import ApiException, ApiForbiddenException, AuthException
-from .model import JWT
+from .utils import async_structure_token
 
 ERROR = "error"
 STATUS = "status"
@@ -114,7 +113,7 @@ class AbstractAuth(ABC):
         except ClientError as err:
             raise AuthException(f"Access token failure: {err}") from err
         if not self._client_id:
-            token_structured = await self.async_structure_token(access_token)
+            token_structured = await async_structure_token(access_token)
             self._client_id = token_structured.client_id
         return {
             "Authorization": f"Bearer {access_token}",
@@ -158,11 +157,6 @@ class AbstractAuth(ABC):
         if MESSAGE in error:
             message.append(error[MESSAGE])
         return message
-
-    async def async_structure_token(self, access_token) -> JWT:
-        """Decode JWT and convert to dataclass."""
-        token_decoded = jwt.decode(access_token, options={"verify_signature": False})
-        return JWT(**token_decoded)
 
     async def websocket(self) -> dict[str, dict]:
         """Start a websocket."""
