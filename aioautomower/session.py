@@ -7,23 +7,18 @@ import time
 from typing import Literal
 
 import aiohttp
-from dacite import from_dict
 
 from . import rest
 from .auth import AbstractAuth
-from .const import (
-    EVENT_TYPES,
-    MARGIN_TIME,
-    MIN_SLEEP_TIME,
-    REST_POLL_CYCLE,
-    HeadlightModes,
-    MowerList,
-)
+from .const import EVENT_TYPES, MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
+from .model import HeadlightModes, MowerList
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AutomowerEndpoint:
+    """Endpoint URLs for the AutomowerConnect API."""
+
     mowers = "mowers/"
     actions = "mowers/{mower_id}/actions"
     calendar = "mowers/{mower_id}/calendar"
@@ -177,7 +172,9 @@ class AutomowerSession:
         return await a.async_mower_command()
 
     async def resume_schedule(self, mower_id: str):
-        """Remove any ovveride on the Planner and let the mower
+        """Resume schedule.
+
+        Remove any ovveride on the Planner and let the mower
         resume to the schedule set by the Calendar.
         """
         data = {"data": {"type": "ResumeSchedule"}}
@@ -203,7 +200,9 @@ class AutomowerSession:
         await self.auth.post_json(url, json=data)
 
     async def park_for(self, mower_id: str, duration_in_min: int):
-        """Parks the mower for a period of minutes. The mower will drive to
+        """Parks the mower for a period of minutes.
+
+        The mower will drive to
         the charching station and park for the duration set by the command.
         """
         data = {
@@ -343,7 +342,8 @@ class AutomowerSession:
 
     def mower_as_dict_dataclass(self):
         """Convert mower data to a dictionary DataClass."""
-        mowers_list = from_dict(data_class=MowerList, data=self.data)
+        ##mowers_list = from_dict(data_class=MowerList, data=self.data)
+        mowers_list = MowerList(**self.data)
         for mower in mowers_list.data:
             self.mowers[mower.id] = mower.attributes
 
@@ -412,13 +412,6 @@ class AutomowerSession:
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
-            _LOGGER.debug(
-                "LE: %s",
-                self.low_energy,
-            )
-            if self.low_energy is True:
-                await asyncio.sleep(REST_POLL_CYCLE_LE)
-            if self.low_energy is False:
-                await asyncio.sleep(REST_POLL_CYCLE)
+            await asyncio.sleep(REST_POLL_CYCLE)
             self.data = await self.get_status()
             self._schedule_data_callbacks()
