@@ -144,7 +144,7 @@ class AbstractAuth(ABC):
         token_decoded = jwt.decode(access_token, options={"verify_signature": False})
         return JWT(**token_decoded)
 
-    async def websocket(self) -> dict:
+    async def websocket(self) -> dict[str, dict]:
         """Start a websocket."""
         try:
             access_token = await self.async_get_access_token()
