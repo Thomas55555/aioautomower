@@ -263,7 +263,7 @@ class AutomowerSession:
             }
         }
         url = AutomowerEndpoint.stay_out_zones.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        await self.auth.patch_json(url, json=body)
 
     async def invalidate_token(self):
         """Invalidate token via Rest."""

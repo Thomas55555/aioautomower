@@ -87,6 +87,26 @@ class AbstractAuth(ABC):
         _LOGGER.debug("response=%s", result)
         return result
 
+    async def patch(self, url: str, **kwargs: Mapping[str, Any]) -> ClientResponse:
+        """Make a post request."""
+        try:
+            resp = await self.request("patch", url, **kwargs)
+        except ClientError as err:
+            raise ApiException(f"Error connecting to API: {err}") from err
+        return await AbstractAuth._raise_for_status(resp)
+
+    async def patch_json(self, url: str, **kwargs: Mapping[str, Any]) -> dict[str, Any]:
+        """Make a post request and return a json response."""
+        resp = await self.patch(url, **kwargs)
+        try:
+            result = await resp.json()
+        except ClientError as err:
+            raise ApiException("Server returned malformed response") from err
+        if not isinstance(result, dict):
+            raise ApiException(f"Server returned malformed response: {result}")
+        _LOGGER.debug("response=%s", result)
+        return result
+
     async def headers(self) -> None:
         """Generate headers for ReST requests."""
         try:
