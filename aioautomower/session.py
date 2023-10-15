@@ -6,11 +6,9 @@ import logging
 import time
 from typing import Literal
 
-import aiohttp
-
 from . import rest
 from .auth import AbstractAuth
-from .const import EVENT_TYPES, MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
+from .const import MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
 from .model import HeadlightModes, MowerList
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,8 +50,7 @@ class AutomowerSession:
         self.token = None
         self.data = {}
         self.mowers = {}
-
-        self.ws_task = None
+        self.listen_task = None
 
         self.token_task = None
         self.rest_task = None
@@ -125,14 +122,13 @@ class AutomowerSession:
             self.data = await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
-        self.ws_task = self.loop.create_task(self._ws_task())
+        self.listen_task = self.loop.create_task(self._listen())
 
     async def close(self):
         """Close the session."""
         for task in [
-            self.ws_task,
+            self.listen_task,
             self.token_task,
-            self.websocket_monitor_task,
             self.rest_task,
         ]:
             tasks = []
@@ -368,46 +364,9 @@ class AutomowerSession:
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
-    async def _ws_task(self):
-        async with await self.auth.websocket() as ws:
-            _LOGGER.debug("Websocket (re)connected")
-            async for msg in ws:
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    j = msg.json()
-                    if "type" in j:
-                        if j["type"] in EVENT_TYPES:
-                            _LOGGER.debug("Got %s, data: %s", j["type"], j)
-                            self._update_data(j)
-                            self._schedule_data_callbacks()
-                        else:
-                            _LOGGER.warning("Received unknown ws type %s", j["type"])
-                    elif "ready" in j and "connectionId" in j:
-                        _LOGGER.debug(
-                            "Websocket ready=%s (id='%s')",
-                            j["ready"],
-                            j["connectionId"],
-                        )
-                    else:
-                        _LOGGER.debug("Discarded websocket response: %s", j)
-                elif msg.type == aiohttp.WSMsgType.ERROR:
-                    _LOGGER.debug("Received ERROR")
-                    break
-                elif msg.type == aiohttp.WSMsgType.CONTINUATION:
-                    _LOGGER.debug("Received CONTINUATION")
-                elif msg.type == aiohttp.WSMsgType.BINARY:
-                    _LOGGER.debug("Received BINARY")
-                elif msg.type == aiohttp.WSMsgType.PING:
-                    _LOGGER.debug("Received PING")
-                elif msg.type == aiohttp.WSMsgType.PONG:
-                    _LOGGER.debug("Received PONG")
-                elif msg.type == aiohttp.WSMsgType.CLOSE:
-                    _LOGGER.debug("Received CLOSE")
-                elif msg.type == aiohttp.WSMsgType.CLOSING:
-                    _LOGGER.debug("Received CLOSING")
-                elif msg.type == aiohttp.WSMsgType.CLOSED:
-                    _LOGGER.debug("Received CLOSED")
-                else:
-                    _LOGGER.debug("Received msg.type=%d", msg.type)
+    async def _listen(self):
+        while True:
+            self._update_data(await self.auth.websocket())
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""

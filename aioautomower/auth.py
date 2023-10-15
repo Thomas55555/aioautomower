@@ -6,16 +6,11 @@ from http import HTTPStatus
 import logging
 from typing import Any, Optional
 
-from aiohttp import (
-    ClientError,
-    ClientResponse,
-    ClientResponseError,
-    ClientSession,
-    ClientWebSocketResponse,
-)
+import aiohttp
+from aiohttp import ClientError, ClientResponse, ClientResponseError, ClientSession
 import jwt
 
-from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
+from .const import API_BASE_URL, AUTH_HEADER_FMT, EVENT_TYPES, WS_URL
 from .exceptions import ApiException, ApiForbiddenException, AuthException
 from .model import JWT
 
@@ -149,16 +144,50 @@ class AbstractAuth(ABC):
         token_decoded = jwt.decode(access_token, options={"verify_signature": False})
         return JWT(**token_decoded)
 
-    async def websocket(self) -> ClientWebSocketResponse:
+    async def websocket(self):
         """Start a websocket."""
-        while True:
-            try:
-                access_token = await self.async_get_access_token()
-            except ClientError as err:
-                raise AuthException(f"Access token failure: {err}") from err
-            async with self._websession.ws_connect(
-                url=WS_URL,
-                headers={"Authorization": AUTH_HEADER_FMT.format(access_token)},
-                heartbeat=60,
-            ) as ws:
-                return ws
+        try:
+            access_token = await self.async_get_access_token()
+        except ClientError as err:
+            raise AuthException(f"Access token failure: {err}") from err
+        async with self._websession.ws_connect(
+            url=WS_URL,
+            headers={"Authorization": AUTH_HEADER_FMT.format(access_token)},
+            heartbeat=60,
+        ) as ws:
+            async for msg in ws:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    j = msg.json()
+                    if "type" in j:
+                        if j["type"] in EVENT_TYPES:
+                            _LOGGER.debug("Got %s, data: %s", j["type"], j)
+                            return j
+                        else:
+                            _LOGGER.warning("Received unknown ws type %s", j["type"])
+                    elif "ready" in j and "connectionId" in j:
+                        _LOGGER.debug(
+                            "Websocket ready=%s (id='%s')",
+                            j["ready"],
+                            j["connectionId"],
+                        )
+                    else:
+                        _LOGGER.debug("Discarded websocket response: %s", j)
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    _LOGGER.debug("Received ERROR")
+                    break
+                elif msg.type == aiohttp.WSMsgType.CONTINUATION:
+                    _LOGGER.debug("Received CONTINUATION")
+                elif msg.type == aiohttp.WSMsgType.BINARY:
+                    _LOGGER.debug("Received BINARY")
+                elif msg.type == aiohttp.WSMsgType.PING:
+                    _LOGGER.debug("Received PING")
+                elif msg.type == aiohttp.WSMsgType.PONG:
+                    _LOGGER.debug("Received PONG")
+                elif msg.type == aiohttp.WSMsgType.CLOSE:
+                    _LOGGER.debug("Received CLOSE")
+                elif msg.type == aiohttp.WSMsgType.CLOSING:
+                    _LOGGER.debug("Received CLOSING")
+                elif msg.type == aiohttp.WSMsgType.CLOSED:
+                    _LOGGER.debug("Received CLOSED")
+                else:
+                    _LOGGER.debug("Received msg.type=%d", msg.type)
