@@ -43,13 +43,13 @@ class AutomowerSession:
         self.poll = poll
         self.data_update_cbs = []
         self.token_update_cbs = []
-        self.ws_heartbeat_interval: float = (60.0,)
         self.rest_task = False
         self.loop = asyncio.get_event_loop()
         self.token = None
         self.data = {}
         self.mowers = {}
         self.listen_task = None
+        self.ws_task = None
 
         self.token_task = None
         self.rest_task = None
@@ -121,12 +121,13 @@ class AutomowerSession:
             self.data = await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
-        self.listen_task = self.loop.create_task(self._listen())
+        self.ws_task = self.loop.create_task(self.auth.websocket())
+        self.auth.register_ws_callback(self.callback)
 
     async def close(self):
         """Close the session."""
         for task in [
-            self.listen_task,
+            self.ws_task,
             self.token_task,
             self.rest_task,
         ]:
@@ -316,7 +317,6 @@ class AutomowerSession:
 
     def mower_as_dict_dataclass(self):
         """Convert mower data to a dictionary DataClass."""
-        ##mowers_list = from_dict(data_class=MowerList, data=self.data)
         mowers_list = MowerList(**self.data)
         for mower in mowers_list.data:
             self.mowers[mower.id] = mower.attributes
@@ -342,9 +342,10 @@ class AutomowerSession:
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
-    async def _listen(self):
-        while True:
-            self._update_data(await self.auth.websocket())
+    def callback(self, new_data):
+        """Pass received websocket data to the update function."""
+        if new_data:
+            self._update_data(new_data)
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""
