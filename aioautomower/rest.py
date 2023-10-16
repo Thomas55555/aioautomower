@@ -163,7 +163,7 @@ class GetMowerData:
         async with aiohttp.ClientSession(
             headers=self.mower_headers, timeout=timeout
         ) as session:
-            async with session.get(MOWER_API_BASE_URL) as resp:
+            async with session.get(API_BASE_URL) as resp:
                 result = await resp.json(encoding="UTF-8")
                 _LOGGER.debug("Response mower data: %s", resp)
                 if resp.status == 200:

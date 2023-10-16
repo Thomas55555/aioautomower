@@ -41,7 +41,6 @@ class AbstractAuth(ABC):
         self, method: str, url: str, **kwargs: Optional[Mapping[str, Any]]
     ) -> ClientResponse:
         """Make a request."""
-
         headers = await self.headers()
         if not (url.startswith("http://") or url.startswith("https://")):
             url = f"{self._host}/{url}"
@@ -169,7 +168,6 @@ class AbstractAuth(ABC):
         """
         if callback not in self.ws_update_cbs:
             self.ws_update_cbs.append(callback)
-        self._schedule_ws_callback(callback, delay=1e-3)
 
     def _schedule_ws_callback(self, cb, delay=0.0):
         """Schedule websocket callback."""

@@ -17,11 +17,22 @@ class AutomowerEndpoint:
     """Endpoint URLs for the AutomowerConnect API."""
 
     mowers = "mowers/"
+    "List data for all mowers linked to a user."
+
     actions = "mowers/{mower_id}/actions"
+    "Accepts actions to control a mower linked to a user."
+
     calendar = "mowers/{mower_id}/calendar"
+    "Update the calendar on the mower."
+
     settings = "mowers/{mower_id}/settings"
+    "Update the settings on the mower."
+
     stay_out_zones = "mowers/{mower_id}/stayOutZones/{stay_out_id}"
+    "Enabe or disable the stay-out zone."
+
     work_area_calendar = "mowers/{mower_id}/workAreas{work_area_id}/calendar"
+    "Update the calendar for a work area on the mower."
 
 
 class AutomowerSession:
@@ -54,7 +65,7 @@ class AutomowerSession:
         self.token_task = None
         self.rest_task = None
 
-    def register_data_callback(self, callback, schedule_immediately=False):
+    def register_data_callback(self, callback):
         """Register a data update callback.
 
         :param func callback: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
@@ -62,10 +73,17 @@ class AutomowerSession:
         """
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
-        if schedule_immediately:
-            self._schedule_data_callback(
-                callback, delay=1e-3
-            )  # Need a delay for home assistant to finish entity setup.
+
+    def _schedule_data_callback(self, cb, delay=0.0):
+        if self.poll:
+            if self.data is None:
+                _LOGGER.debug("No data available. Will not schedule callback")
+                return
+        self.loop.call_later(delay, cb, self.mowers)
+
+    def _schedule_data_callbacks(self):
+        for cb in self.data_update_cbs:
+            self._schedule_data_callback(cb)
 
     def unregister_data_callback(self, callback):
         """Unregister a data update callback.
@@ -74,19 +92,6 @@ class AutomowerSession:
         """
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
-
-    def register_token_callback(self, callback, schedule_immediately=False):
-        """Register a token update callback.
-
-        :param func callback: Callback fired on token updates. Takes one dict argument which is the newly received token.
-        :param bool schedule_immediately: Schedule callback immediately (if token is available).
-        """
-        if callback not in self.token_update_cbs:
-            self.token_update_cbs.append(callback)
-        if schedule_immediately:
-            self._schedule_token_callback(
-                callback, delay=1e-3
-            )  # Need a delay for home assistant to finish entity setup.
 
     async def logincc(self, api_key: str, client_secret: str) -> dict:
         """Login with client credentials.
@@ -262,7 +267,9 @@ class AutomowerSession:
                 "attributes": {"enable": switch},
             }
         }
-        url = AutomowerEndpoint.stay_out_zones.format(mower_id=mower_id)
+        url = AutomowerEndpoint.stay_out_zones.format(
+            mower_id=mower_id, stay_out_id=stay_out_zone_id
+        )
         await self.auth.patch_json(url, json=body)
 
     async def invalidate_token(self):
@@ -320,27 +327,6 @@ class AutomowerSession:
         mowers_list = MowerList(**self.data)
         for mower in mowers_list.data:
             self.mowers[mower.id] = mower.attributes
-
-    def _schedule_token_callback(self, cb, delay=0.0):
-        if self.token is None:
-            _LOGGER.debug("No token available. Will not schedule callback")
-            return
-        self.loop.call_later(delay, cb, self.token)
-
-    def _schedule_token_callbacks(self):
-        for cb in self.token_update_cbs:
-            self._schedule_token_callback(cb)
-
-    def _schedule_data_callback(self, cb, delay=0.0):
-        if self.poll:
-            if self.data is None:
-                _LOGGER.debug("No data available. Will not schedule callback")
-                return
-        self.loop.call_later(delay, cb, self.mowers)
-
-    def _schedule_data_callbacks(self):
-        for cb in self.data_update_cbs:
-            self._schedule_data_callback(cb)
 
     def callback(self, new_data):
         """Pass received websocket data to the update function."""
