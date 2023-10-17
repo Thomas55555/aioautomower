@@ -5,7 +5,6 @@ import logging
 import time
 from typing import Literal
 
-from . import rest
 from .auth import AbstractAuth
 from .const import MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException
