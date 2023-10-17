@@ -1,35 +1,36 @@
 #!/usr/bin/env python3
+import argparse
 import asyncio
-import json
 import logging
 import signal
+import time
 
-import aioautomower
+from aiohttp import ClientSession
+
+from aioautomower.auth import AbstractAuth
+from aioautomower.session import AutomowerSession
+import aioautomower.utils
+
+from .const import API_BASE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def run_tester(client_secret: str, api_key: str, token: dict):
-    sess = aioautomower.AutomowerSession(api_key, token, ws_heartbeat_interval=60)
-    if sess.token is None:
-        token = await sess.logincc(client_secret)
-
-    sess.register_data_callback(
-        lambda x: logging.info("data callback;%s" % json.dumps(x)),
-        schedule_immediately=False,
+async def run_tester(client_id: str, client_secret: str):
+    automower_api = AutomowerSession(
+        AsyncConfigEntryAuth(ClientSession(), client_id, client_secret), poll=True
     )
-    sess.register_token_callback(
-        lambda x: logging.info("token callback;%s" % json.dumps(x)),
-        schedule_immediately=True,
+    automower_api.register_data_callback(
+        lambda x: logging.info("data callback;%s", x),
     )
 
-    await sess.connect()
+    await automower_api.connect()
 
     def sigusr1():
-        asyncio.ensure_future(sess.invalidate_token())
+        asyncio.ensure_future(automower_api.invalidate_token())
 
     def sigusr2():
-        asyncio.ensure_future(sess.get_status())
+        asyncio.ensure_future(automower_api.get_status())
 
     loop = asyncio.get_event_loop()
     loop.add_signal_handler(signal.SIGUSR1, sigusr1)
@@ -42,7 +43,7 @@ async def run_tester(client_secret: str, api_key: str, token: dict):
 def main():
     """Tester for the Husqvarna Automower API.
 
-    The tester will login using username and password and connect to a
+    The tester will login using client_id and client_secret and connect to a
     websocket listening for mower updates.
 
     The tester listens to two signals on which it performs the following
@@ -50,27 +51,52 @@ def main():
     SIGUSR1: Invalidate token
     SIGUSR2: Get status
     """
-    import argparse
 
     parser = argparse.ArgumentParser(
         description=main.__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "-s", "--client_secret", required=True, help="Husqvarna app username"
+        "-s", "--client_id", required=True, help="Husqvarna Application key"
     )
-    parser.add_argument("-k", "--api-key", required=True, help="Husqvarna API key")
     parser.add_argument(
-        "-t",
-        "--token",
-        nargs="?",
-        type=argparse.FileType("r"),
-        default=None,
-        help="Optional access token. If provided, username and password will not be used.",
+        "-k", "--client_secret", required=True, help="Husqvarna Application secret"
     )
 
     args = parser.parse_args()
 
-    token = json.load(args.token) if args.token is not None else None
-
     logging.basicConfig(level="DEBUG", format="%(asctime)s;%(levelname)s;%(message)s")
-    asyncio.run(run_tester(args.client_secret, args.api_key, token))
+    asyncio.run(run_tester(args.client_id, args.client_secret))
+
+
+class AsyncConfigEntryAuth(AbstractAuth):
+    """Provide Husqvarna Automower authentication tied to an OAuth2 based config entry."""
+
+    def __init__(
+        self,
+        websession: ClientSession,
+        client_id: str,
+        client_secret: str,
+    ) -> None:
+        """Initialize Husqvarna Automower auth."""
+        super().__init__(websession, API_BASE_URL)
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.token = None
+        self.websession = websession
+
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+        if not self.token:
+            self.token = await aioautomower.utils.async_get_access_token(
+                self.client_id, self.client_secret, self.websession
+            )
+            token_structured = await aioautomower.utils.async_structure_token(
+                self.token["access_token"]
+            )
+            _LOGGER.debug("token_structured.exp: %s", token_structured.exp)
+            _LOGGER.debug(time.time())
+        if token_structured.exp < time.time():
+            self.token = await aioautomower.utils.async_get_access_token(
+                self.client_id, self.client_secret, self.websession
+            )
+        return self.token["access_token"]
