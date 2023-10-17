@@ -19,3 +19,7 @@ class InvalidSyncTokenException(HusqvarnaAAutomowerException):
 
 class ApiForbiddenException(HusqvarnaAAutomowerException):
     """Raised due to permission errors talking to API."""
+
+
+class NoDataAvailableException(HusqvarnaAAutomowerException):
+    """Raised due updating data, when no data is available."""

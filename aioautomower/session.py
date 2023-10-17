@@ -8,6 +8,7 @@ from typing import Literal
 from . import rest
 from .auth import AbstractAuth
 from .const import MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
+from .exceptions import NoDataAvailableException
 from .model import HeadlightModes, MowerList
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,8 +78,7 @@ class AutomowerSession:
     def _schedule_data_callback(self, cb, delay=0.0):
         if self.poll:
             if self.data is None:
-                _LOGGER.debug("No data available. Will not schedule callback")
-                return
+                raise NoDataAvailableException
         self.loop.call_later(delay, cb, self.mowers)
 
     def _schedule_data_callbacks(self):
@@ -255,14 +255,6 @@ class AutomowerSession:
         )
         await self.auth.patch_json(url, json=body)
 
-    async def invalidate_token(self):
-        """Invalidate token via Rest."""
-        if self.token is None:
-            _LOGGER.warning("No token available")
-            return None
-        token = rest.RevokeAccessToken(self.token["access_token"])
-        return await token.async_delete_access_token()
-
     async def _token_monitor_task(self):
         while True:
             if "expires_at" in self.token:
@@ -277,8 +269,7 @@ class AutomowerSession:
 
     def _update_data(self, j):
         if self.data is None:
-            _LOGGER.error("Failed to update data with ws response (no data)")
-            return
+            raise NoDataAvailableException
         if self.data is not None:
             for datum in self.data["data"]:
                 if datum["type"] == "mower" and datum["id"] == j["id"]:
