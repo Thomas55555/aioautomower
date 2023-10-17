@@ -1,6 +1,7 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
@@ -28,6 +29,9 @@ class AbstractAuth(ABC):
         self._websession = websession
         self._host = host if host is not None else API_BASE_URL
         self._client_id = None
+        self.loop = websession.loop
+        self.ws_update_cbs = []
+        self.ws_data = {}
 
     @abstractmethod
     async def async_get_access_token(self) -> str:
@@ -37,7 +41,6 @@ class AbstractAuth(ABC):
         self, method: str, url: str, **kwargs: Optional[Mapping[str, Any]]
     ) -> ClientResponse:
         """Make a request."""
-
         headers = await self.headers()
         if not (url.startswith("http://") or url.startswith("https://")):
             url = f"{self._host}/{url}"
@@ -106,12 +109,16 @@ class AbstractAuth(ABC):
         _LOGGER.debug("response=%s", result)
         return result
 
-    async def headers(self) -> None:
-        """Generate headers for ReST requests."""
+    async def _async_get_access_token(self) -> None:
+        """Requests a new access token."""
         try:
-            access_token = await self.async_get_access_token()
+            return await self.async_get_access_token()
         except ClientError as err:
             raise AuthException(f"Access token failure: {err}") from err
+
+    async def headers(self) -> None:
+        """Generate headers for ReST requests."""
+        access_token = await self._async_get_access_token()
         if not self._client_id:
             token_structured = await async_structure_token(access_token)
             self._client_id = token_structured.client_id
@@ -143,7 +150,7 @@ class AbstractAuth(ABC):
 
     @staticmethod
     async def _error_detail(resp: ClientResponse) -> list[str]:
-        """Resturns an error message string from the API response."""
+        """Return an error message string from the API response."""
         if resp.status < 400:
             return []
         try:
@@ -158,34 +165,56 @@ class AbstractAuth(ABC):
             message.append(error[MESSAGE])
         return message
 
+    def register_ws_callback(self, callback):
+        """Register a websocket update callback.
+
+        :param func callback: Callback fired on data updates. Takes one dict argument which is the latest websocket data.
+        """
+        if callback not in self.ws_update_cbs:
+            self.ws_update_cbs.append(callback)
+
+    def _schedule_ws_callback(self, cb, delay=0.0):
+        """Schedule websocket callback."""
+        self.loop.call_later(delay, cb, self.ws_data)
+
+    def _schedule_ws_callbacks(self):
+        """Schedule all websocket callbacks."""
+        for cb in self.ws_update_cbs:
+            self._schedule_ws_callback(cb)
+
     async def websocket(self) -> dict[str, dict]:
-        """Start a websocket."""
-        try:
-            access_token = await self.async_get_access_token()
-        except ClientError as err:
-            raise AuthException(f"Access token failure: {err}") from err
+        """Start a websocket conenction."""
         async with self._websession.ws_connect(
             url=WS_URL,
-            headers={"Authorization": AUTH_HEADER_FMT.format(access_token)},
+            headers={
+                "Authorization": AUTH_HEADER_FMT.format(
+                    await self._async_get_access_token()
+                )
+            },
             heartbeat=60,
         ) as ws:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
-                    j = msg.json()
-                    if "type" in j:
-                        if j["type"] in EVENT_TYPES:
-                            _LOGGER.debug("Got %s, data: %s", j["type"], j)
-                            return j
+                    msg_dict = msg.json()
+                    if "type" in msg_dict:
+                        if msg_dict["type"] in EVENT_TYPES:
+                            _LOGGER.debug(
+                                "Got %s, data: %s", msg_dict["type"], msg_dict
+                            )
+                            self.ws_data = msg_dict
+                            self._schedule_ws_callbacks()
                         else:
-                            _LOGGER.warning("Received unknown ws type %s", j["type"])
-                    elif "ready" in j and "connectionId" in j:
+                            _LOGGER.warning(
+                                "Received unknown ws type %s", msg_dict["type"]
+                            )
+                    elif "ready" in msg_dict and "connectionId" in msg_dict:
                         _LOGGER.debug(
                             "Websocket ready=%s (id='%s')",
-                            j["ready"],
-                            j["connectionId"],
+                            msg_dict["ready"],
+                            msg_dict["connectionId"],
                         )
                     else:
-                        _LOGGER.debug("Discarded websocket response: %s", j)
+                        _LOGGER.debug("Discarded websocket response: %s", msg_dict)
                 elif msg.type == aiohttp.WSMsgType.ERROR:
                     _LOGGER.debug("Received ERROR")
                     break
@@ -199,6 +228,7 @@ class AbstractAuth(ABC):
                     _LOGGER.debug("Received PONG")
                 elif msg.type == aiohttp.WSMsgType.CLOSE:
                     _LOGGER.debug("Received CLOSE")
+                    await ws.close()
                 elif msg.type == aiohttp.WSMsgType.CLOSING:
                     _LOGGER.debug("Received CLOSING")
                 elif msg.type == aiohttp.WSMsgType.CLOSED:
