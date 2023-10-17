@@ -29,7 +29,7 @@ class AbstractAuth(ABC):
         self._websession = websession
         self._host = host if host is not None else API_BASE_URL
         self._client_id = None
-        self.loop = asyncio.get_event_loop()
+        self.loop = websession.loop
         self.ws_update_cbs = []
         self.ws_data = {}
 
@@ -109,12 +109,16 @@ class AbstractAuth(ABC):
         _LOGGER.debug("response=%s", result)
         return result
 
-    async def headers(self) -> None:
-        """Generate headers for ReST requests."""
+    async def _async_get_access_token(self) -> None:
+        """Requests a new access token."""
         try:
-            access_token = await self.async_get_access_token()
+            return await self.async_get_access_token()
         except ClientError as err:
             raise AuthException(f"Access token failure: {err}") from err
+
+    async def headers(self) -> None:
+        """Generate headers for ReST requests."""
+        access_token = await self._async_get_access_token()
         if not self._client_id:
             token_structured = await async_structure_token(access_token)
             self._client_id = token_structured.client_id
@@ -180,13 +184,13 @@ class AbstractAuth(ABC):
 
     async def websocket(self) -> dict[str, dict]:
         """Start a websocket conenction."""
-        try:
-            access_token = await self.async_get_access_token()
-        except ClientError as err:
-            raise AuthException(f"Access token failure: {err}") from err
         async with self._websession.ws_connect(
             url=WS_URL,
-            headers={"Authorization": AUTH_HEADER_FMT.format(access_token)},
+            headers={
+                "Authorization": AUTH_HEADER_FMT.format(
+                    await self._async_get_access_token()
+                )
+            },
             heartbeat=60,
         ) as ws:
             async for msg in ws:
@@ -224,6 +228,7 @@ class AbstractAuth(ABC):
                     _LOGGER.debug("Received PONG")
                 elif msg.type == aiohttp.WSMsgType.CLOSE:
                     _LOGGER.debug("Received CLOSE")
+                    await ws.close()
                 elif msg.type == aiohttp.WSMsgType.CLOSING:
                     _LOGGER.debug("Received CLOSING")
                 elif msg.type == aiohttp.WSMsgType.CLOSED:
