@@ -93,23 +93,6 @@ class AutomowerSession:
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
 
-    async def logincc(self, api_key: str, client_secret: str) -> dict:
-        """Login with client credentials.
-
-        This method gets an access token with a client_id (Api key) and a client_secret.
-        This token can't be refreshed. Create a new one after it is expired.
-
-        :param str client_secret: Your client_secret
-        :return dict: The token as returned by
-        rest.GetAccessTokenClientCredentials.async_get_access_token().
-        You can store this persistently and pass it to the constructor
-        on subsequent instantiations.
-        """
-        a = rest.GetAccessTokenClientCredentials(api_key, client_secret)
-        self.token = await a.async_get_access_token()
-        self._schedule_token_callbacks()
-        return self.token
-
     async def connect(self):
         """Connect to the API.
 
@@ -123,7 +106,7 @@ class AutomowerSession:
         self._schedule_data_callbacks()
 
         if self.poll:
-            self.data = await self.get_status()
+            await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
         self.ws_task = self.loop.create_task(self.auth.websocket())
