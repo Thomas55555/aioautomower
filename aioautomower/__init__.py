@@ -4,6 +4,7 @@ __all__ = [
     "cli",
     "const",
     "exceptions",
+    "model",
     "rest",
     "session",
 ]

@@ -1,25 +1,25 @@
 """Library for exceptions using the Husqvarna Automower API."""
 
 
-class HusqvarnaAAutomowerException(Exception):
+class HusqvarnaAutomowerException(Exception):
     """Base class for all client exceptions."""
 
 
-class ApiException(HusqvarnaAAutomowerException):
+class ApiException(HusqvarnaAutomowerException):
     """Raised during problems talking to the API."""
 
 
-class AuthException(HusqvarnaAAutomowerException):
+class AuthException(HusqvarnaAutomowerException):
     """Raised due to auth problems talking to API."""
 
 
-class InvalidSyncTokenException(HusqvarnaAAutomowerException):
+class InvalidSyncTokenException(HusqvarnaAutomowerException):
     """Raised when the sync token is invalid."""
 
 
-class ApiForbiddenException(HusqvarnaAAutomowerException):
+class ApiForbiddenException(HusqvarnaAutomowerException):
     """Raised due to permission errors talking to API."""
 
 
-class NoDataAvailableException(HusqvarnaAAutomowerException):
+class NoDataAvailableException(HusqvarnaAutomowerException):
     """Raised due updating data, when no data is available."""
