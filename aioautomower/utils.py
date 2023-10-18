@@ -19,9 +19,10 @@ async def async_structure_token(access_token) -> JWT:
     return JWT(**token_decoded)
 
 
-async def async_get_access_token(client_id, client_secret, websession) -> dict:
-    """Function to get an acces token from the Authentication API with client
-    credentials. This grant type is intended only for you. If you want other
+async def async_get_access_token(client_id, client_secret) -> dict:
+    """Get an access token from the Authentication API with client credentials.
+
+    This grant type is intended only for you. If you want other
     users to use your application, then they should login using Authorization
     Code Grant.
     """
@@ -33,17 +34,18 @@ async def async_get_access_token(client_id, client_secret, websession) -> dict:
         },
         quote_via=quote_plus,
     )
-    async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-        async with session.post(AUTH_API_TOKEN_URL, data=auth_data) as resp:
+    async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session, session.post(
+        AUTH_API_TOKEN_URL, data=auth_data
+    ) as resp:
+        result = await resp.json(encoding="UTF-8")
+        _LOGGER.debug("Resp.status get access token: %s", result)
+        if resp.status == 200:
             result = await resp.json(encoding="UTF-8")
-            _LOGGER.debug("Resp.status get access token: %s", result)
-            if resp.status == 200:
-                result = await resp.json(encoding="UTF-8")
-                result["expires_at"] = result["expires_in"] + time.time()
-            if resp.status >= 400:
-                raise TokenError(
-                    f"""The token is invalid, respone from
+            result["expires_at"] = result["expires_in"] + time.time()
+        if resp.status >= 400:
+            raise TokenError(
+                f"""The token is invalid, respone from
                     Husqvarna Automower API: {result}"""
-                )
+            )
     result["status"] = resp.status
     return result

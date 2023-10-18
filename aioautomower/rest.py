@@ -33,8 +33,9 @@ class TokenError(Exception):
 
 
 class TokenRefreshError(Exception):
-    """Raised when Husqvarna Authentication API is not
-    able to refresh the token (Error 400 or 404).
+    """Raised when Husqvarna Authentication API is not able to refresh the token.
+
+    on (Error 400 or 404).
     """
 
     def __init__(self, status: str) -> None:
@@ -54,6 +55,7 @@ class MowerApiConnectionsError(Exception):
 
 class GetAccessTokenClientCredentials:
     """Class to get an acces token from the Authentication API with client_credentials.
+
     This grant type is intended only for you. If you want other users to use your
     application, then they should login using Authorization Code Grant.
     """
@@ -71,18 +73,19 @@ class GetAccessTokenClientCredentials:
 
     async def async_get_access_token(self) -> dict:
         """Return the token."""
-        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
+        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session, session.post(
+            AUTH_API_TOKEN_URL, data=self.auth_data
+        ) as resp:
+            result = await resp.json(encoding="UTF-8")
+            _LOGGER.debug("Resp.status get access token: %s", result)
+            if resp.status == 200:
                 result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Resp.status get access token: %s", result)
-                if resp.status == 200:
-                    result = await resp.json(encoding="UTF-8")
-                    result["expires_at"] = result["expires_in"] + time.time()
-                if resp.status >= 400:
-                    raise TokenError(
-                        f"""The token is invalid, respone
+                result["expires_at"] = result["expires_in"] + time.time()
+            if resp.status >= 400:
+                raise TokenError(
+                    f"""The token is invalid, respone
                         from Husqvarna Automower API: {result}"""
-                    )
+                )
         result["status"] = resp.status
         return result
 
@@ -105,19 +108,20 @@ class RefreshAccessToken:
 
     async def async_refresh_access_token(self) -> dict:
         """Return the refresh token."""
-        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session:
-            async with session.post(AUTH_API_TOKEN_URL, data=self.auth_data) as resp:
-                result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Resp.status refresh token: %s", result)
-                if resp.status == 200:
-                    result["expires_at"] = result["expires_in"] + time.time()
-                    result["status"] = resp.status
-                    return result
-                if resp.status in [400, 401, 404]:
-                    raise TokenRefreshError(
-                        f"""The token cannot be refreshed,
+        async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session, session.post(
+            AUTH_API_TOKEN_URL, data=self.auth_data
+        ) as resp:
+            result = await resp.json(encoding="UTF-8")
+            _LOGGER.debug("Resp.status refresh token: %s", result)
+            if resp.status == 200:
+                result["expires_at"] = result["expires_in"] + time.time()
+                result["status"] = resp.status
+                return result
+            if resp.status in [400, 401, 404]:
+                raise TokenRefreshError(
+                    f"""The token cannot be refreshed,
                         respone from Husqvarna Automower API: {result}"""
-                    )
+                )
 
 
 class RevokeAccessToken:
@@ -134,7 +138,9 @@ class RevokeAccessToken:
 
     async def async_delete_access_token(self) -> dict:
         """Delete the token."""
-        async with aiohttp.ClientSession(headers=self.auth_data) as session, session.post(
+        async with aiohttp.ClientSession(
+            headers=self.auth_data
+        ) as session, session.post(
             AUTH_API_REVOKE_URL, data=(f"token={self.access_token}")
         ) as resp:
             result = await resp.json(encoding="UTF-8")

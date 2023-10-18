@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+"""The CLI for aioautomower."""
 import argparse
 import asyncio
 import logging
@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def run_tester(client_id: str, client_secret: str):
+    """Run the tester."""
     automower_api = AutomowerSession(
         AsyncConfigEntryAuth(ClientSession(), client_id, client_secret), poll=True
     )
@@ -68,9 +69,7 @@ def main():
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide Husqvarna Automower authentication
-    tied to an OAuth2 based config entry.
-    """
+    """Provide Husqvarna Automower authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,

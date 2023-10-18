@@ -109,7 +109,7 @@ class AbstractAuth(ABC):
         return result
 
     async def _async_get_access_token(self) -> None:
-        """Requests a new access token."""
+        """Request a new access token."""
         try:
             return await self.async_get_access_token()
         except ClientError as err:
