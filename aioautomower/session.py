@@ -35,10 +35,10 @@ class AutomowerEndpoint:
     "Update the calendar for a work area on the mower."
 
 
-class AutomowerApi:
+class AutomowerSession:
     """Automower API to communicate with an Automower.
 
-    The `AutomowerApi` is the primary API service for this library. It supports
+    The `AutomowerSession` is the primary API service for this library. It supports
     operations like getting a status or sending commands.
     """
 
