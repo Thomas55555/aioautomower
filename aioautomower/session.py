@@ -36,7 +36,11 @@ class AutomowerEndpoint:
 
 
 class AutomowerSession:
-    """Session."""
+    """Automower API to communicate with an Automower.
+
+    The `AutomowerSession` is the primary API service for this library. It supports
+    operations like getting a status or sending commands.
+    """
 
     def __init__(
         self,
