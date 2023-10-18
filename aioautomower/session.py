@@ -41,14 +41,12 @@ class AutomowerSession:
     def __init__(
         self,
         auth: AbstractAuth,
-        poll=False,
+        poll: bool = False,
     ) -> None:
         """Create a session.
 
-        :param str api_key: A 36 digit api key.
-        :param dict token: A token as returned by rest.GetAccessToken.async_get_access_token()
-        :param float ws_heartbeat_interval: Periodicity of keep-alive pings on the websocket in seconds.
-        :param loop: Event-loop for task execution. If None, the event loop in the current OS thread is used.
+        :param class auth: The AbstractAuth class from aioautomower.auth.
+        :param bool poll: Poll data with rest if True.
         """
         self.auth = auth
         self.poll = poll
@@ -66,11 +64,7 @@ class AutomowerSession:
         self.rest_task = None
 
     def register_data_callback(self, callback):
-        """Register a data update callback.
-
-        :param func callback: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
-        :param bool schedule_immediately: Schedule callback immediately (if data is available).
-        """
+        """Register a data update callback."""
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
 
@@ -87,7 +81,7 @@ class AutomowerSession:
     def unregister_data_callback(self, callback):
         """Unregister a data update callback.
 
-        :param func callback: Callback fired on data updates. Takes one dict argument which is the up-to-date mower data list.
+        :param func callback: Takes one function, which should be unregistered.
         """
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)

@@ -20,9 +20,10 @@ async def async_structure_token(access_token) -> JWT:
 
 
 async def async_get_access_token(client_id, client_secret, websession) -> dict:
-    """Function to get an acces token from the Authentication API with client credentials.
-    This grant type is intended only for you. If you want other users to use your application,
-    then they should login using Authorization Code Grant.
+    """Function to get an acces token from the Authentication API with client
+    credentials. This grant type is intended only for you. If you want other
+    users to use your application, then they should login using Authorization
+    Code Grant.
     """
     auth_data = urlencode(
         {
@@ -41,7 +42,8 @@ async def async_get_access_token(client_id, client_secret, websession) -> dict:
                 result["expires_at"] = result["expires_in"] + time.time()
             if resp.status >= 400:
                 raise TokenError(
-                    f"The token is invalid, respone from Husqvarna Automower API: {result}"
+                    f"""The token is invalid, respone from 
+                    Husqvarna Automower API: {result}"""
                 )
     result["status"] = resp.status
     return result
