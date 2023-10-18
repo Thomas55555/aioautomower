@@ -167,7 +167,8 @@ class AbstractAuth(ABC):
     def register_ws_callback(self, callback):
         """Register a websocket update callback.
 
-        :param func callback: Callback fired on data updates. Takes one dict argument which is the latest websocket data.
+        :param func callback: Callback fired on data updates.
+        Takes one dict argument which is the latest websocket data.
         """
         if callback not in self.ws_update_cbs:
             self.ws_update_cbs.append(callback)

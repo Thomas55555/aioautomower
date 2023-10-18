@@ -33,7 +33,8 @@ class TokenError(Exception):
 
 
 class TokenRefreshError(Exception):
-    """Raised when Husqvarna Authentication API is not able to refresh the token (Error 400 or 404)."""
+    """Raised when Husqvarna Authentication API is not
+    able to refresh the token (Error 400 or 404)."""
 
     def __init__(self, status: str) -> None:
         """Initialize."""
@@ -52,8 +53,8 @@ class MowerApiConnectionsError(Exception):
 
 class GetAccessTokenClientCredentials:
     """Class to get an acces token from the Authentication API with client_credentials.
-    This grant type is intended only for you. If you want other users to use your application,
-    then they should login using Authorization Code Grant.
+    This grant type is intended only for you. If you want other users to use your
+    application, then they should login using Authorization Code Grant.
     """
 
     def __init__(self, client_id, client_secret) -> None:
@@ -78,7 +79,8 @@ class GetAccessTokenClientCredentials:
                     result["expires_at"] = result["expires_in"] + time.time()
                 if resp.status >= 400:
                     raise TokenError(
-                        f"The token is invalid, respone from Husqvarna Automower API: {result}"
+                        f"""The token is invalid, respone
+                        from Husqvarna Automower API: {result}"""
                     )
         result["status"] = resp.status
         return result
@@ -112,7 +114,8 @@ class RefreshAccessToken:
                     return result
                 if resp.status in [400, 401, 404]:
                     raise TokenRefreshError(
-                        f"The token cannot be refreshed, respone from Husqvarna Automower API: {result}"
+                        f"""The token cannot be refreshed, 
+                        respone from Husqvarna Automower API: {result}"""
                     )
 
 
@@ -178,7 +181,8 @@ class GetMowerData:
                     _LOGGER.error("Response mower data: %s", result)
                     if resp.status == 403:
                         raise MowerApiConnectionsError(
-                            f"Error {resp.status}, the mower state can't be fetched: {result}"
+                            f"""Error {resp.status},
+                            the mower state can't be fetched: {result}"""
                         )
         return result
 
