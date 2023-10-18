@@ -1,6 +1,5 @@
 """Models for Husqvarna Automower data."""
 from enum import Enum, StrEnum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -127,7 +126,7 @@ class Positions(BaseModel):
 class Statistics(BaseModel):
     """DataClass for Statistics values."""
 
-    cutting_blade_usage_time: Optional[int] = Field(alias="cuttingBladeUsageTime")
+    cutting_blade_usage_time: int | None = Field(alias="cuttingBladeUsageTime")
     number_of_charging_cycles: int = Field(alias="numberOfChargingCycles")
     number_of_collisions: int = Field(alias="numberOfCollisions")
     total_charging_time: int = Field(alias="totalChargingTime")
@@ -140,7 +139,7 @@ class Statistics(BaseModel):
 class Headlight(BaseModel):
     """DataClass for Headlight values."""
 
-    mode: Optional[str]
+    mode: str | None
 
 
 class Zones(BaseModel):
@@ -176,12 +175,12 @@ class MowerAttributes(BaseModel):
     calendar: Tasks
     planner: Planner
     metadata: Metadata
-    positions: Optional[list[Positions]]
+    positions: list[Positions] | None
     statistics: Statistics
-    cutting_height: Optional[int] = Field(alias="cuttingHeight")
+    cutting_height: int | None = Field(alias="cuttingHeight")
     headlight: Headlight
-    stay_out_zones: Optional[StayOutZones] = Field(alias="stayOutZones")
-    work_areas: Optional[WorkAreas] = Field(alias="workAreas")
+    stay_out_zones: StayOutZones | None = Field(alias="stayOutZones")
+    work_areas: WorkAreas | None = Field(alias="workAreas")
 
 
 class MowerData(BaseModel):

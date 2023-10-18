@@ -1,10 +1,10 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from http import HTTPStatus
-import logging
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from aiohttp import ClientError, ClientResponse, ClientResponseError, ClientSession
@@ -37,7 +37,7 @@ class AbstractAuth(ABC):
         """Return a valid access token."""
 
     async def request(
-        self, method: str, url: str, **kwargs: Optional[Mapping[str, Any]]
+        self, method: str, url: str, **kwargs: Mapping[str, Any] | None
     ) -> ClientResponse:
         """Make a request."""
         headers = await self.headers()
@@ -109,7 +109,7 @@ class AbstractAuth(ABC):
         return result
 
     async def _async_get_access_token(self) -> None:
-        """Requests a new access token."""
+        """Request a new access token."""
         try:
             return await self.async_get_access_token()
         except ClientError as err:

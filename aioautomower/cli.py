@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+"""The CLI for aioautomower."""
 import argparse
 import asyncio
 import logging
@@ -7,9 +7,9 @@ import time
 
 from aiohttp import ClientSession
 
+import aioautomower.utils
 from aioautomower.auth import AbstractAuth
 from aioautomower.session import AutomowerSession
-import aioautomower.utils
 
 from .const import API_BASE_URL
 
@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def run_tester(client_id: str, client_secret: str):
+    """Run the tester."""
     automower_api = AutomowerSession(
         AsyncConfigEntryAuth(ClientSession(), client_id, client_secret), poll=True
     )
@@ -51,7 +52,6 @@ def main():
     SIGUSR1: Invalidate token
     SIGUSR2: Get status
     """
-
     parser = argparse.ArgumentParser(
         description=main.__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -69,8 +69,7 @@ def main():
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide Husqvarna Automower authentication
-    tied to an OAuth2 based config entry."""
+    """Provide Husqvarna Automower authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,

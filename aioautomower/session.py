@@ -69,9 +69,8 @@ class AutomowerSession:
             self.data_update_cbs.append(callback)
 
     def _schedule_data_callback(self, cb, delay=0.0):
-        if self.poll:
-            if self.data is None:
-                raise NoDataAvailableException
+        if self.poll and self.data is None:
+            raise NoDataAvailableException
         self.loop.call_later(delay, cb, self.mowers)
 
     def _schedule_data_callbacks(self):
@@ -95,7 +94,6 @@ class AutomowerSession:
         token is created with the Authorization Code Grant. Call this method
         before any other methods.
         """
-
         self._schedule_data_callbacks()
 
         if self.poll:
