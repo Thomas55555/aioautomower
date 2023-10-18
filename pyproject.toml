@@ -36,6 +36,9 @@ aioautomower = ["py.typed"]
 [tool.ruff]
 fix = true
 show-fixes = true
+exclude = [
+    "session.py",
+]
 
 # enable later: "C90", "PTH", "TCH", "RET", "ANN"
 select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]

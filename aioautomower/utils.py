@@ -6,7 +6,7 @@ from urllib.parse import quote_plus, urlencode
 import aiohttp
 import jwt
 
-from .const import AUTH_API_TOKEN_URL, AUTH_HEADERS
+from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 from .model import JWT
 from .rest import TokenError
 
@@ -48,4 +48,29 @@ async def async_get_access_token(client_id, client_secret) -> dict:
                     Husqvarna Automower API: {result}"""
             )
     result["status"] = resp.status
+    return result
+
+
+async def async_invalidate_access_token(
+    valid_access_token, access_token_to_invalidate
+) -> dict:
+    """Invalidate the token.
+
+    :param str valid_access_token: A working access token to authorize this request.
+    :param str access_token_to_delete: An access token to invalidate,
+    can be th same like the first argument.
+    """
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": f"Bearer {valid_access_token}",
+        "Accept": "*/*",
+    }
+    async with aiohttp.ClientSession(headers=headers) as session, session.post(
+        AUTH_API_REVOKE_URL, data=(f"token={access_token_to_invalidate}")
+    ) as resp:
+        result = await resp.json(encoding="UTF-8")
+        _LOGGER.debug("Resp.status delete token: %s", resp.status)
+        if resp.status >= 400:
+            resp.raise_for_status()
+            _LOGGER.error("Response body delete token: %s", result)
     return result
