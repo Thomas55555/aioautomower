@@ -27,7 +27,7 @@ dependencies = [
 [tool.setuptools]
 platforms = ["any"]
 zip-safe  = false
-packages = ["aiohue"]
+packages = ["aioautomower"]
 include-package-data = true
 
 [tool.setuptools.package-data]
