@@ -1,1 +1,4 @@
-aiohttp 
+aiohttp
+pydantic
+PyJWT
+setuptools
