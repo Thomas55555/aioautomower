@@ -42,7 +42,7 @@ async def async_get_access_token(client_id, client_secret, websession) -> dict:
                 result["expires_at"] = result["expires_in"] + time.time()
             if resp.status >= 400:
                 raise TokenError(
-                    f"""The token is invalid, respone from 
+                    f"""The token is invalid, respone from
                     Husqvarna Automower API: {result}"""
                 )
     result["status"] = resp.status

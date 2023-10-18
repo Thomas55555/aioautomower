@@ -7,9 +7,9 @@ import time
 
 from aiohttp import ClientSession
 
+import aioautomower.utils
 from aioautomower.auth import AbstractAuth
 from aioautomower.session import AutomowerSession
-import aioautomower.utils
 
 from .const import API_BASE_URL
 
@@ -51,7 +51,6 @@ def main():
     SIGUSR1: Invalidate token
     SIGUSR2: Get status
     """
-
     parser = argparse.ArgumentParser(
         description=main.__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
@@ -70,7 +69,8 @@ def main():
 
 class AsyncConfigEntryAuth(AbstractAuth):
     """Provide Husqvarna Automower authentication
-    tied to an OAuth2 based config entry."""
+    tied to an OAuth2 based config entry.
+    """
 
     def __init__(
         self,

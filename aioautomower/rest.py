@@ -34,7 +34,8 @@ class TokenError(Exception):
 
 class TokenRefreshError(Exception):
     """Raised when Husqvarna Authentication API is not
-    able to refresh the token (Error 400 or 404)."""
+    able to refresh the token (Error 400 or 404).
+    """
 
     def __init__(self, status: str) -> None:
         """Initialize."""
@@ -114,7 +115,7 @@ class RefreshAccessToken:
                     return result
                 if resp.status in [400, 401, 404]:
                     raise TokenRefreshError(
-                        f"""The token cannot be refreshed, 
+                        f"""The token cannot be refreshed,
                         respone from Husqvarna Automower API: {result}"""
                     )
 
@@ -133,15 +134,14 @@ class RevokeAccessToken:
 
     async def async_delete_access_token(self) -> dict:
         """Delete the token."""
-        async with aiohttp.ClientSession(headers=self.auth_data) as session:
-            async with session.post(
-                AUTH_API_REVOKE_URL, data=(f"token={self.access_token}")
-            ) as resp:
-                result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Resp.status delete token: %s", resp.status)
-                if resp.status >= 400:
-                    resp.raise_for_status()
-                    _LOGGER.error("Response body delete token: %s", result)
+        async with aiohttp.ClientSession(headers=self.auth_data) as session, session.post(
+            AUTH_API_REVOKE_URL, data=(f"token={self.access_token}")
+        ) as resp:
+            result = await resp.json(encoding="UTF-8")
+            _LOGGER.debug("Resp.status delete token: %s", resp.status)
+            if resp.status >= 400:
+                resp.raise_for_status()
+                _LOGGER.error("Response body delete token: %s", result)
         return result
 
 
@@ -165,25 +165,24 @@ class GetMowerData:
         """Return the mowers data as a list of mowers."""
         async with aiohttp.ClientSession(
             headers=self.mower_headers, timeout=timeout
-        ) as session:
-            async with session.get(API_BASE_URL) as resp:
+        ) as session, session.get(API_BASE_URL) as resp:
+            result = await resp.json(encoding="UTF-8")
+            _LOGGER.debug("Response mower data: %s", resp)
+            if resp.status == 200:
                 result = await resp.json(encoding="UTF-8")
-                _LOGGER.debug("Response mower data: %s", resp)
-                if resp.status == 200:
-                    result = await resp.json(encoding="UTF-8")
-                    for idx, _ent in enumerate(result["data"]):
-                        result["data"][idx]["attributes"].update(
-                            result["data"][idx]["attributes"]["settings"]
-                        )
-                        del result["data"][idx]["attributes"]["settings"]
-                    _LOGGER.debug("Result mower data: %s", result)
-                if resp.status >= 400:
-                    _LOGGER.error("Response mower data: %s", result)
-                    if resp.status == 403:
-                        raise MowerApiConnectionsError(
-                            f"""Error {resp.status},
+                for idx, _ent in enumerate(result["data"]):
+                    result["data"][idx]["attributes"].update(
+                        result["data"][idx]["attributes"]["settings"]
+                    )
+                    del result["data"][idx]["attributes"]["settings"]
+                _LOGGER.debug("Result mower data: %s", result)
+            if resp.status >= 400:
+                _LOGGER.error("Response mower data: %s", result)
+                if resp.status == 403:
+                    raise MowerApiConnectionsError(
+                        f"""Error {resp.status},
                             the mower state can't be fetched: {result}"""
-                        )
+                    )
         return result
 
 
