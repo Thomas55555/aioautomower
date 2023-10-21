@@ -4,12 +4,13 @@ import contextlib
 import logging
 import time
 from typing import Literal
+
 from aiohttp import ClientWebSocketResponse, WSMsgType
+
 from .auth import AbstractAuth
-from .const import MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE, EVENT_TYPES
+from .const import EVENT_TYPES, MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException
 from .model import HeadlightModes, MowerList
-from json import loads
 
 _LOGGER = logging.getLogger(__name__)
 

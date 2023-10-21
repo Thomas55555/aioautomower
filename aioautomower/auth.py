@@ -1,20 +1,23 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
 import logging
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
-import time
-import aiohttp
-from aiohttp import ClientError, ClientResponse, ClientResponseError, ClientSession
-from aiohttp import ClientWebSocketResponse, WSMsgType
+
+from aiohttp import (
+    ClientError,
+    ClientResponse,
+    ClientResponseError,
+    ClientSession,
+    ClientWebSocketResponse,
+)
+
 from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from .exceptions import ApiException, ApiForbiddenException, AuthException
 from .utils import async_structure_token
-from json import loads
-from datetime import datetime
-import asyncio
 
 ERROR = "error"
 STATUS = "status"
