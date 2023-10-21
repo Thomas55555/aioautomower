@@ -108,7 +108,7 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
-        self._ws = await self.auth.websocket()
+        self._ws = await self.auth.websocket_connect()
         self._receiver_task = asyncio.ensure_future(self._receiver())
 
     async def _receiver(self) -> None:
