@@ -105,6 +105,7 @@ class AutomowerSession:
 
     async def close(self):
         """Close the session."""
+        await self._ws.close()
         for task in [
             self.ws_task,
             self.token_task,
@@ -301,6 +302,6 @@ class AutomowerSession:
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
-            await asyncio.sleep(REST_POLL_CYCLE)
             self.data = await self.get_status()
             self._schedule_data_callbacks()
+            await asyncio.sleep(REST_POLL_CYCLE)

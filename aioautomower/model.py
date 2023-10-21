@@ -126,7 +126,7 @@ class Positions(BaseModel):
 class Statistics(BaseModel):
     """DataClass for Statistics values."""
 
-    cutting_blade_usage_time: int | None = Field(alias="cuttingBladeUsageTime")
+    # cutting_blade_usage_time: Optional[int] = Field(alias="cuttingBladeUsageTime")
     number_of_charging_cycles: int = Field(alias="numberOfChargingCycles")
     number_of_collisions: int = Field(alias="numberOfCollisions")
     total_charging_time: int = Field(alias="totalChargingTime")
@@ -179,8 +179,8 @@ class MowerAttributes(BaseModel):
     statistics: Statistics
     cutting_height: int | None = Field(alias="cuttingHeight")
     headlight: Headlight
-    stay_out_zones: StayOutZones | None = Field(alias="stayOutZones")
-    work_areas: WorkAreas | None = Field(alias="workAreas")
+    # stay_out_zones: Optional[StayOutZones] = Field(alias="stayOutZones")
+    # work_areas: WorkAreas | None = Field(alias="workAreas")
 
 
 class MowerData(BaseModel):
