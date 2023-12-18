@@ -1,7 +1,6 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
 import logging
-import time
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from http import HTTPStatus
