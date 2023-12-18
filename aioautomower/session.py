@@ -107,13 +107,12 @@ class AutomowerSession:
         if self.poll:
             await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
-
         self._receiver_task = asyncio.ensure_future(self._receiver())
 
     async def _receiver(self) -> None:
         """Receive a message from a web socket."""
         while True:
-            _LOGGER.debug("websocket: %s", websocket)
+            _LOGGER.debug("Websocekt re/connecting")
             websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
             _LOGGER.debug("websocket: %s", websocket)
             while not websocket.closed:
