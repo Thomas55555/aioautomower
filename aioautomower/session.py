@@ -108,40 +108,46 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
-        self._ws = await self.auth.websocket_connect()
         self._receiver_task = asyncio.ensure_future(self._receiver())
 
     async def _receiver(self) -> None:
         """Receive a message from a web socket."""
-        if not (websocket := self._ws):
-            return
-        while not websocket.closed:
-            try:
-                msg = await websocket.receive(timeout=300)
-                if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING, WSMsgType.CLOSED):
-                    break
-                if msg.type == WSMsgType.TEXT:
-                    msg_dict = msg.json()
-                    if "type" in msg_dict:
-                        if msg_dict["type"] in EVENT_TYPES:
+        while True:
+            _LOGGER.debug("websocket: %s", websocket)
+            websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
+            _LOGGER.debug("websocket: %s", websocket)
+            while not websocket.closed:
+                _LOGGER.debug("HALLLOOO")
+                try:
+                    msg = await websocket.receive(timeout=300)
+                    if msg.type in (
+                        WSMsgType.CLOSE,
+                        WSMsgType.CLOSING,
+                        WSMsgType.CLOSED,
+                    ):
+                        break
+                    if msg.type == WSMsgType.TEXT:
+                        msg_dict = msg.json()
+                        if "type" in msg_dict:
+                            if msg_dict["type"] in EVENT_TYPES:
+                                _LOGGER.debug(
+                                    "Got %s, data: %s", msg_dict["type"], msg_dict
+                                )
+                                self._update_data(msg_dict)
+                            else:
+                                _LOGGER.warning(
+                                    "Received unknown ws type %s", msg_dict["type"]
+                                )
+                        elif "ready" in msg_dict and "connectionId" in msg_dict:
                             _LOGGER.debug(
-                                "Got %s, data: %s", msg_dict["type"], msg_dict
+                                "Websocket ready=%s (id='%s')",
+                                msg_dict["ready"],
+                                msg_dict["connectionId"],
                             )
-                            self._update_data(msg_dict)
-                        else:
-                            _LOGGER.warning(
-                                "Received unknown ws type %s", msg_dict["type"]
-                            )
-                    elif "ready" in msg_dict and "connectionId" in msg_dict:
-                        _LOGGER.debug(
-                            "Websocket ready=%s (id='%s')",
-                            msg_dict["ready"],
-                            msg_dict["connectionId"],
-                        )
-                elif msg.type == WSMsgType.ERROR:
-                    continue
-            except asyncio.TimeoutError:
-                _LOGGER.debug("Timeout occured")
+                    elif msg.type == WSMsgType.ERROR:
+                        continue
+                except asyncio.TimeoutError:
+                    _LOGGER.debug("Timeout occured")
 
     async def close(self):
         """Close the session."""

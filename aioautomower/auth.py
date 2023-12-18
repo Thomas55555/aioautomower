@@ -176,15 +176,6 @@ class AbstractAuth(ABC):
         """Return the web socket."""
         return self._ws
 
-    async def token_valid_state(self, token) -> bool:
-        """Return if the token is expired."""
-        _LOGGER.debug("187")
-        token_struktured = await async_structure_token(token)
-        _LOGGER.debug("189")
-        if time.time() > token_struktured.exp:
-            return False
-        return True
-
     async def websocket_connect(self) -> None:
         """Start a websocket conenction."""
         token = await self._async_get_access_token()
