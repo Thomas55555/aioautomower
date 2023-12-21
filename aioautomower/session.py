@@ -114,9 +114,7 @@ class AutomowerSession:
         while True:
             _LOGGER.debug("Websocekt re/connecting")
             websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
-            _LOGGER.debug("websocket: %s", websocket)
             while not websocket.closed:
-                _LOGGER.debug("HALLLOOO")
                 try:
                     msg = await websocket.receive(timeout=300)
                     if msg.type in (
@@ -342,6 +340,6 @@ class AutomowerSession:
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
-            await asyncio.sleep(REST_POLL_CYCLE)
             self.data = await self.get_status()
             self._schedule_data_callbacks()
+            await asyncio.sleep(REST_POLL_CYCLE)

@@ -178,7 +178,6 @@ class AbstractAuth(ABC):
     async def websocket_connect(self) -> None:
         """Start a websocket conenction."""
         token = await self._async_get_access_token()
-        _LOGGER.debug("token: %s", token)
         self._ws = await self._websession.ws_connect(
             url=WS_URL,
             headers={"Authorization": AUTH_HEADER_FMT.format(token)},
