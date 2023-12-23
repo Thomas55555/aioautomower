@@ -18,7 +18,7 @@ jobs:
         id: vars
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install build
@@ -41,4 +41,4 @@ jobs:
         run: >-
           python3 -m build
       - name: Publish release to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.10
+        uses: pypa/gh-action-pypi-publish@v1.8.11

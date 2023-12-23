@@ -6,10 +6,15 @@ from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
 
-import aiohttp
-from aiohttp import ClientError, ClientResponse, ClientResponseError, ClientSession
+from aiohttp import (
+    ClientError,
+    ClientResponse,
+    ClientResponseError,
+    ClientSession,
+    ClientWebSocketResponse,
+)
 
-from .const import API_BASE_URL, AUTH_HEADER_FMT, EVENT_TYPES, WS_URL
+from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from .exceptions import ApiException, ApiForbiddenException, AuthException
 from .utils import async_structure_token
 
@@ -31,6 +36,7 @@ class AbstractAuth(ABC):
         self.loop = websession.loop
         self.ws_update_cbs = []
         self.ws_data = {}
+        self.ws_status: bool = True
 
     @abstractmethod
     async def async_get_access_token(self) -> str:
@@ -164,74 +170,17 @@ class AbstractAuth(ABC):
             message.append(error[MESSAGE])
         return message
 
-    def register_ws_callback(self, callback):
-        """Register a websocket update callback.
+    @property
+    def websocket(self) -> ClientWebSocketResponse | None:
+        """Return the web socket."""
+        return self._ws
 
-        :param func callback: Callback fired on data updates.
-        Takes one dict argument which is the latest websocket data.
-        """
-        if callback not in self.ws_update_cbs:
-            self.ws_update_cbs.append(callback)
-
-    def _schedule_ws_callback(self, cb, delay=0.0):
-        """Schedule websocket callback."""
-        self.loop.call_later(delay, cb, self.ws_data)
-
-    def _schedule_ws_callbacks(self):
-        """Schedule all websocket callbacks."""
-        for cb in self.ws_update_cbs:
-            self._schedule_ws_callback(cb)
-
-    async def websocket(self) -> dict[str, dict]:
+    async def websocket_connect(self) -> None:
         """Start a websocket conenction."""
-        async with self._websession.ws_connect(
+        token = await self._async_get_access_token()
+        self._ws = await self._websession.ws_connect(
             url=WS_URL,
-            headers={
-                "Authorization": AUTH_HEADER_FMT.format(
-                    await self._async_get_access_token()
-                )
-            },
+            headers={"Authorization": AUTH_HEADER_FMT.format(token)},
             heartbeat=60,
-        ) as ws:
-            async for msg in ws:
-                if msg.type == aiohttp.WSMsgType.TEXT:
-                    msg_dict = msg.json()
-                    if "type" in msg_dict:
-                        if msg_dict["type"] in EVENT_TYPES:
-                            _LOGGER.debug(
-                                "Got %s, data: %s", msg_dict["type"], msg_dict
-                            )
-                            self.ws_data = msg_dict
-                            self._schedule_ws_callbacks()
-                        else:
-                            _LOGGER.warning(
-                                "Received unknown ws type %s", msg_dict["type"]
-                            )
-                    elif "ready" in msg_dict and "connectionId" in msg_dict:
-                        _LOGGER.debug(
-                            "Websocket ready=%s (id='%s')",
-                            msg_dict["ready"],
-                            msg_dict["connectionId"],
-                        )
-                    else:
-                        _LOGGER.debug("Discarded websocket response: %s", msg_dict)
-                elif msg.type == aiohttp.WSMsgType.ERROR:
-                    _LOGGER.debug("Received ERROR")
-                    break
-                elif msg.type == aiohttp.WSMsgType.CONTINUATION:
-                    _LOGGER.debug("Received CONTINUATION")
-                elif msg.type == aiohttp.WSMsgType.BINARY:
-                    _LOGGER.debug("Received BINARY")
-                elif msg.type == aiohttp.WSMsgType.PING:
-                    _LOGGER.debug("Received PING")
-                elif msg.type == aiohttp.WSMsgType.PONG:
-                    _LOGGER.debug("Received PONG")
-                elif msg.type == aiohttp.WSMsgType.CLOSE:
-                    _LOGGER.debug("Received CLOSE")
-                    await ws.close()
-                elif msg.type == aiohttp.WSMsgType.CLOSING:
-                    _LOGGER.debug("Received CLOSING")
-                elif msg.type == aiohttp.WSMsgType.CLOSED:
-                    _LOGGER.debug("Received CLOSED")
-                else:
-                    _LOGGER.debug("Received msg.type=%d", msg.type)
+        )
+        return self._ws

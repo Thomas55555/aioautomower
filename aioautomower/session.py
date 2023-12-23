@@ -5,8 +5,10 @@ import logging
 import time
 from typing import Literal
 
+from aiohttp import ClientWebSocketResponse, WSMsgType
+
 from .auth import AbstractAuth
-from .const import MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
+from .const import EVENT_TYPES, MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException
 from .model import HeadlightModes, MowerList
 
@@ -36,7 +38,11 @@ class AutomowerEndpoint:
 
 
 class AutomowerSession:
-    """Session."""
+    """Automower API to communicate with an Automower.
+
+    The `AutomowerSession` is the primary API service for this library. It supports
+    operations like getting a status or sending commands.
+    """
 
     def __init__(
         self,
@@ -62,6 +68,8 @@ class AutomowerSession:
 
         self.token_task = None
         self.rest_task = None
+        self._ws: ClientWebSocketResponse | None = None
+        self._receiver_task: asyncio.Task | None = None
 
     def register_data_callback(self, callback):
         """Register a data update callback."""
@@ -99,9 +107,44 @@ class AutomowerSession:
         if self.poll:
             await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
+        self._receiver_task = asyncio.ensure_future(self._receiver())
 
-        self.ws_task = self.loop.create_task(self.auth.websocket())
-        self.auth.register_ws_callback(self.callback)
+    async def _receiver(self) -> None:
+        """Receive a message from a web socket."""
+        while True:
+            _LOGGER.debug("Websocekt re/connecting")
+            websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
+            while not websocket.closed:
+                try:
+                    msg = await websocket.receive(timeout=300)
+                    if msg.type in (
+                        WSMsgType.CLOSE,
+                        WSMsgType.CLOSING,
+                        WSMsgType.CLOSED,
+                    ):
+                        break
+                    if msg.type == WSMsgType.TEXT:
+                        msg_dict = msg.json()
+                        if "type" in msg_dict:
+                            if msg_dict["type"] in EVENT_TYPES:
+                                _LOGGER.debug(
+                                    "Got %s, data: %s", msg_dict["type"], msg_dict
+                                )
+                                self._update_data(msg_dict)
+                            else:
+                                _LOGGER.warning(
+                                    "Received unknown ws type %s", msg_dict["type"]
+                                )
+                        elif "ready" in msg_dict and "connectionId" in msg_dict:
+                            _LOGGER.debug(
+                                "Websocket ready=%s (id='%s')",
+                                msg_dict["ready"],
+                                msg_dict["connectionId"],
+                            )
+                    elif msg.type == WSMsgType.ERROR:
+                        continue
+                except asyncio.TimeoutError:
+                    _LOGGER.debug("Timeout occured")
 
     async def close(self):
         """Close the session."""
@@ -293,11 +336,6 @@ class AutomowerSession:
         mowers_list = MowerList(**self.data)
         for mower in mowers_list.data:
             self.mowers[mower.id] = mower.attributes
-
-    def callback(self, new_data):
-        """Pass received websocket data to the update function."""
-        if new_data:
-            self._update_data(new_data)
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""

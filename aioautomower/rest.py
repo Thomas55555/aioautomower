@@ -54,7 +54,7 @@ class MowerApiConnectionsError(Exception):
 
 
 class GetAccessTokenClientCredentials:
-    """Class to get an acces token from the Authentication API with client_credentials.
+    """Legacy class to get an acces token from the Authentication API with client_credentials.
 
     This grant type is intended only for you. If you want other users to use your
     application, then they should login using Authorization Code Grant.
@@ -62,6 +62,10 @@ class GetAccessTokenClientCredentials:
 
     def __init__(self, client_id, client_secret) -> None:
         """Initialize the Auth-API and store the auth so we can make requests."""
+        _LOGGER.warning(
+            """The GetAccessTokenClientCredentials class is depracated. Please migrate
+            to async_get_access_token function in utils.py."""
+        )
         self.auth_data = urlencode(
             {
                 "grant_type": "client_credentials",
@@ -95,6 +99,9 @@ class RefreshAccessToken:
 
     def __init__(self, api_key, refresh_token) -> None:
         """Initialize the Auth-API and store the auth so we can make requests."""
+        _LOGGER.warning(
+            "The RefreshAccessToken class is depracated. Please migrate to AutomowerApi class"
+        )
         self.api_key = api_key
         self.refresh_token = refresh_token
         self.auth_data = urlencode(
@@ -129,6 +136,10 @@ class RevokeAccessToken:
 
     def __init__(self, access_token) -> None:
         """Initialize the Auth-API and store the auth so we can make requests."""
+        _LOGGER.warning(
+            """The RevokeAccessToken class is depracated.
+            Please migrate to async_get_access_token funtion in utils.py"""
+        )
         self.access_token = access_token
         self.auth_data = {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -156,6 +167,9 @@ class GetMowerData:
 
     def __init__(self, api_key, access_token, provider, token_type) -> None:
         """Initialize the Communication API to get data."""
+        _LOGGER.warning(
+            "The GetMowerData class is depracated. Please migrate to AutomowerSession class"
+        )
         self.api_key = api_key
         self.access_token = access_token
         self.provider = provider
@@ -206,6 +220,9 @@ class Return:
         command_type,
     ) -> None:
         """Initialize the API and store the auth so we can send commands."""
+        _LOGGER.warning(
+            "The Return class is depracated. Please migrate to AutomowerSession class"
+        )
         self.api_key = api_key
         self.access_token = access_token
         self.provider = provider
