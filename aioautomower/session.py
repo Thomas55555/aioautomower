@@ -61,8 +61,8 @@ class AutomowerSession:
         self.rest_task = False
         self.loop = asyncio.get_event_loop()
         self.token = None
+        self._data = {}
         self.data = {}
-        self.mowers = {}
         self.listen_task = None
         self.ws_task = None
 
@@ -79,7 +79,7 @@ class AutomowerSession:
     def _schedule_data_callback(self, cb, delay=0.0):
         if self.poll and self.data is None:
             raise NoDataAvailableException
-        self.loop.call_later(delay, cb, self.mowers)
+        self.loop.call_later(delay, cb, self.data)
 
     def _schedule_data_callbacks(self):
         for cb in self.data_update_cbs:
@@ -170,9 +170,9 @@ class AutomowerSession:
                 mower_list["data"][idx]["attributes"]["settings"]
             )
             del mower_list["data"][idx]["attributes"]["settings"]
-        self.data = mower_list
+        self._data = mower_list
         self.mower_as_dict_dataclass()
-        return self.mowers
+        return self.data
 
     async def resume_schedule(self, mower_id: str):
         """Resume schedule.
@@ -302,44 +302,39 @@ class AutomowerSession:
             await asyncio.sleep(sleep_time)
             await self.auth.async_get_access_token()
 
-    def _update_data(self, j):
-        if self.data is None:
+    def _update_data(self, new_data):
+        if self._data is None:
             raise NoDataAvailableException
-        if self.data is not None:
-            for datum in self.data["data"]:
-                if datum["type"] == "mower" and datum["id"] == j["id"]:
-                    if j["type"] == "positions-event":
-                        last_pos_identical = (
-                            datum["attributes"]["positions"][0]
-                            == j["attributes"]["positions"][0]
-                        )
-                        if not last_pos_identical:
-                            j["attributes"]["positions"].extend(
-                                datum["attributes"]["positions"]
-                            )
-                    for attrib in j["attributes"]:
+        if self._data is not None:
+            for datum in self._data["data"]:
+                if datum["type"] == "mower" and datum["id"] == new_data["id"]:
+                    for attrib in new_data["attributes"]:
                         try:
-                            tasks = j["attributes"]["calendar"]["tasks"]
+                            tasks = new_data["attributes"]["calendar"]["tasks"]
                             if len(tasks) == 0:
                                 temp_task = datum["attributes"]["calendar"]["tasks"]
-                                datum["attributes"][attrib] = j["attributes"][attrib]
+                                datum["attributes"][attrib] = new_data["attributes"][
+                                    attrib
+                                ]
                                 datum["attributes"]["calendar"]["tasks"] = temp_task
                             if len(tasks) > 0:
-                                datum["attributes"][attrib] = j["attributes"][attrib]
+                                datum["attributes"][attrib] = new_data["attributes"][
+                                    attrib
+                                ]
                         except KeyError:
-                            datum["attributes"][attrib] = j["attributes"][attrib]
+                            datum["attributes"][attrib] = new_data["attributes"][attrib]
         self.mower_as_dict_dataclass()
         self._schedule_data_callbacks()
 
     def mower_as_dict_dataclass(self):
         """Convert mower data to a dictionary DataClass."""
-        mowers_list = MowerList(**self.data)
+        mowers_list = MowerList(**self._data)
         for mower in mowers_list.data:
-            self.mowers[mower.id] = mower.attributes
+            self.data[mower.id] = mower.attributes
 
     async def _rest_task(self):
         """Poll data periodically via Rest."""
         while True:
-            self.data = await self.get_status()
+            await self.get_status()
             self._schedule_data_callbacks()
             await asyncio.sleep(REST_POLL_CYCLE)

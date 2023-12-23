@@ -33,16 +33,10 @@ class AsyncTokenAuth(AbstractAuth):
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        _LOGGER.debug("self.token :%s", self.token)
         if not self.token:
             self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
             token_structured = await async_structure_token(self.token["access_token"])
-            _LOGGER.debug("token_structured.exp: %s", token_structured.exp)
-            _LOGGER.debug(time.time())
-        # if token_structured.exp < time.time():
-        #     self.token = await aioautomower.utils.async_get_access_token(
-        #         self.client_id, self.client_secret, self.websession
-        #     )
+            print("Token expires at: ", token_structured.exp)
         return self.token["access_token"]
 
     @property
@@ -69,14 +63,14 @@ async def main():
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
     await automower_api.connect()
-    await asyncio.sleep(300)
+    await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
 
 
 def callback(ws_data):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
-    print(ws_data)
+    print("Mowers data:", ws_data)
 
 
 asyncio.run(main())
