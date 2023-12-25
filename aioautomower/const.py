@@ -23,7 +23,10 @@ REST_POLL_CYCLE = 300
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
 USER_URL = f"{AUTH_API_BASE_URL}/users"
 WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
-
+MOWER_API_BASE_URL = "https://api.amc.husqvarna.dev/v1/mowers/"
+REST_POLL_CYCLE_LE = 86400
+WS_STATUS_UPDATE_CYLE = 840.0
+WS_TOLERANCE_TIME = 20.0
 
 ERRORCODES = {
     0: "Unexpected error",

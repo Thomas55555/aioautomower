@@ -9,7 +9,7 @@ from aiohttp import ClientSession
 
 import aioautomower.utils
 from aioautomower.auth import AbstractAuth
-from aioautomower.session import AutomowerSession
+from aioautomower.api import AutomowerApi
 
 from .const import API_BASE_URL
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def run_tester(client_id: str, client_secret: str):
     """Run the tester."""
-    automower_api = AutomowerSession(
+    automower_api = AutomowerApi(
         AsyncConfigEntryAuth(ClientSession(), client_id, client_secret), poll=True
     )
     automower_api.register_data_callback(

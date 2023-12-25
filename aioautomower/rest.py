@@ -168,7 +168,7 @@ class GetMowerData:
     def __init__(self, api_key, access_token, provider, token_type) -> None:
         """Initialize the Communication API to get data."""
         _LOGGER.warning(
-            "The GetMowerData class is depracated. Please migrate to AutomowerSession class"
+            "The GetMowerData class is depracated. Please migrate to AutomowerApi class"
         )
         self.api_key = api_key
         self.access_token = access_token
@@ -221,7 +221,7 @@ class Return:
     ) -> None:
         """Initialize the API and store the auth so we can send commands."""
         _LOGGER.warning(
-            "The Return class is depracated. Please migrate to AutomowerSession class"
+            "The Return class is depracated. Please migrate to AutomowerApi class"
         )
         self.api_key = api_key
         self.access_token = access_token
