@@ -1,6 +1,5 @@
 """Models for Husqvarna Automower data."""
 from enum import Enum, StrEnum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
