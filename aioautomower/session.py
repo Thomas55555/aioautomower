@@ -214,7 +214,8 @@ class AutomowerSession:
 
     async def resume_schedule(self, mower_id: str):
         """Removes any ovveride on the Planner and let the mower
-        resume to the schedule set by the Calendar"""
+        resume to the schedule set by the Calendar
+        """
         command_type = "actions"
         payload = {"data": {"type": "ResumeSchedule"}}
         try:
@@ -242,7 +243,8 @@ class AutomowerSession:
 
     async def park_for(self, mower_id: str, duration_in_min: int):
         """Parks the mower for a period of minutes. The mower will drive to
-        the charching station and park for the duration set by the command."""
+        the charching station and park for the duration set by the command.
+        """
         command_type = "actions"
         payload = {
             "data": {
@@ -497,7 +499,8 @@ class AutomowerSession:
     async def _websocket_monitor_task(self):
         """Monitor, if the websocket still sends updates. If not, check, via REST,
         if the mower is connected. If there are no recent updates, Start REST task
-        to get information"""
+        to get information
+        """
         message_sent = []
         mower_connected = []
         for idx, ent in enumerate(self.data["data"]):

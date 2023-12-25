@@ -8,8 +8,8 @@ import time
 from aiohttp import ClientSession
 
 import aioautomower.utils
-from aioautomower.auth import AbstractAuth
 from aioautomower.api import AutomowerApi
+from aioautomower.auth import AbstractAuth
 
 from .const import API_BASE_URL
 

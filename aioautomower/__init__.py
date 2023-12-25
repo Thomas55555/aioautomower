@@ -11,4 +11,3 @@ __all__ = [
 
 # deprecated to keep older scripts who import this from breaking
 from .rest import *
-from .session import AutomowerSession
