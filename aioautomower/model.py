@@ -179,7 +179,7 @@ class MowerAttributes(BaseModel):
     statistics: Statistics
     cutting_height: Optional[int] = Field(alias="cuttingHeight", default=None)
     headlight: Headlight
-    stay_out_zones: Optional[StayOutZones] = Field(alias="stayOutZones", default=None)
+    stay_out_zones: StayOutZones | None = Field(alias="stayOutZones")
     work_areas: Optional[WorkAreas] = Field(alias="workAreas", default=None)
 
 
