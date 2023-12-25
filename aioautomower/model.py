@@ -1,8 +1,9 @@
 """Models for Husqvarna Automower data."""
 from enum import Enum, StrEnum
+from typing import Optional
 
 from pydantic import BaseModel, Field
-from typing import Optional
+
 
 class User(BaseModel):
     """The content of the JWT."""
