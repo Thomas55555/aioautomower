@@ -2,7 +2,7 @@
 from enum import Enum, StrEnum
 
 from pydantic import BaseModel, Field
-
+from typing import Optional
 
 class User(BaseModel):
     """The content of the JWT."""
@@ -126,7 +126,7 @@ class Positions(BaseModel):
 class Statistics(BaseModel):
     """DataClass for Statistics values."""
 
-    cutting_blade_usage_time: int | None = Field(alias="cuttingBladeUsageTime")
+    cutting_blade_usage_time: Optional[float]  = Field(alias="cuttingBladeUsageTime", default=None)
     number_of_charging_cycles: int = Field(alias="numberOfChargingCycles")
     number_of_collisions: int = Field(alias="numberOfCollisions")
     total_charging_time: int = Field(alias="totalChargingTime")
@@ -177,10 +177,10 @@ class MowerAttributes(BaseModel):
     metadata: Metadata
     positions: list[Positions] | None
     statistics: Statistics
-    cutting_height: int | None = Field(alias="cuttingHeight")
+    cutting_height: Optional[int] = Field(alias="cuttingHeight", default=None)
     headlight: Headlight
-    stay_out_zones: StayOutZones | None = Field(alias="stayOutZones")
-    work_areas: WorkAreas | None = Field(alias="workAreas")
+    stay_out_zones: Optional[StayOutZones] = Field(alias="stayOutZones", default=None)
+    work_areas: Optional[WorkAreas] = Field(alias="workAreas", default=None)
 
 
 class MowerData(BaseModel):
