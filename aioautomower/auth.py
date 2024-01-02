@@ -2,6 +2,7 @@
 
 import logging
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
@@ -33,7 +34,7 @@ class AbstractAuth(ABC):
         self._websession = websession
         self._host = host if host is not None else API_BASE_URL
         self._client_id = None
-        self.loop = websession.loop
+        self.loop = asyncio.get_event_loop()
         self.ws_update_cbs = []
         self.ws_data = {}
         self.ws_status: bool = True
