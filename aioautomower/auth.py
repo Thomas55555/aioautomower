@@ -1,8 +1,8 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
-import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
