@@ -180,7 +180,7 @@ class MowerAttributes(BaseModel):
     cutting_height: int = Field(alias="cuttingHeight", default=None)
     headlight: Headlight
     stay_out_zones: StayOutZones = Field(alias="stayOutZones", default=None)
-    work_areas: WorkAreas = Field(alias="workAreas", default=None)
+    work_areas: list[WorkAreas] = Field(alias="workAreas", default=None)
 
 
 class MowerData(BaseModel):
