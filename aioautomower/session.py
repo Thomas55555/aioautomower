@@ -58,17 +58,12 @@ class AutomowerSession:
         self.poll = poll
         self.data_update_cbs = []
         self.token_update_cbs = []
-        self.rest_task = False
         self.loop = asyncio.get_event_loop()
         self.token = None
         self._data = {}
         self.data = {}
-        self.listen_task = None
-        self.ws_task = None
-
         self.token_task = None
         self.rest_task = None
-        self._ws: ClientWebSocketResponse | None = None
         self._receiver_task: asyncio.Task | None = None
 
     def register_data_callback(self, callback):
@@ -112,7 +107,7 @@ class AutomowerSession:
     async def _receiver(self) -> None:
         """Receive a message from a web socket."""
         while True:
-            _LOGGER.debug("Websocekt re/connecting")
+            _LOGGER.debug("Websocket re/connecting")
             websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
             while not websocket.closed:
                 try:
@@ -145,22 +140,6 @@ class AutomowerSession:
                         continue
                 except asyncio.TimeoutError:
                     _LOGGER.debug("Timeout occured")
-
-    async def close(self):
-        """Close the session."""
-        await self._ws.close()
-        for task in [
-            self.ws_task,
-            self.token_task,
-            self.rest_task,
-        ]:
-            tasks = []
-            if task is not None:
-                tasks.append(task)
-                if not task.cancelled():
-                    task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(*tasks)
 
     async def get_status(self) -> MowerList:
         """Get mower status via Rest."""
@@ -338,3 +317,18 @@ class AutomowerSession:
             await self.get_status()
             self._schedule_data_callbacks()
             await asyncio.sleep(REST_POLL_CYCLE)
+
+    async def close(self):
+        """Close the session."""
+        for task in [
+            self.token_task,
+            self.rest_task,
+            self._receiver_task,
+        ]:
+            tasks = []
+            if task is not None:
+                tasks.append(task)
+                if not task.cancelled():
+                    task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(*tasks)

@@ -66,6 +66,7 @@ async def main():
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
+    await websession.close()
 
 
 def callback(ws_data):
