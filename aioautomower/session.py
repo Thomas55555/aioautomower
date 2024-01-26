@@ -10,7 +10,7 @@ from aiohttp import ClientWebSocketResponse, WSMsgType
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException
-from .model import HeadlightModes, MowersDictionary
+from .model import HeadlightModes, MowerAttributes
 from .utils import mower_list_to_dictionary_dataclass
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class AutomowerSession:
                 except asyncio.TimeoutError:
                     _LOGGER.debug("Timeout occured")
 
-    async def get_status(self) -> MowersDictionary:
+    async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         for idx, _ent in enumerate(mower_list["data"]):
