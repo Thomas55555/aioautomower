@@ -7,7 +7,7 @@ import aiohttp
 import jwt
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
-from .model import JWT
+from .model import JWT, MowerList, MowersDictionary
 from .rest import TokenError
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,3 +74,12 @@ async def async_invalidate_access_token(
             resp.raise_for_status()
             _LOGGER.error("Response body delete token: %s", result)
     return result
+
+
+def mower_list_to_dictionary_dataclass(mower_list) -> MowersDictionary:
+    """Convert mower data to a dictionary DataClass."""
+    mowers_list = MowerList(**mower_list)
+    mowers_dict = {}
+    for mower in mowers_list.data:
+        mowers_dict[mower.id] = mower.attributes
+    return mowers_dict

@@ -1,7 +1,7 @@
 """Models for Husqvarna Automower data."""
 from enum import Enum, StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 class User(BaseModel):
@@ -126,7 +126,7 @@ class Positions(BaseModel):
 class Statistics(BaseModel):
     """DataClass for Statistics values."""
 
-    cutting_blade_usage_time: int  = Field(alias="cuttingBladeUsageTime", default=None)
+    cutting_blade_usage_time: int = Field(alias="cuttingBladeUsageTime", default=None)
     number_of_charging_cycles: int = Field(alias="numberOfChargingCycles")
     number_of_collisions: int = Field(alias="numberOfCollisions")
     total_charging_time: int = Field(alias="totalChargingTime")
@@ -195,6 +195,10 @@ class MowerList(BaseModel):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
+
+
+class MowersDictionary(RootModel[dict[str, MowerAttributes]]):
+    """DataClass for a dictonary of all mowers."""
 
 
 class HeadlightModes(StrEnum):
