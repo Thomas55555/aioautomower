@@ -1,7 +1,7 @@
 """Models for Husqvarna Automower data."""
 from enum import Enum, StrEnum
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 
 
 class User(BaseModel):
@@ -195,10 +195,6 @@ class MowerList(BaseModel):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
-
-
-class MowersDictionary(RootModel[dict[str, MowerAttributes]]):
-    """DataClass for a dictonary of all mowers."""
 
 
 class HeadlightModes(StrEnum):
