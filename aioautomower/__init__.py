@@ -7,4 +7,5 @@ __all__ = [
     "model",
     "rest",
     "session",
+    "utils",
 ]
