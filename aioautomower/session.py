@@ -3,7 +3,6 @@ import asyncio
 import contextlib
 import logging
 import time
-from collections.abc import Iterable
 from typing import Literal
 
 from aiohttp import ClientWebSocketResponse, WSMsgType
@@ -143,7 +142,7 @@ class AutomowerSession:
                 except asyncio.TimeoutError:
                     _LOGGER.debug("Timeout occured")
 
-    async def get_status(self) -> Iterable[dict[str, MowerAttributes]]:
+    async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         for idx, _ent in enumerate(mower_list["data"]):
