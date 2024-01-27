@@ -29,7 +29,7 @@ class AsyncTokenAuth(AbstractAuth):
     ) -> None:
         """Initialize Husqvarna Automower auth."""
         super().__init__(websession, API_BASE_URL)
-        self.token = None
+        self.token: dict = {}
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
@@ -51,8 +51,7 @@ class AsyncTokenAuth(AbstractAuth):
         """Ensure that the current token is valid."""
         if self.valid_token:
             return
-
-        self.token = await async_get_access_token()
+        self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 
 async def main():

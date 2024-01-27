@@ -57,12 +57,12 @@ class AutomowerSession:
         """
         self.auth = auth
         self.poll = poll
-        self.data_update_cbs = []
-        self.token_update_cbs = []
+        self.data_update_cbs: list = []
+        self.token_update_cbs: list = []
         self.loop = asyncio.get_event_loop()
         self.token = None
-        self._data = {}
-        self.data = {}
+        self._data: dict = {}
+        self.data: dict[str, MowerAttributes] = {}
         self.token_task = None
         self.rest_task = None
         self._receiver_task: asyncio.Task | None = None

@@ -33,10 +33,8 @@ class AbstractAuth(ABC):
         """Initialize the auth."""
         self._websession = websession
         self._host = host if host is not None else API_BASE_URL
-        self._client_id = None
+        self._client_id = ""
         self.loop = asyncio.get_event_loop()
-        self.ws_update_cbs = []
-        self.ws_data = {}
         self.ws_status: bool = True
 
     @abstractmethod
@@ -115,14 +113,14 @@ class AbstractAuth(ABC):
         _LOGGER.debug("response=%s", result)
         return result
 
-    async def _async_get_access_token(self) -> None:
+    async def _async_get_access_token(self) -> str:
         """Request a new access token."""
         try:
             return await self.async_get_access_token()
         except ClientError as err:
             raise AuthException(f"Access token failure: {err}") from err
 
-    async def headers(self) -> None:
+    async def headers(self) -> dict:
         """Generate headers for ReST requests."""
         access_token = await self._async_get_access_token()
         if not self._client_id:
@@ -176,7 +174,7 @@ class AbstractAuth(ABC):
         """Return the web socket."""
         return self._ws
 
-    async def websocket_connect(self) -> None:
+    async def websocket_connect(self) -> ClientWebSocketResponse:
         """Start a websocket conenction."""
         token = await self._async_get_access_token()
         self._ws = await self._websession.ws_connect(
