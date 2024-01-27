@@ -81,14 +81,14 @@ class AsyncConfigEntryAuth(AbstractAuth):
         super().__init__(websession, API_BASE_URL)
         self.client_id = client_id
         self.client_secret = client_secret
-        self.token = None
+        self.token: dict = {}
         self.websession = websession
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         if not self.token:
             self.token = await aioautomower.utils.async_get_access_token(
-                self.client_id, self.client_secret, self.websession
+                self.client_id, self.client_secret
             )
             token_structured = await aioautomower.utils.async_structure_token(
                 self.token["access_token"]
@@ -97,6 +97,6 @@ class AsyncConfigEntryAuth(AbstractAuth):
             _LOGGER.debug(time.time())
         if token_structured.exp < time.time():
             self.token = await aioautomower.utils.async_get_access_token(
-                self.client_id, self.client_secret, self.websession
+                self.client_id, self.client_secret
             )
         return self.token["access_token"]

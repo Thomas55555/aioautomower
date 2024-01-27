@@ -15,8 +15,8 @@ from aioautomower.utils import async_get_access_token, async_structure_token
 _LOGGER = logging.getLogger(__name__)
 
 
-CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a731"
-CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243881"
+CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
+CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 
@@ -29,7 +29,7 @@ class AsyncTokenAuth(AbstractAuth):
     ) -> None:
         """Initialize Husqvarna Automower auth."""
         super().__init__(websession, API_BASE_URL)
-        self.token = None
+        self.token: dict = {}
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
@@ -51,8 +51,7 @@ class AsyncTokenAuth(AbstractAuth):
         """Ensure that the current token is valid."""
         if self.valid_token:
             return
-
-        self.token = await async_get_access_token()
+        self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 
 async def main():

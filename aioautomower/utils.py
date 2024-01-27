@@ -1,6 +1,7 @@
 """Utils for Husqvarna Automower."""
 import logging
 import time
+from collections.abc import Iterable
 from urllib.parse import quote_plus, urlencode
 
 import aiohttp
@@ -76,7 +77,9 @@ async def async_invalidate_access_token(
     return result
 
 
-def mower_list_to_dictionary_dataclass(mower_list) -> dict[str, MowerAttributes]:
+def mower_list_to_dictionary_dataclass(
+    mower_list,
+) -> Iterable[dict[str, MowerAttributes]]:
     """Convert mower data to a dictionary DataClass."""
     mowers_list = MowerList(**mower_list)
     mowers_dict = {}
