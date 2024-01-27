@@ -5,7 +5,6 @@ __all__ = [
     "const",
     "exceptions",
     "model",
-    "rest",
     "session",
     "utils",
 ]
