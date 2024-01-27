@@ -113,7 +113,7 @@ class RefreshAccessToken:
             quote_via=quote_plus,
         )
 
-    async def async_refresh_access_token(self) -> dict:
+    async def async_refresh_access_token(self) -> None:
         """Return the refresh token."""
         async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session, session.post(
             AUTH_API_TOKEN_URL, data=self.auth_data
@@ -250,4 +250,4 @@ class Return:
             _LOGGER.debug("Sent payload: %s", self.payload)
             _LOGGER.debug("Resp status mower command: %s", resp.status)
             if resp.status >= 400:
-                raise CommandNotPossibleError(resp.status)
+                raise CommandNotPossibleError("Error")
