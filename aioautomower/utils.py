@@ -7,8 +7,8 @@ import aiohttp
 import jwt
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
+from .exceptions import ApiException
 from .model import JWT, MowerAttributes, MowerList
-from .utils import ApiException
 
 _LOGGER = logging.getLogger(__name__)
 
