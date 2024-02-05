@@ -139,7 +139,7 @@ class AutomowerSession:
                             )
                     elif msg.type == WSMsgType.ERROR:
                         continue
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     _LOGGER.debug("Timeout occured")
 
     async def get_status(self) -> dict[str, MowerAttributes]:
