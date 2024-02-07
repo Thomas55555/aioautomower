@@ -1,4 +1,5 @@
 """Utils for Husqvarna Automower."""
+
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
@@ -34,9 +35,10 @@ async def async_get_access_token(client_id, client_secret) -> dict:
         },
         quote_via=quote_plus,
     )
-    async with aiohttp.ClientSession(headers=AUTH_HEADERS) as session, session.post(
-        AUTH_API_TOKEN_URL, data=auth_data
-    ) as resp:
+    async with (
+        aiohttp.ClientSession(headers=AUTH_HEADERS) as session,
+        session.post(AUTH_API_TOKEN_URL, data=auth_data) as resp,
+    ):
         result = await resp.json(encoding="UTF-8")
         _LOGGER.debug("Resp.status get access token: %s", result)
         if resp.status == 200:
@@ -65,9 +67,12 @@ async def async_invalidate_access_token(
         "Authorization": f"Bearer {valid_access_token}",
         "Accept": "*/*",
     }
-    async with aiohttp.ClientSession(headers=headers) as session, session.post(
-        AUTH_API_REVOKE_URL, data=(f"token={access_token_to_invalidate}")
-    ) as resp:
+    async with (
+        aiohttp.ClientSession(headers=headers) as session,
+        session.post(
+            AUTH_API_REVOKE_URL, data=(f"token={access_token_to_invalidate}")
+        ) as resp,
+    ):
         result = await resp.json(encoding="UTF-8")
         _LOGGER.debug("Resp.status delete token: %s", resp.status)
         if resp.status >= 400:
@@ -80,7 +85,7 @@ def mower_list_to_dictionary_dataclass(
     mower_list,
 ) -> dict[str, MowerAttributes]:
     """Convert mower data to a dictionary DataClass."""
-    mowers_list = MowerList(**mower_list)
+    mowers_list = MowerList.from_dict(mower_list)
     mowers_dict = {}
     for mower in mowers_list.data:
         mowers_dict[mower.id] = mower.attributes
