@@ -161,7 +161,7 @@ class Statistics(DataClassDictMixin):
         metadata=field_options(alias="totalSearchingTime")
     )
     cutting_blade_usage_time: int = field(
-        metadata=field_options(alias="cuttingBladeUsageTime"), default=None
+        metadata=field_options(alias="cuttingBladeUsageTime"), default=0
     )
 
 
@@ -213,7 +213,7 @@ class MowerAttributes(DataClassDictMixin):
     statistics: Statistics
     headlight: Headlight
     cutting_height: int = field(
-        metadata=field_options(alias="cuttingHeight"), default=None
+        metadata=field_options(alias="cuttingHeight"), default=0
     )
     stay_out_zones: StayOutZones = field(
         metadata=field_options(alias="stayOutZones"), default=None
