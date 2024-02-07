@@ -72,6 +72,9 @@ async def main():
         await asyncio.sleep(5)
         # await automower_api.resume_schedule(mower_id)
         # Uncomment the line above to let all your mowers resume their schedule.
+        await asyncio.sleep(5)
+        # await automower_api.pause_mowing(mower_id)
+        # Uncomment the line above to let all your mowers pause.
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
