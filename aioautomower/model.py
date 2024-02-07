@@ -1,10 +1,13 @@
 """Models for Husqvarna Automower data."""
+
+from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 
-from pydantic import BaseModel, Field
+from mashumaro import DataClassDictMixin, field_options
 
 
-class User(BaseModel):
+@dataclass
+class User(DataClassDictMixin):
     """The content of the JWT."""
 
     first_name: str
@@ -13,7 +16,8 @@ class User(BaseModel):
     customer_id: str
 
 
-class JWT(BaseModel):
+@dataclass
+class JWT(DataClassDictMixin):
     """The content of the JWT."""
 
     jti: str
@@ -30,40 +34,47 @@ class JWT(BaseModel):
     sub: str
 
 
-class System(BaseModel):
+@dataclass
+class System(DataClassDictMixin):
     """System information about a Automower."""
 
     name: str
     model: str
-    serial_number: int = Field(alias="serialNumber")
+    serial_number: int = field(metadata=field_options(alias="serialNumber"))
 
 
-class Battery(BaseModel):
+@dataclass
+class Battery(DataClassDictMixin):
     """Information about the battery in the Automower."""
 
-    battery_percent: int = Field(alias="batteryPercent")
+    battery_percent: int = field(metadata=field_options(alias="batteryPercent"))
 
 
-class Capabilities(BaseModel):
+@dataclass
+class Capabilities(DataClassDictMixin):
     """Information about what capabilities the Automower has."""
 
     headlights: bool
-    work_areas: bool = Field(alias="workAreas")
+    work_areas: bool = field(metadata=field_options(alias="workAreas"))
     position: bool
-    stay_out_zones: bool = Field(alias="stayOutZones")
+    stay_out_zones: bool = field(metadata=field_options(alias="stayOutZones"))
 
 
-class Mower(BaseModel):
+@dataclass
+class Mower(DataClassDictMixin):
     """Information about the mowers current status."""
 
     mode: str
     activity: str
     state: str
-    error_code: int = Field(alias="errorCode")
-    error_code_timestamp: int = Field(alias="errorCodeTimestamp")
+    error_code: int = field(metadata=field_options(alias="errorCode"))
+    error_code_timestamp: int = field(
+        metadata=field_options(alias="errorCodeTimestamp")
+    )
 
 
-class Calendar(BaseModel):
+@dataclass
+class Calendar(DataClassDictMixin):
     """Information about the calendar tasks.
 
     An Automower can have several tasks. If the mower supports
@@ -82,34 +93,41 @@ class Calendar(BaseModel):
     sunday: bool
 
 
-class Tasks(BaseModel):
+@dataclass
+class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
     tasks: list[Calendar]
 
 
-class Override(BaseModel):
+@dataclass
+class Override(DataClassDictMixin):
     """DataClass for Override values."""
 
     action: str
 
 
-class Planner(BaseModel):
+@dataclass
+class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_timestamp: int = Field(alias="nextStartTimestamp")
+    next_start_timestamp: int = field(
+        metadata=field_options(alias="nextStartTimestamp")
+    )
     override: Override
-    restricted_reason: str = Field(alias="restrictedReason")
+    restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
 
 
-class Metadata(BaseModel):
+@dataclass
+class Metadata(DataClassDictMixin):
     """DataClass for Metadata values."""
 
     connected: bool
-    status_timestamp: int = Field(alias="statusTimestamp")
+    status_timestamp: int = field(metadata=field_options(alias="statusTimestamp"))
 
 
-class Positions(BaseModel):
+@dataclass
+class Positions(DataClassDictMixin):
     """List of the GPS positions.
 
     Latest registered position is first in the
@@ -123,49 +141,65 @@ class Positions(BaseModel):
     longitude: float
 
 
-class Statistics(BaseModel):
+@dataclass
+class Statistics(DataClassDictMixin):
     """DataClass for Statistics values."""
 
-    cutting_blade_usage_time: int = Field(alias="cuttingBladeUsageTime", default=None)
-    number_of_charging_cycles: int = Field(alias="numberOfChargingCycles")
-    number_of_collisions: int = Field(alias="numberOfCollisions")
-    total_charging_time: int = Field(alias="totalChargingTime")
-    total_cutting_time: int = Field(alias="totalCuttingTime")
-    total_drive_distance: int = Field(alias="totalDriveDistance")
-    total_running_time: int = Field(alias="totalRunningTime")
-    total_searching_time: int = Field(alias="totalSearchingTime")
+    number_of_charging_cycles: int = field(
+        metadata=field_options(alias="numberOfChargingCycles")
+    )
+    number_of_collisions: int = field(
+        metadata=field_options(alias="numberOfCollisions")
+    )
+    total_charging_time: int = field(metadata=field_options(alias="totalChargingTime"))
+    total_cutting_time: int = field(metadata=field_options(alias="totalCuttingTime"))
+    total_drive_distance: int = field(
+        metadata=field_options(alias="totalDriveDistance")
+    )
+    total_running_time: int = field(metadata=field_options(alias="totalRunningTime"))
+    total_searching_time: int = field(
+        metadata=field_options(alias="totalSearchingTime")
+    )
+    cutting_blade_usage_time: int = field(
+        metadata=field_options(alias="cuttingBladeUsageTime"), default=0
+    )
 
 
-class Headlight(BaseModel):
+@dataclass
+class Headlight(DataClassDictMixin):
     """DataClass for Headlight values."""
 
     mode: str | None
 
 
-class Zones(BaseModel):
+@dataclass
+class Zones(DataClassDictMixin):
     """DataClass for Zone values."""
 
-    id: str = Field(alias="Id")
+    id: str = field(metadata=field_options(alias="Id"))
     name: str
     enabled: bool
 
 
-class StayOutZones(BaseModel):
+@dataclass
+class StayOutZones(DataClassDictMixin):
     """DataClass for StayOutZone values."""
 
     dirty: bool
     zones: list[Zones]
 
 
-class WorkAreas(BaseModel):
+@dataclass
+class WorkAreas(DataClassDictMixin):
     """DataClass for WorkAreas values."""
 
-    work_area_id: int = Field(alias="workAreaId")
+    work_area_id: int = field(metadata=field_options(alias="workAreaId"))
     name: str
-    cutting_height: int = Field(alias="cuttingHeight")
+    cutting_height: int = field(metadata=field_options(alias="cuttingHeight"))
 
 
-class MowerAttributes(BaseModel):
+@dataclass
+class MowerAttributes(DataClassDictMixin):
     """DataClass for MowerAttributes."""
 
     system: System
@@ -177,13 +211,21 @@ class MowerAttributes(BaseModel):
     metadata: Metadata
     positions: list[Positions] | None
     statistics: Statistics
-    cutting_height: int = Field(alias="cuttingHeight", default=None)
     headlight: Headlight
-    stay_out_zones: StayOutZones = Field(alias="stayOutZones", default=None)
-    work_areas: list[WorkAreas] = Field(alias="workAreas", default=None)
+    cutting_height: int = field(
+        metadata=field_options(alias="cuttingHeight"), default=0
+    )
+    stay_out_zones: StayOutZones = field(
+        metadata=field_options(alias="stayOutZones"), default=None
+    )
+
+    work_areas: list[WorkAreas] = field(
+        metadata=field_options(alias="workAreas"), default=None
+    )
 
 
-class MowerData(BaseModel):
+@dataclass
+class MowerData(DataClassDictMixin):
     """DataClass for MowerData values."""
 
     type: str
@@ -191,7 +233,8 @@ class MowerData(BaseModel):
     attributes: MowerAttributes
 
 
-class MowerList(BaseModel):
+@dataclass
+class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
