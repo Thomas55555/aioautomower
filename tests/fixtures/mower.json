@@ -6,7 +6,7 @@
         "attributes": {
           "system": {
             "name": "Test Mower 1",
-            "model": "450XH-TEST",
+            "model": "Husqvarna Automower 315X",
             "serialNumber": 123
           },
           "battery": {
@@ -120,7 +120,7 @@
               "longitude": -82.5520054
             }
           ],
-          "cuttingHeight": 4,
+          "cuttingHeight": null,
           "headlight": {
             "mode": "EVENING_ONLY"
           },

@@ -13,9 +13,9 @@
             "batteryPercent": 100
           },
           "capabilities": {
-            "headlights": true,
+            "headlights": false,
             "workAreas": false,
-            "position": true,
+            "position": false,
             "stayOutZones": false
           },
           "mower": {
