@@ -40,6 +40,13 @@ async def test_high_feature_mower() -> None:
     mower_python = json.loads(mower_fixture)
     mowers = mower_list_to_dictionary_dataclass(mower_python)
     assert mowers[MOWER_ID].battery.battery_percent == 100
+    assert mowers[MOWER_ID].stay_out_zones.dirty is False
+    assert (
+        mowers[MOWER_ID].stay_out_zones.zones[0].id
+        == "81C6EEA2-D139-4FEA-B134-F22A6B3EA403"
+    )
+    assert mowers[MOWER_ID].stay_out_zones.zones[0].name == "Springflowers"
+    assert mowers[MOWER_ID].stay_out_zones.zones[0].enabled is True
     assert mowers[MOWER_ID].work_areas is not None
     assert mowers[MOWER_ID].work_areas[0].work_area_id == 123456
     assert mowers[MOWER_ID].work_areas[0].name == "Front lawn"

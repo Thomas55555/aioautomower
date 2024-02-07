@@ -134,6 +134,16 @@
             "totalRunningTime": 4564800,
             "totalSearchingTime": 370800
           },
+          "stayOutZones":{
+            "dirty": false,
+            "zones": [
+              {
+                "Id": "81C6EEA2-D139-4FEA-B134-F22A6B3EA403",
+                "name": "Springflowers",
+                "enabled": true
+              }
+            ]
+          },
           "workAreas":[
             {
               "workAreaId": 123456,
