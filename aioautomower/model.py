@@ -301,6 +301,7 @@ class RestrictedReasons(StrEnum):
     FROST = "FROST"
     ALL_WORK_AREAS_COMPLETED = "ALL_WORK_AREAS_COMPLETED"
     EXTERNAL = "EXTERNAL"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
 class Actions(StrEnum):
