@@ -8,7 +8,7 @@ from mashumaro import DataClassDictMixin, field_options
 
 @dataclass
 class User(DataClassDictMixin):
-    """The content of the JWT."""
+    """The user details of the JWT."""
 
     first_name: str
     last_name: str
