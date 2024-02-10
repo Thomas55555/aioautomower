@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_structure_token(access_token) -> JWT:
     """Decode JWT and convert to dataclass."""
     token_decoded = jwt.decode(access_token, options={"verify_signature": False})
-    return JWT(**token_decoded)
+    return JWT.from_dict(token_decoded)
 
 
 async def async_get_access_token(client_id, client_secret) -> dict:
