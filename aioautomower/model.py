@@ -69,7 +69,7 @@ class Mower(DataClassDictMixin):
     activity: str
     state: str
     error_code: int = field(metadata=field_options(alias="errorCode"))
-    error_code_dateteime: datetime = field(
+    error_code_dateteime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
@@ -117,7 +117,7 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_dateteime: datetime = field(
+    next_start_dateteime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
@@ -135,10 +135,10 @@ class Metadata(DataClassDictMixin):
     """DataClass for Metadata values."""
 
     connected: bool
-    status_dateteime: datetime = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000, tz=UTC)
+    status_dateteime: datetime = (
+        field(
+            metadata=field_options(
+                deserialize=lambda x: datetime.fromtimestamp(x / 1000, tz=UTC)
             ),
             alias="statusTimestamp",
         ),
