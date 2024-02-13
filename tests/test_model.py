@@ -55,6 +55,14 @@ async def test_high_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) != 0
 
 
+def test_snapshot(snapshot):
+    """Testing a snapshot of a mid feature mower."""
+    mower_fixture = load_fixture("mower.json")
+    mower_python = json.loads(mower_fixture)
+    mowers = mower_list_to_dictionary_dataclass(mower_python)
+    assert mowers == snapshot
+
+
 @pytest.mark.asyncio
 async def test_decode_token() -> None:
     """Test converting a low feature mower."""

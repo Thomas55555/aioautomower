@@ -1,6 +1,7 @@
 """Models for Husqvarna Automower data."""
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum, StrEnum
 
 from mashumaro import DataClassDictMixin, field_options
@@ -68,8 +69,13 @@ class Mower(DataClassDictMixin):
     activity: str
     state: str
     error_code: int = field(metadata=field_options(alias="errorCode"))
-    error_code_timestamp: int = field(
-        metadata=field_options(alias="errorCodeTimestamp")
+    error_code_dateteime: datetime | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (
+                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+            ),
+            alias="errorCodeTimestamp",
+        ),
     )
 
 
@@ -111,9 +117,15 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_timestamp: int = field(
-        metadata=field_options(alias="nextStartTimestamp")
+    next_start_dateteime: datetime | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (
+                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+            ),
+            alias="nextStartTimestamp",
+        ),
     )
+
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
 
@@ -123,7 +135,12 @@ class Metadata(DataClassDictMixin):
     """DataClass for Metadata values."""
 
     connected: bool
-    status_timestamp: int = field(metadata=field_options(alias="statusTimestamp"))
+    status_dateteime: datetime = field(
+        metadata=field_options(
+            deserialize=lambda x: (datetime.fromtimestamp(x / 1000, tz=UTC)),
+            alias="statusTimestamp",
+        ),
+    )
 
 
 @dataclass
