@@ -1,6 +1,7 @@
 """Tests for asynchronous Python client for aioautomower."""
 
 import json
+from dataclasses import fields
 
 import pytest
 
@@ -56,11 +57,14 @@ async def test_high_feature_mower() -> None:
 
 
 def test_snapshot(snapshot):
-    """Testing a snapshot of a mid feature mower."""
-    mower_fixture = load_fixture("mower.json")
+    """Testing a snapshot of a high feature mower."""
+    mower_fixture = load_fixture("high_feature_mower.json")
     mower_python = json.loads(mower_fixture)
     mowers = mower_list_to_dictionary_dataclass(mower_python)
-    assert mowers == snapshot
+    for field in fields(mowers[MOWER_ID]):
+        field_name = field.name
+        field_value = getattr(mowers[MOWER_ID], field_name)
+        assert field_value == snapshot(name=f"{field_name}")
 
 
 @pytest.mark.asyncio
