@@ -229,7 +229,9 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions] | None
     statistics: Statistics
     headlight: Headlight
-    cutting_height: int | None = field(metadata=field_options(alias="cuttingHeight"))
+    cutting_height: int | None = field(
+        metadata=field_options(alias="cuttingHeight"), default=None
+    )
     stay_out_zones: StayOutZones = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
