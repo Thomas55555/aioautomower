@@ -37,20 +37,21 @@ aiohttp = "^3.9.3"
 mashumaro = "^3.12"
 PyJWT = "^2.8.0"
 
-[tool.poetry.dev-dependencies]
+
+[tool.poetry.group.dev.dependencies]
 codespell = "2.2.6"
 covdefaults = "2.3.0"
-coverage = {version = "7.4.1", extras = ["toml"]}
+coverage = {version = "7.4.2", extras = ["toml"]}
 mypy = "1.8.0"
-pre-commit = "3.6.1"
+pre-commit = "3.6.2"
 pre-commit-hooks = "4.5.0"
 pylint = "3.0.3"
-pytest = "8.0.0"
+pytest = "8.0.1"
 pytest-asyncio = "0.23.5"
 pytest-cov = "4.1.0"
-ruff = "0.2.1"
+ruff = "0.2.2"
 safety = "3.0.1"
-yamllint = "1.34.0"
+yamllint = "1.35.1"
 syrupy = "4.6.1"
 aioresponses = "0.7.6"
 
@@ -69,6 +70,9 @@ aioautomower = ["py.typed"]
 [tool.ruff]
 fix = true
 show-fixes = true
+
+[tool.pylint.FORMAT]
+max-line-length = 88
 
 # enable later: "C90", "PTH", "TCH", "RET", "ANN"
 select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]
