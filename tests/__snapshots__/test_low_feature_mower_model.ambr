@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_mower_snapshot[battery]
+  Battery(battery_percent=100)
+# ---
+# name: test_mower_snapshot[calendar]
+  Tasks(tasks=[Calendar(start=1140, duration=300, monday=True, tuesday=False, wednesday=True, thursday=False, friday=True, saturday=False, sunday=False), Calendar(start=0, duration=480, monday=False, tuesday=True, wednesday=False, thursday=True, friday=False, saturday=True, sunday=False)])
+# ---
+# name: test_mower_snapshot[capabilities]
+  Capabilities(headlights=False, work_areas=False, position=False, stay_out_zones=False)
+# ---
+# name: test_mower_snapshot[cutting_height]
+  None
+# ---
+# name: test_mower_snapshot[headlight]
+  Headlight(mode=None)
+# ---
+# name: test_mower_snapshot[metadata]
+  Metadata(connected=True, status_dateteime=datetime.datetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc))
+# ---
+# name: test_mower_snapshot[mower]
+  Mower(mode='MAIN_AREA', activity='PARKED_IN_CS', state='RESTRICTED', error_code=0, error_code_dateteime=None)
+# ---
+# name: test_mower_snapshot[planner]
+  Planner(next_start_dateteime=datetime.datetime(2023, 6, 5, 21, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=7200), 'CEST')), override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
+# ---
+# name: test_mower_snapshot[positions]
+  list([
+  ])
+# ---
+# name: test_mower_snapshot[statistics]
+  Statistics(number_of_charging_cycles=1380, number_of_collisions=11396, total_charging_time=4334400, total_cutting_time=4194000, total_drive_distance=1780272, total_running_time=4564800, total_searching_time=370800, cutting_blade_usage_time=None)
+# ---
+# name: test_mower_snapshot[stay_out_zones]
+  None
+# ---
+# name: test_mower_snapshot[system]
+  System(name='Test Mower 1', model='Automower Aspire', serial_number=123)
+# ---
+# name: test_mower_snapshot[work_areas]
+  None
+# ---
