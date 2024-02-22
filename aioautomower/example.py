@@ -15,13 +15,13 @@ from aioautomower.utils import async_get_access_token, async_structure_token
 _LOGGER = logging.getLogger(__name__)
 
 
-CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a731"
-CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243881"
+CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
+CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 
 class AsyncTokenAuth(AbstractAuth):
-    """Provide Husqvarna Automower authentication tied to an OAuth2 based config entry."""
+    """Provide Automower authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,
@@ -62,6 +62,7 @@ async def main():
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
     await automower_api.connect()
+    # pylint: disable=unused-variable
     for mower_id in automower_api.data:
         await asyncio.sleep(5)
         # await automower_api.park_until_next_schedule(mower_id)

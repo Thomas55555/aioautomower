@@ -3,13 +3,12 @@
 import asyncio
 import contextlib
 import logging
-import time
 from typing import Literal
 from dataclasses import dataclass
 from aiohttp import ClientWebSocketResponse, WSMsgType
 
 from .auth import AbstractAuth
-from .const import EVENT_TYPES, MARGIN_TIME, MIN_SLEEP_TIME, REST_POLL_CYCLE
+from .const import EVENT_TYPES, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException
 from .model import HeadlightModes, MowerAttributes
 from .utils import mower_list_to_dictionary_dataclass
@@ -46,6 +45,9 @@ class AutomowerSession:
     The `AutomowerSession` is the primary API service for this library. It supports
     operations like getting a status or sending commands.
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-nested-blocks
 
     def __init__(
         self,
@@ -271,18 +273,6 @@ class AutomowerSession:
             mower_id=mower_id, stay_out_id=stay_out_zone_id
         )
         await self.auth.patch_json(url, json=body)
-
-    async def _token_monitor_task(self):
-        while True:
-            if "expires_at" in self.token:
-                expires_at = self.token["expires_at"]
-                sleep_time = max(MIN_SLEEP_TIME, expires_at - time.time() - MARGIN_TIME)
-            else:
-                sleep_time = MIN_SLEEP_TIME
-
-            _LOGGER.debug("token_monitor_task sleeping for %s sec", sleep_time)
-            await asyncio.sleep(sleep_time)
-            await self.auth.async_get_access_token()
 
     def _update_data(self, new_data):
         if self._data is None:
