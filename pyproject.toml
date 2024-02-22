@@ -71,15 +71,9 @@ aioautomower = ["py.typed"]
 fix = true
 show-fixes = true
 
+
 [tool.pylint.FORMAT]
 max-line-length = 88
-
-# enable later: "C90", "PTH", "TCH", "RET", "ANN"
-select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]
-ignore = ["PLR2004", "N818"]
-unfixable = ["F841"]
-line-length = 100
-target-version = "py311"
 
 [tool.ruff.flake8-annotations]
 allow-star-arg-any = true
@@ -98,3 +92,6 @@ max-branches=25
 max-returns=15
 max-args=10
 max-statements=50
+
+[tool.pylint]
+ignore = ["R0902"]

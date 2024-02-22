@@ -1,10 +1,11 @@
 """Module to connect to Automower with websocket."""
+
 import asyncio
 import contextlib
 import logging
 import time
 from typing import Literal
-
+from dataclasses import dataclass
 from aiohttp import ClientWebSocketResponse, WSMsgType
 
 from .auth import AbstractAuth
@@ -16,6 +17,7 @@ from .utils import mower_list_to_dictionary_dataclass
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
 class AutomowerEndpoint:
     """Endpoint URLs for the AutomowerConnect API."""
 
@@ -32,7 +34,7 @@ class AutomowerEndpoint:
     "Update the settings on the mower."
 
     stay_out_zones = "mowers/{mower_id}/stayOutZones/{stay_out_id}"
-    "Enabe or disable the stay-out zone."
+    "Enable or disable the stay-out zone."
 
     work_area_calendar = "mowers/{mower_id}/workAreas{work_area_id}/calendar"
     "Update the calendar for a work area on the mower."
@@ -55,17 +57,17 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self.auth = auth
-        self.poll = poll
-        self.data_update_cbs: list = []
-        self.token_update_cbs: list = []
-        self.loop = asyncio.get_event_loop()
-        self.token = None
         self._data: dict = {}
-        self.data: dict[str, MowerAttributes] = {}
-        self.token_task = None
-        self.rest_task = None
         self._receiver_task: asyncio.Task | None = None
+        self.auth = auth
+        self.data_update_cbs: list = []
+        self.data: dict[str, MowerAttributes] = {}
+        self.loop = asyncio.get_event_loop()
+        self.poll = poll
+        self.rest_task = None
+        self.token = None
+        self.token_task = None
+        self.token_update_cbs: list = []
 
     def register_data_callback(self, callback):
         """Register a data update callback."""
@@ -93,7 +95,7 @@ class AutomowerSession:
         """Connect to the API.
 
         This method handles the login and starts a task that keep the access
-        token constantly fresh. Also a REST taks will be started, which
+        token constantly fresh. Also a REST task will be started, which
         periodically polls the REST endpoint. This method works only, if the
         token is created with the Authorization Code Grant. Call this method
         before any other methods.
@@ -140,7 +142,7 @@ class AutomowerSession:
                     elif msg.type == WSMsgType.ERROR:
                         continue
                 except TimeoutError:
-                    _LOGGER.debug("Timeout occured")
+                    _LOGGER.debug("Timeout occurred")
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
@@ -157,7 +159,7 @@ class AutomowerSession:
     async def resume_schedule(self, mower_id: str):
         """Resume schedule.
 
-        Remove any ovveride on the Planner and let the mower
+        Remove any override on the Planner and let the mower
         resume to the schedule set by the Calendar.
         """
         body = {"data": {"type": "ResumeSchedule"}}
