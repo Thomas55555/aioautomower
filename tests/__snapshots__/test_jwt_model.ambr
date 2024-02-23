@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_jwt_snapshot[client_id]
+  '433e5fdf-5129-452c-xxxx-fadce3213042'
+# ---
+# name: test_jwt_snapshot[customer_id]
+  '123'
+# ---
+# name: test_jwt_snapshot[exp]
+  1697753347
+# ---
+# name: test_jwt_snapshot[groups]
+  list([
+    'amc',
+    'developer-portal',
+    'fd78b3a4-a7f9-4c76-bef9-aa5a50583382',
+    'gardena-myaccount',
+    'husqvarna-connect',
+    'husqvarna-mypages',
+    'smartgarden',
+  ])
+# ---
+# name: test_jwt_snapshot[iat]
+  1697666947
+# ---
+# name: test_jwt_snapshot[iss]
+  'husqvarna'
+# ---
+# name: test_jwt_snapshot[jti]
+  '60f14d59-bcc8-4039-bc38-25db3760d047'
+# ---
+# name: test_jwt_snapshot[roles]
+  list([
+  ])
+# ---
+# name: test_jwt_snapshot[scope]
+  'iam:read amc:api'
+# ---
+# name: test_jwt_snapshot[scopes]
+  list([
+    'iam:read',
+    'amc:api',
+  ])
+# ---
+# name: test_jwt_snapshot[sub]
+  '5a93141e-55a7-479f-96e2-8a63188c054f'
+# ---
+# name: test_jwt_snapshot[user]
+  User(first_name='Erika', last_name='Mustermann', custom_attributes={'hc_country': 'DE'}, customer_id='4755997720458xxxx')
+# ---
