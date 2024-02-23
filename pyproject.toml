@@ -131,3 +131,11 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 50
+
+[tool.coverage.run]
+plugins = ["covdefaults"]
+source = ["aioautomower"]
