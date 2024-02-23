@@ -73,8 +73,8 @@ jobs:
         run: |
           poetry run coverage combine coverage*/.coverage*
           poetry run coverage xml -i
-      - name: 🚀 Upload coverage report
+      - name: 🚀 Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
-          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: Thomas55555/aioautomower
