@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aioautomower"
 # The version is set by GH action on release
+dynamic = ["version"]
 version = "0.0.0"
 license     = {text = "Apache-2.0"}
 description = "MPython module to talk to Husqvarna Automower."
@@ -22,6 +23,11 @@ dependencies = [
   "mashumaro",
   "PyJWT"
 ]
+
+[project.urls]
+Documentation = "https://github.com/Thomas55555/aioautomower"
+Repository = "https://github.com/Thomas55555/aioautomower"
+Issues = "https://github.com/Thomas55555/aioautomower/issues"
 
 [tool.poetry]
 name = "aioautomower"
