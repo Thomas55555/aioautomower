@@ -38,7 +38,7 @@ jobs:
       - name: 🏗 Install dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run pytest
-        run: poetry run pytest --cov tests
+        run: poetry run pytest --cov=aioautomower tests
       - name: ⬆️ Upload coverage artifact
         uses: actions/upload-artifact@v4.3.1
         with:

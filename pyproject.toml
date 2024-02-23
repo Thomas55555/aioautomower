@@ -133,7 +133,7 @@ warn_unused_ignores = true
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 50
+fail_under = 30
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
