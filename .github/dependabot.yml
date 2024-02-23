@@ -1,12 +1,13 @@
+---
 version: 2
 updates:
-- package-ecosystem: "pip"
-  directory: "/"
-  schedule:
-    interval: daily
-    time: "06:00"
-  open-pull-requests-limit: 10
-- package-ecosystem: "github-actions" # See documentation for possible values
-  directory: "/" # Location of package manifests
-  schedule:
-    interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "06:00"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "github-actions" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
