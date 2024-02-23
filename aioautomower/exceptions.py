@@ -23,3 +23,7 @@ class ApiForbiddenException(HusqvarnaAutomowerException):
 
 class NoDataAvailableException(HusqvarnaAutomowerException):
     """Raised due updating data, when no data is available."""
+
+
+class TimeoutException(HusqvarnaAutomowerException):
+    """Raised due connecting the websocket."""
