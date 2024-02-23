@@ -36,6 +36,7 @@ class AbstractAuth(ABC):
         self._client_id = ""
         self.loop = asyncio.get_event_loop()
         self.ws_status: bool = True
+        self._ws: ClientWebSocketResponse
 
     @abstractmethod
     async def async_get_access_token(self) -> str:
@@ -175,7 +176,7 @@ class AbstractAuth(ABC):
         return self._ws
 
     async def websocket_connect(self) -> ClientWebSocketResponse:
-        """Start a websocket conenction."""
+        """Start a websocket connection."""
         token = await self._async_get_access_token()
         self._ws = await self._websession.ws_connect(
             url=WS_URL,

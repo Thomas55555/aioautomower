@@ -21,6 +21,7 @@ class User(DataClassDictMixin):
 class JWT(DataClassDictMixin):
     """The content of the JWT."""
 
+    # pylint: disable=too-many-instance-attributes
     jti: str
     iss: str
     roles: list
@@ -88,6 +89,7 @@ class Calendar(DataClassDictMixin):
     the task to an work area.
     """
 
+    # pylint: disable=too-many-instance-attributes
     start: int
     duration: int
     monday: bool
@@ -162,6 +164,7 @@ class Positions(DataClassDictMixin):
 class Statistics(DataClassDictMixin):
     """DataClass for Statistics values."""
 
+    # pylint: disable=too-many-instance-attributes
     number_of_charging_cycles: int = field(
         metadata=field_options(alias="numberOfChargingCycles")
     )
@@ -219,6 +222,7 @@ class WorkAreas(DataClassDictMixin):
 class MowerAttributes(DataClassDictMixin):
     """DataClass for MowerAttributes."""
 
+    # pylint: disable=too-many-instance-attributes
     system: System
     battery: Battery
     capabilities: Capabilities
@@ -232,11 +236,11 @@ class MowerAttributes(DataClassDictMixin):
     cutting_height: int | None = field(
         metadata=field_options(alias="cuttingHeight"), default=None
     )
-    stay_out_zones: StayOutZones = field(
+    stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
 
-    work_areas: list[WorkAreas] = field(
+    work_areas: list[WorkAreas] | None = field(
         metadata=field_options(alias="workAreas"), default=None
     )
 

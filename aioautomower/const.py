@@ -15,10 +15,6 @@ EVENT_TYPES = [
     "settings-event",
 ]
 HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
-MARGIN_TIME = 60.0
-# Token is typically valid for 24h
-# request a new one some time before its expiration to avoid glitches.
-MIN_SLEEP_TIME = 10.0  # Avoid hammering
 REST_POLL_CYCLE = 300
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
 USER_URL = f"{AUTH_API_BASE_URL}/users"

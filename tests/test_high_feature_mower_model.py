@@ -35,6 +35,7 @@ async def test_high_feature_mower() -> None:
 
 def test_mower_snapshot(snapshot):
     """Testing a snapshot of a high feature mower."""
+    # pylint: disable=duplicate-code
     mower_fixture = load_fixture("high_feature_mower.json")
     mower_python = json.loads(mower_fixture)
     mowers = mower_list_to_dictionary_dataclass(mower_python)
