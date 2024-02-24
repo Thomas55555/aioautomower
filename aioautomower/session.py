@@ -9,7 +9,7 @@ from aiohttp import ClientWebSocketResponse, WSMsgType
 
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
-from .exceptions import NoDataAvailableException
+from .exceptions import NoDataAvailableException, TimeoutException
 from .model import HeadlightModes, MowerAttributes
 from .utils import mower_list_to_dictionary_dataclass
 
@@ -60,7 +60,6 @@ class AutomowerSession:
         :param bool poll: Poll data with rest if True.
         """
         self._data: dict = {}
-        self._receiver_task: asyncio.Task | None = None
         self.auth = auth
         self.data_update_cbs: list = []
         self.data: dict[str, MowerAttributes] = {}
@@ -107,44 +106,43 @@ class AutomowerSession:
         if self.poll:
             await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
-        self._receiver_task = asyncio.ensure_future(self._receiver())
 
-    async def _receiver(self) -> None:
-        """Receive a message from a web socket."""
-        while True:
-            _LOGGER.debug("Websocket re/connecting")
-            websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
-            while not websocket.closed:
-                try:
-                    msg = await websocket.receive(timeout=300)
-                    if msg.type in (
-                        WSMsgType.CLOSE,
-                        WSMsgType.CLOSING,
-                        WSMsgType.CLOSED,
-                    ):
-                        break
-                    if msg.type == WSMsgType.TEXT:
-                        msg_dict = msg.json()
-                        if "type" in msg_dict:
-                            if msg_dict["type"] in EVENT_TYPES:
-                                _LOGGER.debug(
-                                    "Got %s, data: %s", msg_dict["type"], msg_dict
-                                )
-                                self._update_data(msg_dict)
-                            else:
-                                _LOGGER.warning(
-                                    "Received unknown ws type %s", msg_dict["type"]
-                                )
-                        elif "ready" in msg_dict and "connectionId" in msg_dict:
+    async def start_listening(self, init_ready: asyncio.Event | None = None) -> None:
+        """Start listening to the websocket (and receive initial state)."""
+        websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
+        while not websocket.closed:
+            try:
+                msg = await websocket.receive(timeout=300)
+                if msg.type in (
+                    WSMsgType.CLOSE,
+                    WSMsgType.CLOSING,
+                    WSMsgType.CLOSED,
+                ):
+                    break
+                if msg.type == WSMsgType.TEXT:
+                    msg_dict = msg.json()
+                    if "type" in msg_dict:
+                        if msg_dict["type"] in EVENT_TYPES:
                             _LOGGER.debug(
-                                "Websocket ready=%s (id='%s')",
-                                msg_dict["ready"],
-                                msg_dict["connectionId"],
+                                "Got %s, data: %s", msg_dict["type"], msg_dict
                             )
-                    elif msg.type == WSMsgType.ERROR:
-                        continue
-                except TimeoutError:
-                    _LOGGER.debug("Timeout occurred")
+                            self._update_data(msg_dict)
+                        else:
+                            _LOGGER.warning(
+                                "Received unknown ws type %s", msg_dict["type"]
+                            )
+                    elif "ready" in msg_dict and "connectionId" in msg_dict:
+                        _LOGGER.debug(
+                            "Websocket ready=%s (id='%s')",
+                            msg_dict["ready"],
+                            msg_dict["connectionId"],
+                        )
+                        if init_ready is not None:
+                            init_ready.set()
+                elif msg.type == WSMsgType.ERROR:
+                    continue
+            except TimeoutError as exc:
+                raise TimeoutException from exc
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
@@ -310,7 +308,6 @@ class AutomowerSession:
         for task in [
             self.token_task,
             self.rest_task,
-            self._receiver_task,
         ]:
             tasks = []
             if task is not None:
