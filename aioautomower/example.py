@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
 CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
-LISTEN_READY_TIMEOUT = 30
+MAX_WS_RECONNECT_TIME = 600
 
 
 class AsyncTokenAuth(AbstractAuth):
@@ -61,16 +61,15 @@ async def main():
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     # Add a callback, can be done at any point in time and
     # multiple callbacks can be added.
-    automower_api.register_data_callback(callback)
     init_ready = asyncio.Event()
-    listen_task = asyncio.create_task(_client_listen(automower_api, init_ready))
-    try:
-        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
-            await init_ready.wait()
-    except TimeoutError:
-        listen_task.cancel()
-        print("Automower client not ready")
+    asyncio.create_task(_client_listen(automower_api, init_ready))
+    await asyncio.sleep(1)
     await automower_api.connect()
+    automower_api.register_data_callback(callback)
+    try:
+        await init_ready.wait()
+    except TimeoutError:
+        print("Automower client not ready")
     # pylint: disable=unused-variable
     for mower_id in automower_api.data:
         await asyncio.sleep(5)
@@ -99,13 +98,23 @@ def callback(ws_data):
 async def _client_listen(
     automower_client: AutomowerSession,
     init_ready: asyncio.Event,
+    reconnect_time: int = 2,
 ) -> None:
     """Listen with the client."""
     try:
-        await automower_client.start_listening(init_ready)
+        websocket = await automower_client.auth.websocket_connect()
+        await automower_client.start_listening(websocket, init_ready)
     except Exception as err:  # pylint: disable=broad-except
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
+    while True:
+        await asyncio.sleep(reconnect_time)
+        reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
+        await _client_listen(
+            automower_client=automower_client,
+            init_ready=init_ready,
+            reconnect_time=reconnect_time,
+        )
 
 
 asyncio.run(main())
