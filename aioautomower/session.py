@@ -305,14 +305,8 @@ class AutomowerSession:
 
     async def close(self):
         """Close the session."""
-        for task in [
-            self.token_task,
-            self.rest_task,
-        ]:
-            tasks = []
-            if task is not None:
-                tasks.append(task)
-                if not task.cancelled():
-                    task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(*tasks)
+        if self.rest_task:
+            if not self.rest_task.cancelled():
+                self.rest_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await asyncio.gather(self.rest_task)
