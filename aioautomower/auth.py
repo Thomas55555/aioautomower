@@ -13,10 +13,16 @@ from aiohttp import (
     ClientResponseError,
     ClientSession,
     ClientWebSocketResponse,
+    WSServerHandshakeError,
 )
 
 from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
-from .exceptions import ApiException, ApiForbiddenException, AuthException
+from .exceptions import (
+    ApiException,
+    ApiForbiddenException,
+    AuthException,
+    HusqvarnaWSServerHandshakeError,
+)
 from .utils import async_structure_token
 
 ERROR = "error"
@@ -178,9 +184,13 @@ class AbstractAuth(ABC):
     async def websocket_connect(self) -> ClientWebSocketResponse:
         """Start a websocket connection."""
         token = await self._async_get_access_token()
-        self._ws = await self._websession.ws_connect(
-            url=WS_URL,
-            headers={"Authorization": AUTH_HEADER_FMT.format(token)},
-            heartbeat=60,
-        )
+        try:
+            self._ws = await self._websession.ws_connect(
+                url=WS_URL,
+                headers={"Authorization": AUTH_HEADER_FMT.format(token)},
+                heartbeat=60,
+            )
+        except WSServerHandshakeError as err:
+            raise HusqvarnaWSServerHandshakeError(err) from err
+
         return self._ws

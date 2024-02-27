@@ -27,3 +27,7 @@ class NoDataAvailableException(HusqvarnaAutomowerException):
 
 class TimeoutException(HusqvarnaAutomowerException):
     """Raised due connecting the websocket."""
+
+
+class HusqvarnaWSServerHandshakeError(HusqvarnaAutomowerException):
+    """Raised due connecting the websocket if server not available"""
