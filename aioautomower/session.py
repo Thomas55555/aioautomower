@@ -107,9 +107,12 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = self.loop.create_task(self._rest_task())
 
-    async def start_listening(self, init_ready: asyncio.Event | None = None) -> None:
+    async def start_listening(
+        self,
+        websocket: ClientWebSocketResponse,
+        init_ready: asyncio.Event | None = None,
+    ) -> None:
         """Start listening to the websocket (and receive initial state)."""
-        websocket: ClientWebSocketResponse = await self.auth.websocket_connect()
         while not websocket.closed:
             try:
                 msg = await websocket.receive(timeout=300)
