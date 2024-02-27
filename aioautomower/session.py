@@ -63,7 +63,7 @@ class AutomowerSession:
         self.auth = auth
         self.data_update_cbs: list = []
         self.data: dict[str, MowerAttributes] = {}
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task = None
         self.token = None
@@ -105,7 +105,7 @@ class AutomowerSession:
 
         if self.poll:
             await self.get_status()
-            self.rest_task = self.loop.create_task(self._rest_task())
+            self.rest_task = asyncio.create_task(self._rest_task())
 
     async def start_listening(self, init_ready: asyncio.Event | None = None) -> None:
         """Start listening to the websocket (and receive initial state)."""
