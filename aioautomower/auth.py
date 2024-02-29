@@ -42,7 +42,7 @@ class AbstractAuth(ABC):
         self._client_id = ""
         self.loop = asyncio.get_event_loop()
         self.ws_status: bool = True
-        self._ws: ClientWebSocketResponse
+        self.ws: ClientWebSocketResponse
 
     @abstractmethod
     async def async_get_access_token(self) -> str:
@@ -176,16 +176,11 @@ class AbstractAuth(ABC):
             message.append(error[MESSAGE])
         return message
 
-    @property
-    def websocket(self) -> ClientWebSocketResponse | None:
-        """Return the web socket."""
-        return self._ws
-
     async def websocket_connect(self) -> ClientWebSocketResponse:
         """Start a websocket connection."""
         token = await self._async_get_access_token()
         try:
-            self._ws = await self._websession.ws_connect(
+            self.ws = await self._websession.ws_connect(
                 url=WS_URL,
                 headers={"Authorization": AUTH_HEADER_FMT.format(token)},
                 heartbeat=60,
@@ -193,4 +188,4 @@ class AbstractAuth(ABC):
         except WSServerHandshakeError as err:
             raise HusqvarnaWSServerHandshakeError(err) from err
 
-        return self._ws
+        return self.ws
