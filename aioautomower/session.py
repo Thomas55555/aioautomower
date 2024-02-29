@@ -5,7 +5,7 @@ import contextlib
 import logging
 from typing import Literal
 from dataclasses import dataclass
-from aiohttp import ClientWebSocketResponse, WSMsgType
+from aiohttp import WSMsgType
 
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
@@ -107,15 +107,11 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    async def start_listening(
-        self,
-        websocket: ClientWebSocketResponse,
-        init_ready: asyncio.Event | None = None,
-    ) -> None:
+    async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
-        while not websocket.closed:
+        while not self.auth.ws.closed:
             try:
-                msg = await websocket.receive(timeout=300)
+                msg = await self.auth.ws.receive(timeout=300)
                 if msg.type in (
                     WSMsgType.CLOSE,
                     WSMsgType.CLOSING,
@@ -140,8 +136,6 @@ class AutomowerSession:
                             msg_dict["ready"],
                             msg_dict["connectionId"],
                         )
-                        if init_ready is not None:
-                            init_ready.set()
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:

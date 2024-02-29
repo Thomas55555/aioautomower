@@ -61,15 +61,10 @@ async def main():
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     # Add a callback, can be done at any point in time and
     # multiple callbacks can be added.
-    init_ready = asyncio.Event()
-    asyncio.create_task(_client_listen(automower_api, init_ready))
+    asyncio.create_task(_client_listen(automower_api))
     await asyncio.sleep(1)
     await automower_api.connect()
     automower_api.register_data_callback(callback)
-    try:
-        await init_ready.wait()
-    except TimeoutError:
-        print("Automower client not ready")
     # pylint: disable=unused-variable
     for mower_id in automower_api.data:
         await asyncio.sleep(5)
@@ -97,13 +92,12 @@ def callback(ws_data):
 
 async def _client_listen(
     automower_client: AutomowerSession,
-    init_ready: asyncio.Event,
     reconnect_time: int = 2,
 ) -> None:
     """Listen with the client."""
     try:
-        websocket = await automower_client.auth.websocket_connect()
-        await automower_client.start_listening(websocket, init_ready)
+        await automower_client.auth.websocket_connect()
+        await automower_client.start_listening()
     except Exception as err:  # pylint: disable=broad-except
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
@@ -112,7 +106,6 @@ async def _client_listen(
         reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
         await _client_listen(
             automower_client=automower_client,
-            init_ready=init_ready,
             reconnect_time=reconnect_time,
         )
 
