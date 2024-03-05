@@ -11,7 +11,7 @@ from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerSession
 from aioautomower.model import MowerAttributes
-from aioautomower.utils import async_get_access_token, async_structure_token
+from aioautomower.utils import async_get_access_token, structure_token
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class AsyncTokenAuth(AbstractAuth):
         """Return a valid access token."""
         if not self.token:
             self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
-            token_structured = await async_structure_token(self.token["access_token"])
+            token_structured = structure_token(self.token["access_token"])
             print("Token expires at: ", token_structured.exp)
         return self.token["access_token"]
 
