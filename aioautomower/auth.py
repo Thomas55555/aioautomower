@@ -23,7 +23,7 @@ from .exceptions import (
     AuthException,
     HusqvarnaWSServerHandshakeError,
 )
-from .utils import async_structure_token
+from .utils import structure_token
 
 ERROR = "error"
 STATUS = "status"
@@ -131,7 +131,7 @@ class AbstractAuth(ABC):
         """Generate headers for ReST requests."""
         access_token = await self._async_get_access_token()
         if not self._client_id:
-            token_structured = await async_structure_token(access_token)
+            token_structured = structure_token(access_token)
             self._client_id = token_structured.client_id
         return {
             "Authorization": f"Bearer {access_token}",
