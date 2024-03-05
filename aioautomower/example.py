@@ -15,8 +15,8 @@ from aioautomower.utils import async_get_access_token, async_structure_token
 _LOGGER = logging.getLogger(__name__)
 
 
-CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
-CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
+CLIENT_ID = "7ac6b068-7f58-4749-aaa3-607167543933"
+CLIENT_SECRET = "1c4db7bd-8f8e-40c0-9580-28188e28e630"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 

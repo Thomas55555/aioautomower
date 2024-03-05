@@ -1,10 +1,32 @@
 """Models for Husqvarna Automower data."""
 
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from dataclasses import dataclass, field, fields
+import datetime
 from enum import Enum, StrEnum
-
+import logging
 from mashumaro import DataClassDictMixin, field_options
+
+logging.basicConfig(level=logging.DEBUG)
+WEEKDAYS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
+
+
+WEEKDAYS_TO_RFC5545 = {
+    "monday": "MO",
+    "tuesday": "TU",
+    "wednesday": "WE",
+    "thursday": "TH",
+    "friday": "FR",
+    "saturday": "SA",
+    "sunday": "SU",
+}
 
 
 @dataclass
@@ -70,10 +92,12 @@ class Mower(DataClassDictMixin):
     activity: str
     state: str
     error_code: int = field(metadata=field_options(alias="errorCode"))
-    error_code_dateteime: datetime | None = field(
+    error_code_dateteime: datetime.datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+                None
+                if x == 0
+                else datetime.datetime.fromtimestamp(x / 1000).astimezone()
             ),
             alias="errorCodeTimestamp",
         ),
@@ -110,18 +134,112 @@ class CalendarEvent(DataClassDictMixin):
     the task to an work area.
     """
 
-    start: datetime
-    end: datetime
+    start: datetime.datetime
+    end: datetime.datetime
     rrule: str
     uid: str
     recurrence_id: str
+
+
+class ConvertScheduleToCalendar:
+    """Convert the Husqvarna task to an CalendarEvent"""
+
+    def __init__(self, task: Calendar) -> None:
+        """Initialize the schedule to calendar converter"""
+        self.task = task
+        self.now = datetime.datetime.now().astimezone()
+        self.begin_of_current_day = self.now.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        self.current_day = self.now.weekday()
+
+    # pylint: disable=inconsistent-return-statements
+    def next_weekday_with_schedule(self) -> datetime.datetime:
+        """Find the next weekday with a schedule entry."""
+        # pylint: disable=too-many-nested-blocks
+        for days in range(8):
+            time_to_check = self.now + datetime.timedelta(days=days)
+            time_to_check_begin_of_day = time_to_check.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            day_to_check = time_to_check.weekday()
+            print("today:%s", self.now)
+            print("day_to_check:%s", day_to_check)
+            day_to_check_as_string = WEEKDAYS[day_to_check]
+            print("today_as_string:%s", day_to_check_as_string)
+            for task_field in fields(self.task):
+                field_name = task_field.name
+                field_value = getattr(self.task, field_name)
+                if field_value is True:
+                    if field_name is day_to_check_as_string:
+                        print("field_name:%s", field_name)
+                        end_task = (
+                            time_to_check_begin_of_day
+                            + datetime.timedelta(minutes=self.task.start)
+                            + datetime.timedelta(minutes=self.task.duration)
+                        )
+                        print("time_to_check", time_to_check)
+                        print("end_task", end_task)
+                        print("HIER")
+                        print("compare", time_to_check < end_task)
+                        print("Days", days)
+                        if self.begin_of_current_day == time_to_check_begin_of_day:
+                            print("GLEICHER TAG")
+                            if end_task < self.now:
+                                break
+                        return self.now + datetime.timedelta(days)
+        # return datetime.datetime.today() + datetime.timedelta(days_ahead)
+
+    def make_daylist(self) -> str:
+        """Generate a RFC5545 daylist from a task."""
+        day_list = ""
+        print("selftask", self.task)
+        for task_field in fields(self.task):
+            field_name = task_field.name
+            field_value = getattr(self.task, field_name)
+            if field_value is True:
+                today_rfc = WEEKDAYS_TO_RFC5545[field_name]
+                if day_list == "":
+                    day_list = today_rfc
+                else:
+                    day_list += "," + str(today_rfc)
+        return day_list
+
+    def make_event(self) -> CalendarEvent:
+        """Generate a CalendarEvent from a task."""
+        daylist = self.make_daylist()
+        next_wd_with_schedule = self.next_weekday_with_schedule()
+        print("next_wd_with_schedule:%s", next_wd_with_schedule)
+        begin_of_day_with_schedule = next_wd_with_schedule.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ).astimezone()
+        event = CalendarEvent(
+            start=begin_of_day_with_schedule
+            + datetime.timedelta(minutes=self.task.start),
+            end=begin_of_day_with_schedule
+            + datetime.timedelta(minutes=self.task.start)
+            + datetime.timedelta(minutes=self.task.duration),
+            rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
+            uid="fs",
+            recurrence_id=f"Recure{1}",
+        )
+        if event.end < self.now:
+            print("Uhrzeit schon vorbei")
+        print(event)
+        return event
 
 
 @dataclass
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar]
+    # pylint: disable=unnecessary-lambda
+    events: list[CalendarEvent] = field(
+        metadata=field_options(
+            deserialize=lambda v: husqvarna_schedule_to_calendar(v),
+            alias="tasks",
+        ),
+    )
 
 
 @dataclass
@@ -135,10 +253,12 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_dateteime: datetime | None = field(
+    next_start_dateteime: datetime.datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+                None
+                if x == 0
+                else datetime.datetime.fromtimestamp(x / 1000).astimezone()
             ),
             alias="nextStartTimestamp",
         ),
@@ -153,9 +273,11 @@ class Metadata(DataClassDictMixin):
     """DataClass for Metadata values."""
 
     connected: bool
-    status_dateteime: datetime = field(
+    status_dateteime: datetime.datetime = field(
         metadata=field_options(
-            deserialize=lambda x: (datetime.fromtimestamp(x / 1000, tz=UTC)),
+            deserialize=lambda x: (
+                datetime.datetime.fromtimestamp(x / 1000, tz=datetime.UTC)
+            ),
             alias="statusTimestamp",
         ),
     )
@@ -275,6 +397,17 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
+
+
+def husqvarna_schedule_to_calendar(x: list[Calendar]) -> dict[str, MowerAttributes]:
+    """Convert mower data to a dictionary DataClass."""
+    logging.debug("This is a debug message")
+    eventlist = []
+    for task in x:
+        y = Calendar.from_dict(task)
+        event = ConvertScheduleToCalendar(y)
+        eventlist.append(event.make_event())
+    return eventlist
 
 
 class HeadlightModes(StrEnum):
