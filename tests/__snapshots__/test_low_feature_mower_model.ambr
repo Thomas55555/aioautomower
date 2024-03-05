@@ -3,7 +3,7 @@
   Battery(battery_percent=100)
 # ---
 # name: test_mower_snapshot[calendar]
-  Tasks(events=[CalendarEvent(start=datetime.datetime(2024, 3, 6, 19, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), end=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), rrule='FREQ=WEEKLY;BYDAY=MO,WE,FR', uid='fs', recurrence_id='Recure1'), CalendarEvent(start=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), end=datetime.datetime(2024, 3, 7, 8, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), rrule='FREQ=WEEKLY;BYDAY=TU,TH,SA', uid='fs', recurrence_id='Recure1')])
+  Tasks(events=[AutomowerCalendarEvent(start=datetime.datetime(2024, 3, 6, 19, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), end=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), rrule='FREQ=WEEKLY;BYDAY=MO,WE,FR', uid='1140_300_MO,WE,FR'), AutomowerCalendarEvent(start=datetime.datetime(2024, 3, 7, 0, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), end=datetime.datetime(2024, 3, 7, 8, 0, tzinfo=datetime.timezone(datetime.timedelta(seconds=3600), 'CET')), rrule='FREQ=WEEKLY;BYDAY=TU,TH,SA', uid='0_480_TU,TH,SA')])
 # ---
 # name: test_mower_snapshot[capabilities]
   Capabilities(headlights=False, work_areas=False, position=False, stay_out_zones=False)

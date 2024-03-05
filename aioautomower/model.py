@@ -127,7 +127,7 @@ class Calendar(DataClassDictMixin):
 
 
 @dataclass
-class CalendarEvent(DataClassDictMixin):
+class AutomowerCalendarEvent(DataClassDictMixin):
     """Information about the calendar tasks.
 
     An Automower can have several tasks. If the mower supports
@@ -139,11 +139,10 @@ class CalendarEvent(DataClassDictMixin):
     end: datetime.datetime
     rrule: str
     uid: str
-    recurrence_id: str
 
 
 class ConvertScheduleToCalendar:
-    """Convert the Husqvarna task to an CalendarEvent"""
+    """Convert the Husqvarna task to an AutomowerCalendarEvent"""
 
     def __init__(self, task: Calendar) -> None:
         """Initialize the schedule to calendar converter"""
@@ -195,22 +194,21 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
-    def make_event(self) -> CalendarEvent:
-        """Generate a CalendarEvent from a task."""
+    def make_event(self) -> AutomowerCalendarEvent:
+        """Generate a AutomowerCalendarEvent from a task."""
         daylist = self.make_daylist()
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
         ).astimezone()
-        event = CalendarEvent(
+        event = AutomowerCalendarEvent(
             start=begin_of_day_with_schedule
             + datetime.timedelta(minutes=self.task.start),
             end=begin_of_day_with_schedule
             + datetime.timedelta(minutes=self.task.start)
             + datetime.timedelta(minutes=self.task.duration),
             rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
-            uid="fs",
-            recurrence_id=f"Recure{1}",
+            uid=f"{self.task.start}_{self.task.duration}_{daylist}",
         )
         return event
 
@@ -220,7 +218,7 @@ class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
     # pylint: disable=unnecessary-lambda
-    events: list[CalendarEvent] = field(
+    events: list[AutomowerCalendarEvent] = field(
         metadata=field_options(
             deserialize=lambda v: husqvarna_schedule_to_calendar(v),
             alias="tasks",
