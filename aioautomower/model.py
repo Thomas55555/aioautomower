@@ -102,6 +102,22 @@ class Calendar(DataClassDictMixin):
 
 
 @dataclass
+class CalendarEvent(DataClassDictMixin):
+    """Information about the calendar tasks.
+
+    An Automower can have several tasks. If the mower supports
+    work areas the property workAreaId is required to connect
+    the task to an work area.
+    """
+
+    start: datetime
+    end: datetime
+    rrule: str
+    uid: str
+    recurrence_id: str
+
+
+@dataclass
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
