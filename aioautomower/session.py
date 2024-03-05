@@ -75,10 +75,10 @@ class AutomowerSession:
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
 
-    def _schedule_data_callback(self, cb, delay=0.0):
+    def _schedule_data_callback(self, cb):
         if self.poll and self.data is None:
             raise NoDataAvailableException
-        self.loop.call_later(delay, cb, self.data)
+        self.loop.call_soon_threadsafe(cb, self.data)
 
     def _schedule_data_callbacks(self):
         for cb in self.data_update_cbs:
