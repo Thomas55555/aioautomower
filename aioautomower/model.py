@@ -99,6 +99,9 @@ class Calendar(DataClassDictMixin):
     friday: bool
     saturday: bool
     sunday: bool
+    work_area_id: int | None = field(
+        metadata=field_options(alias="workAreaId"), default=None
+    )
 
 
 @dataclass
