@@ -6,10 +6,10 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import jwt
-
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 from .exceptions import ApiException
 from .model import JWT, MowerAttributes, MowerList
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,9 +81,7 @@ async def async_invalidate_access_token(
     return result
 
 
-def mower_list_to_dictionary_dataclass(
-    mower_list,
-) -> dict[str, MowerAttributes]:
+def mower_list_to_dictionary_dataclass(mower_list) -> dict[str, MowerAttributes]:
     """Convert mower data to a dictionary DataClass."""
     mowers_list = MowerList.from_dict(mower_list)
     mowers_dict = {}

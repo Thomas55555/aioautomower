@@ -4,7 +4,7 @@ import asyncio
 import logging
 import time
 from typing import cast
-
+import pprint
 from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
@@ -89,7 +89,9 @@ async def main():
 def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_id in ws_data:
-        print(ws_data[mower_id])
+        pprint.pprint(ws_data[mower_id])
+        for event in ws_data[mower_id].calendar.events:
+            pprint.pprint(event.start)
 
 
 async def _client_listen(
