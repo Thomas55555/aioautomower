@@ -138,7 +138,7 @@
             "dirty": false,
             "zones": [
               {
-                "Id": "81C6EEA2-D139-4FEA-B134-F22A6B3EA403",
+                "id": "81C6EEA2-D139-4FEA-B134-F22A6B3EA403",
                 "name": "Springflowers",
                 "enabled": true
               }
