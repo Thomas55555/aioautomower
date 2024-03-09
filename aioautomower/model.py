@@ -199,7 +199,7 @@ class Headlight(DataClassDictMixin):
 class Zones(DataClassDictMixin):
     """DataClass for Zone values."""
 
-    id: str = field(metadata=field_options(alias="id"))
+    id: str
     name: str
     enabled: bool
 
