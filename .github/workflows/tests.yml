@@ -21,10 +21,10 @@ jobs:
       matrix:
         python: ["3.11", "3.12"]
     steps:
-      - name: Install uv
-        run: pip install uv
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
+      - name: Install uv
+        run: pip install uv
       - name: 🏗 Set up Poetry
         run: uv pipx install poetry
       - name: 🏗 Set up Python ${{ matrix.python }}
