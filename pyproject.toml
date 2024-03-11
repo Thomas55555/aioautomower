@@ -44,6 +44,7 @@ PyJWT = "^2.8.0"
 
 
 [tool.poetry.group.dev.dependencies]
+aioresponses = "0.7.6"
 codespell = "2.2.6"
 covdefaults = "2.3.0"
 coverage = {version = "7.4.3", extras = ["toml"]}
@@ -56,9 +57,9 @@ pytest-asyncio = "0.23.5.post1"
 pytest-cov = "4.1.0"
 ruff = "0.3.2"
 safety = "3.0.1"
-yamllint = "1.35.1"
 syrupy = "4.6.1"
-aioresponses = "0.7.6"
+uv = "0.1.17"
+yamllint = "1.35.1"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
