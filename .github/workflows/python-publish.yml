@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
       - name: Install build
         run: >-
-          pip install build tomli tomli-w
+          uv pip install build tomli tomli-w
       - name: Set Python project version from tag
         shell: python
         run: |-
