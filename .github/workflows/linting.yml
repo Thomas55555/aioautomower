@@ -43,6 +43,8 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
         run: uv pip install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -68,6 +70,8 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
         run: uv pip install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -115,6 +119,8 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
         run: uv pip install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
@@ -138,6 +144,8 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
         run: uv pip install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}

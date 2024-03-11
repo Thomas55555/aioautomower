@@ -57,6 +57,8 @@ jobs:
           fetch-depth: 0
       - name: ⬇️ Download coverage data
         uses: actions/download-artifact@v4.1.4
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
         run: uv pip install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
