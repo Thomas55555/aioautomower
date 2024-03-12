@@ -222,6 +222,14 @@ class WorkAreas(DataClassDictMixin):
 
 
 @dataclass
+class WorkArea(DataClassDictMixin):
+    """DataClass for WorkAreas values."""
+
+    name: str | None
+    cutting_height: int
+
+
+@dataclass
 class MowerAttributes(DataClassDictMixin):
     """DataClass for MowerAttributes."""
 
@@ -244,7 +252,16 @@ class MowerAttributes(DataClassDictMixin):
     )
 
     work_areas: list[WorkAreas] | None = field(
-        metadata=field_options(alias="workAreas"), default=None
+        metadata=field_options(
+            deserialize=lambda workarea_list: {
+                area.work_area_id: WorkArea(
+                    name=area.name or None, cutting_height=area.cutting_height
+                )
+                for area in map(WorkAreas.from_dict, workarea_list)
+            },
+            alias="workAreas",
+        ),
+        default=None,
     )
 
 

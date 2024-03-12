@@ -51,8 +51,8 @@
   System(name='Test Mower 1', model='450XH-TEST', serial_number=123)
 # ---
 # name: test_mower_snapshot[work_areas]
-  list([
-    WorkAreas(work_area_id=123456, name='Front lawn', cutting_height=50),
-    WorkAreas(work_area_id=0, name='', cutting_height=50),
-  ])
+  dict({
+    0: WorkArea(name=None, cutting_height=50),
+    123456: WorkArea(name='Front lawn', cutting_height=50),
+  })
 # ---

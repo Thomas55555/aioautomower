@@ -26,9 +26,8 @@ async def test_high_feature_mower() -> None:
     assert mowers[MOWER_ID].stay_out_zones.zones[0].name == "Springflowers"
     assert mowers[MOWER_ID].stay_out_zones.zones[0].enabled is True
     assert mowers[MOWER_ID].work_areas is not None
-    assert mowers[MOWER_ID].work_areas[0].work_area_id == 123456
-    assert mowers[MOWER_ID].work_areas[0].name == "Front lawn"
-    assert mowers[MOWER_ID].work_areas[0].cutting_height == 50
+    assert mowers[MOWER_ID].work_areas[123456].name == "Front lawn"
+    assert mowers[MOWER_ID].work_areas[123456].cutting_height == 50
     assert mowers[MOWER_ID].statistics.cutting_blade_usage_time == 1234
     assert len(mowers[MOWER_ID].positions) != 0
 
