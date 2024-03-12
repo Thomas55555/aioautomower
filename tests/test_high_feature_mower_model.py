@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import fields
-
+from syrupy.assertion import SnapshotAssertion
 import pytest
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
@@ -19,12 +19,20 @@ async def test_high_feature_mower() -> None:
     mowers = mower_list_to_dictionary_dataclass(mower_python)
     assert mowers[MOWER_ID].battery.battery_percent == 100
     assert mowers[MOWER_ID].stay_out_zones.dirty is False
+    print(mowers[MOWER_ID].stay_out_zones)
+    assert mowers[MOWER_ID].stay_out_zones.zones is not None
     assert (
-        mowers[MOWER_ID].stay_out_zones.zones[0].id
-        == "81C6EEA2-D139-4FEA-B134-F22A6B3EA403"
+        mowers[MOWER_ID]
+        .stay_out_zones.zones["81C6EEA2-D139-4FEA-B134-F22A6B3EA403"]
+        .name
+        == "Springflowers"
     )
-    assert mowers[MOWER_ID].stay_out_zones.zones[0].name == "Springflowers"
-    assert mowers[MOWER_ID].stay_out_zones.zones[0].enabled is True
+    assert (
+        mowers[MOWER_ID]
+        .stay_out_zones.zones["81C6EEA2-D139-4FEA-B134-F22A6B3EA403"]
+        .enabled
+        is True
+    )
     assert mowers[MOWER_ID].work_areas is not None
     assert mowers[MOWER_ID].work_areas[123456].name == "Front lawn"
     assert mowers[MOWER_ID].work_areas[123456].cutting_height == 50
@@ -32,7 +40,7 @@ async def test_high_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) != 0
 
 
-def test_mower_snapshot(snapshot):
+def test_mower_snapshot(snapshot: SnapshotAssertion):
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
     mower_fixture = load_fixture("high_feature_mower.json")

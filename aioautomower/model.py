@@ -196,10 +196,18 @@ class Headlight(DataClassDictMixin):
 
 
 @dataclass
-class Zones(DataClassDictMixin):
+class _Zones(DataClassDictMixin):
     """DataClass for Zone values."""
 
     id: str
+    name: str
+    enabled: bool
+
+
+@dataclass
+class Zone(DataClassDictMixin):
+    """DataClass for Zone values."""
+
     name: str
     enabled: bool
 
@@ -209,11 +217,18 @@ class StayOutZones(DataClassDictMixin):
     """DataClass for StayOutZone values."""
 
     dirty: bool
-    zones: list[Zones]
+    zones: dict[str, Zone] = field(
+        metadata=field_options(
+            deserialize=lambda workarea_list: {
+                area.id: Zone(name=area.name or None, enabled=area.enabled)
+                for area in map(_Zones.from_dict, workarea_list)
+            },
+        ),
+    )
 
 
 @dataclass
-class WorkAreas(DataClassDictMixin):
+class _WorkAreas(DataClassDictMixin):
     """DataClass for WorkAreas values."""
 
     work_area_id: int = field(metadata=field_options(alias="workAreaId"))
@@ -250,14 +265,13 @@ class MowerAttributes(DataClassDictMixin):
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
-
-    work_areas: list[WorkAreas] | None = field(
+    work_areas: dict[str, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
                 area.work_area_id: WorkArea(
                     name=area.name or None, cutting_height=area.cutting_height
                 )
-                for area in map(WorkAreas.from_dict, workarea_list)
+                for area in map(_WorkAreas.from_dict, workarea_list)
             },
             alias="workAreas",
         ),

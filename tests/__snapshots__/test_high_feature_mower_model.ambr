@@ -45,7 +45,7 @@
   Statistics(number_of_charging_cycles=1380, number_of_collisions=11396, total_charging_time=4334400, total_cutting_time=4194000, total_drive_distance=1780272, total_running_time=4564800, total_searching_time=370800, cutting_blade_usage_time=1234)
 # ---
 # name: test_mower_snapshot[stay_out_zones]
-  StayOutZones(dirty=False, zones=[Zones(id='81C6EEA2-D139-4FEA-B134-F22A6B3EA403', name='Springflowers', enabled=True)])
+  StayOutZones(dirty=False, zones={'81C6EEA2-D139-4FEA-B134-F22A6B3EA403': Zone(name='Springflowers', enabled=True), 'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': Zone(name='Danger Zone', enabled=False)})
 # ---
 # name: test_mower_snapshot[system]
   System(name='Test Mower 1', model='450XH-TEST', serial_number=123)
