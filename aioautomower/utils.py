@@ -92,7 +92,7 @@ def mower_list_to_dictionary_dataclass(
     return mowers_dict
 
 
-def error_key_list() -> list:
+def error_key_list() -> list[str]:
     """Create a list with all possible error keys"""
     codes = []
     for error_text in ERRORCODES.values():
@@ -100,7 +100,7 @@ def error_key_list() -> list:
     return sorted(codes)
 
 
-def error_key_dict() -> dict:
+def error_key_dict() -> dict[str, str]:
     """Create a dictionary with error keys and a human friendly text"""
     codes = {}
     for error_text in ERRORCODES.values():

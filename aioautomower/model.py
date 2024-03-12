@@ -9,7 +9,7 @@ from mashumaro import DataClassDictMixin, field_options
 from .const import ERRORCODES
 
 
-def snake_case(string):
+def snake_case(string) -> str:
     """Convert an error text to snake case"""
     return "_".join(
         sub(
