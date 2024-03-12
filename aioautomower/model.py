@@ -219,9 +219,9 @@ class StayOutZones(DataClassDictMixin):
     dirty: bool
     zones: dict[str, Zone] = field(
         metadata=field_options(
-            deserialize=lambda workarea_list: {
+            deserialize=lambda zone_list: {
                 area.id: Zone(name=area.name or None, enabled=area.enabled)
-                for area in map(_Zones.from_dict, workarea_list)
+                for area in map(_Zones.from_dict, zone_list)
             },
         ),
     )
