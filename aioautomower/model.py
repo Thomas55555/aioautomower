@@ -3,8 +3,28 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum, StrEnum
-
+from re import sub
 from mashumaro import DataClassDictMixin, field_options
+
+from .const import ERRORCODES
+
+
+def snake_case(string):
+    """Convert an error text to snake case"""
+    return "_".join(
+        sub(
+            "([A-Z][a-z][,]+)",
+            r" \1",
+            sub(
+                "([A-Z]+)",
+                r" \1",
+                string.replace("-", " ")
+                .replace(",", "")
+                .replace(".", "")
+                .replace("!", ""),
+            ),
+        ).split()
+    ).lower()
 
 
 @dataclass
@@ -70,7 +90,13 @@ class Mower(DataClassDictMixin):
     activity: str
     state: str
     error_code: int = field(metadata=field_options(alias="errorCode"))
-    error_code_dateteime: datetime | None = field(
+    error_key: str | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (None if x == 0 else snake_case(ERRORCODES.get(x))),
+            alias="errorCode",
+        ),
+    )
+    error_dateteime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()

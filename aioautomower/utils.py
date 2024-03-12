@@ -3,13 +3,13 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
-
 import aiohttp
 import jwt
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 from .exceptions import ApiException
-from .model import JWT, MowerAttributes, MowerList
+from .model import JWT, MowerAttributes, MowerList, snake_case
+from .const import ERRORCODES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,3 +90,19 @@ def mower_list_to_dictionary_dataclass(
     for mower in mowers_list.data:
         mowers_dict[mower.id] = mower.attributes
     return mowers_dict
+
+
+def error_key_list() -> list:
+    """Create a list with all possible error keys"""
+    codes = []
+    for error_text in ERRORCODES.values():
+        codes.append(snake_case(error_text))
+    return sorted(codes)
+
+
+def error_key_dict() -> dict:
+    """Create a dictionary with error keys and a human friendly text"""
+    codes = {}
+    for error_text in ERRORCODES.values():
+        codes[snake_case(error_text)] = error_text
+    return codes
