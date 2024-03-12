@@ -3,7 +3,6 @@
 import json
 from dataclasses import fields
 
-import pytest
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
@@ -11,7 +10,6 @@ from tests import load_fixture
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-@pytest.mark.asyncio
 async def test_low_feature_mower() -> None:
     """Test converting a low feature mower."""
     mower_fixture = load_fixture("low_feature_mower.json")
