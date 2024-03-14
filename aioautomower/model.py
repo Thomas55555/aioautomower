@@ -194,23 +194,30 @@ class Statistics(DataClassDictMixin):
     """DataClass for Statistics values."""
 
     # pylint: disable=too-many-instance-attributes
-    number_of_charging_cycles: int = field(
-        metadata=field_options(alias="numberOfChargingCycles")
-    )
-    number_of_collisions: int = field(
-        metadata=field_options(alias="numberOfCollisions")
-    )
-    total_charging_time: int = field(metadata=field_options(alias="totalChargingTime"))
-    total_cutting_time: int = field(metadata=field_options(alias="totalCuttingTime"))
-    total_drive_distance: int = field(
-        metadata=field_options(alias="totalDriveDistance")
-    )
-    total_running_time: int = field(metadata=field_options(alias="totalRunningTime"))
-    total_searching_time: int = field(
-        metadata=field_options(alias="totalSearchingTime")
-    )
+
     cutting_blade_usage_time: int | None = field(
         metadata=field_options(alias="cuttingBladeUsageTime"), default=None
+    )
+    number_of_charging_cycles: int | None = field(
+        metadata=field_options(alias="numberOfChargingCycles"), default=None
+    )
+    number_of_collisions: int | None = field(
+        metadata=field_options(alias="numberOfCollisions"), default=None
+    )
+    total_charging_time: int | None = field(
+        metadata=field_options(alias="totalChargingTime"), default=None
+    )
+    total_cutting_time: int | None = field(
+        metadata=field_options(alias="totalCuttingTime"), default=None
+    )
+    total_drive_distance: int | None = field(
+        metadata=field_options(alias="totalDriveDistance"), default=None
+    )
+    total_running_time: int | None = field(
+        metadata=field_options(alias="totalRunningTime"), default=None
+    )
+    total_searching_time: int | None = field(
+        metadata=field_options(alias="totalSearchingTime"), default=None
     )
 
 
