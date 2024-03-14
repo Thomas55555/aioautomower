@@ -23,8 +23,10 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
-        run: pipx install poetry
+        run: uv pip install poetry
       - name: 🏗 Set up Python ${{ matrix.python }}
         id: python
         uses: actions/setup-python@v5.0.0
@@ -55,8 +57,10 @@ jobs:
           fetch-depth: 0
       - name: ⬇️ Download coverage data
         uses: actions/download-artifact@v4.1.4
+      - name: Install uv
+        run: pipx install uv
       - name: 🏗 Set up Poetry
-        run: pipx install poetry
+        run: uv pip install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.0.0
