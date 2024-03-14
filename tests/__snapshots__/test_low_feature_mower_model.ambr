@@ -28,7 +28,7 @@
   ])
 # ---
 # name: test_mower_snapshot[statistics]
-  Statistics(number_of_charging_cycles=1380, number_of_collisions=11396, total_charging_time=4334400, total_cutting_time=4194000, total_drive_distance=1780272, total_running_time=4564800, total_searching_time=370800, cutting_blade_usage_time=None)
+  Statistics(cutting_blade_usage_time=None, number_of_charging_cycles=None, number_of_collisions=None, total_charging_time=None, total_cutting_time=None, total_drive_distance=None, total_running_time=None, total_searching_time=None)
 # ---
 # name: test_mower_snapshot[stay_out_zones]
   None

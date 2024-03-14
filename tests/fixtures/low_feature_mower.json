@@ -67,15 +67,7 @@
         "headlight": {
           "mode": null
         },
-        "statistics": {
-          "numberOfChargingCycles": 1380,
-          "numberOfCollisions": 11396,
-          "totalChargingTime": 4334400,
-          "totalCuttingTime": 4194000,
-          "totalDriveDistance": 1780272,
-          "totalRunningTime": 4564800,
-          "totalSearchingTime": 370800
-        }
+        "statistics": {}
       }
     }
   ]
