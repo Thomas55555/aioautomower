@@ -99,7 +99,7 @@ class Mower(DataClassDictMixin):
     error_dateteime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+                None if x == 0 else datetime.fromtimestamp(x / 1000)
             ),
             alias="errorCodeTimestamp",
         ),
@@ -151,7 +151,7 @@ class Planner(DataClassDictMixin):
     next_start_dateteime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+                None if x == 0 else datetime.fromtimestamp(x / 1000)
             ),
             alias="nextStartTimestamp",
         ),
