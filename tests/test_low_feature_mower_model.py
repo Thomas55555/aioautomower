@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import fields
-
+from freezegun import freeze_time
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
@@ -19,7 +19,7 @@ async def test_low_feature_mower() -> None:
     assert mowers[MOWER_ID].cutting_height is None
     assert len(mowers[MOWER_ID].positions) == 0
 
-
+@freeze_time(tz_offset=2)
 def test_mower_snapshot(snapshot):
     """Testing a snapshot of a high feature mower."""
     mower_fixture = load_fixture("low_feature_mower.json")
