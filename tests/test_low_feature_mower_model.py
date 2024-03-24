@@ -7,6 +7,7 @@ from freezegun import freeze_time
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
 
+
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
@@ -18,6 +19,7 @@ async def test_low_feature_mower() -> None:
     assert mowers[MOWER_ID].headlight.mode is None
     assert mowers[MOWER_ID].cutting_height is None
     assert len(mowers[MOWER_ID].positions) == 0
+
 
 @freeze_time(tz_offset=2)
 def test_mower_snapshot(snapshot):

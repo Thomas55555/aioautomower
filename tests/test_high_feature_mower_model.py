@@ -3,9 +3,9 @@
 import json
 from dataclasses import fields
 from syrupy.assertion import SnapshotAssertion
+from freezegun import freeze_time
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
-from freezegun import freeze_time
 
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
@@ -37,6 +37,7 @@ async def test_high_feature_mower() -> None:
     assert mowers[MOWER_ID].work_areas[123456].cutting_height == 50
     assert mowers[MOWER_ID].statistics.cutting_blade_usage_time == 1234
     assert len(mowers[MOWER_ID].positions) != 0
+
 
 @freeze_time(tz_offset=2)
 def test_mower_snapshot(snapshot: SnapshotAssertion):
