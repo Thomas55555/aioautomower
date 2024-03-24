@@ -150,7 +150,7 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_dateteime: datetime | None = field(
+    next_start_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None if x == 0 else datetime.fromtimestamp(x / 1000)
