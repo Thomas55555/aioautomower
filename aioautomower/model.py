@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum, StrEnum
 from re import sub
+
+
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
@@ -96,10 +98,10 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
-    error_dateteime: datetime | None = field(
+    error_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+                None if x == 0 else datetime.fromtimestamp(x / 1000)
             ),
             alias="errorCodeTimestamp",
         ),
@@ -148,10 +150,10 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_dateteime: datetime | None = field(
+    next_start_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000).astimezone()
+                None if x == 0 else datetime.fromtimestamp(x / 1000)
             ),
             alias="nextStartTimestamp",
         ),
