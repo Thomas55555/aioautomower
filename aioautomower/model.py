@@ -98,7 +98,7 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
-    error_dateteime: datetime | None = field(
+    error_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None if x == 0 else datetime.fromtimestamp(x / 1000)
