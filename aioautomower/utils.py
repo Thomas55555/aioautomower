@@ -3,9 +3,10 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
+from uuid import UUID
+from typing import cast, Mapping, Any
 import aiohttp
 import jwt
-
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 from .exceptions import ApiException
 from .model import JWT, MowerAttributes, MowerList, snake_case
@@ -14,13 +15,15 @@ from .const import ERRORCODES
 _LOGGER = logging.getLogger(__name__)
 
 
-def structure_token(access_token) -> JWT:
+def structure_token(access_token: str) -> JWT:
     """Decode JWT and convert to dataclass."""
     token_decoded = jwt.decode(access_token, options={"verify_signature": False})
     return JWT.from_dict(token_decoded)
 
 
-async def async_get_access_token(client_id, client_secret) -> dict:
+async def async_get_access_token(
+    client_id: UUID, client_secret: UUID
+) -> dict[str, str]:
     """Get an access token from the Authentication API with client credentials.
 
     This grant type is intended only for you. If you want other
@@ -50,12 +53,13 @@ async def async_get_access_token(client_id, client_secret) -> dict:
                     Husqvarna Automower API: {result}"""
             )
     result["status"] = resp.status
-    return result
+    print(result)
+    return cast(dict[str, str], result)
 
 
 async def async_invalidate_access_token(
-    valid_access_token, access_token_to_invalidate
-) -> dict:
+    valid_access_token: str, access_token_to_invalidate: str
+) -> dict[str, str]:
     """Invalidate the token.
 
     :param str valid_access_token: A working access token to authorize this request.
@@ -78,11 +82,11 @@ async def async_invalidate_access_token(
         if resp.status >= 400:
             resp.raise_for_status()
             _LOGGER.error("Response body delete token: %s", result)
-    return result
+    return cast(dict[str, str], result)
 
 
 def mower_list_to_dictionary_dataclass(
-    mower_list,
+    mower_list: Mapping[Any, Any],
 ) -> dict[str, MowerAttributes]:
     """Convert mower data to a dictionary DataClass."""
     mowers_list = MowerList.from_dict(mower_list)
