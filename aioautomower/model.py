@@ -4,11 +4,15 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum, StrEnum
 from re import sub
-
+import time
+import os
 
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
+
+os.environ["TZ"] = "UTC"
+time.tzset()
 
 
 def snake_case(string) -> str:
