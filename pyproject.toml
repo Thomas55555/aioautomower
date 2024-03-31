@@ -81,18 +81,18 @@ show-fixes = true
 [tool.pylint.FORMAT]
 max-line-length = 88
 
-[tool.ruff.flake8-annotations]
+[tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 suppress-dummy-args = true
 
-[tool.ruff.flake8-builtins]
+[tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["id"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 # Use Google-style docstrings.
 convention = "pep257"
 
-[tool.ruff.pylint]
+[tool.ruff.lint.pylint]
 
 max-branches=25
 max-returns=15
