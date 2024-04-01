@@ -104,7 +104,7 @@ class Mower(DataClassDictMixin):
                 if x == 0
                 else datetime.fromtimestamp(x / 1000, tz=UTC)
                 .replace(tzinfo=None)
-                .astimezone()
+                .astimezone(tz=UTC)
             ),
             alias="errorCodeTimestamp",
         ),
@@ -160,7 +160,7 @@ class Planner(DataClassDictMixin):
                 if x == 0
                 else datetime.fromtimestamp(x / 1000, tz=UTC)
                 .replace(tzinfo=None)
-                .astimezone()
+                .astimezone(tz=UTC)
             ),
             alias="nextStartTimestamp",
         ),
