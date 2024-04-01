@@ -4,15 +4,10 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum, StrEnum
 from re import sub
-import time
-import os
 
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
-
-os.environ["TZ"] = "UTC"
-time.tzset()
 
 
 def snake_case(string) -> str:
@@ -105,7 +100,11 @@ class Mower(DataClassDictMixin):
     error_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000)
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC)
+                .replace(tzinfo=None)
+                .astimezone()
             ),
             alias="errorCodeTimestamp",
         ),
@@ -157,7 +156,11 @@ class Planner(DataClassDictMixin):
     next_start_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000)
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC)
+                .replace(tzinfo=None)
+                .astimezone()
             ),
             alias="nextStartTimestamp",
         ),
