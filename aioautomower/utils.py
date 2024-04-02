@@ -111,17 +111,13 @@ def error_key_dict() -> dict[str, str]:
 
 
 def convert_timestamp_to_datetime_utc(
-    timestamp: int, time_zone_str: str
+    timestamp: int, time_zone: zoneinfo.ZoneInfo
 ) -> datetime.datetime | None:
     """Create datetime object in the requested timezone."""
 
     if timestamp != 0:
-        try:
-            tz = zoneinfo.ZoneInfo(time_zone_str)
-        except zoneinfo.ZoneInfoNotFoundError:
-            tz = None
         local_datetime_unshifted = datetime.datetime.fromtimestamp(
-            timestamp / 1000, tz=tz
+            timestamp / 1000, tz=time_zone
         )
         return local_datetime_unshifted - local_datetime_unshifted.utcoffset()
     return None

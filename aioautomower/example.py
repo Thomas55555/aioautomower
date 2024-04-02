@@ -4,7 +4,7 @@ import asyncio
 import logging
 import time
 from typing import cast
-
+import zoneinfo
 from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
@@ -96,7 +96,8 @@ def callback(ws_data: dict[str, MowerAttributes]):
         print(ws_data[mower_id])
         print(
             convert_timestamp_to_datetime_utc(
-                ws_data[mower_id].planner.next_start_timestamp, "Europe/Berlin"
+                ws_data[mower_id].planner.next_start_timestamp,
+                zoneinfo.ZoneInfo("Europe/Berlin"),
             )
         )
 
