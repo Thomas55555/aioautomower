@@ -11,7 +11,11 @@ from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerSession
 from aioautomower.model import MowerAttributes
-from aioautomower.utils import async_get_access_token, structure_token
+from aioautomower.utils import (
+    async_get_access_token,
+    structure_token,
+    convert_timestamp_to_datetime_utc,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +94,11 @@ def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_id in ws_data:
         print(ws_data[mower_id])
+        print(
+            convert_timestamp_to_datetime_utc(
+                ws_data[mower_id].planner.next_start_timestamp, "Europe/Berlin"
+            )
+        )
 
 
 async def _client_listen(

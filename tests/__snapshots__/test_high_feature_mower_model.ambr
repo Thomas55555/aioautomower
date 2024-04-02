@@ -21,7 +21,7 @@
   Mower(mode='MAIN_AREA', activity='PARKED_IN_CS', state='RESTRICTED', error_code=0, error_key=None, error_datetime=None)
 # ---
 # name: test_mower_snapshot[planner]
-  Planner(next_start_datetime=FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc), override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
+  Planner(next_start_datetime=FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc), next_start_timestamp=1685991600000, override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
 # ---
 # name: test_mower_snapshot[positions]
   list([

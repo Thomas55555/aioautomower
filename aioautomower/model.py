@@ -165,7 +165,9 @@ class Planner(DataClassDictMixin):
             alias="nextStartTimestamp",
         ),
     )
-
+    next_start_timestamp: int | None = field(
+        metadata=field_options(alias="nextStartTimestamp")
+    )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
 
