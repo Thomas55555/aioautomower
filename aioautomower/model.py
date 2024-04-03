@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from enum import Enum, StrEnum
 from re import sub
 
-
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
@@ -101,10 +100,17 @@ class Mower(DataClassDictMixin):
     error_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000)
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(
+                    tzinfo=datetime.now(UTC).astimezone().tzinfo
+                )
             ),
             alias="errorCodeTimestamp",
         ),
+    )
+    error_timestamp: int | None = field(
+        metadata=field_options(alias="errorCodeTimestamp")
     )
 
 
@@ -153,12 +159,18 @@ class Planner(DataClassDictMixin):
     next_start_datetime: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
-                None if x == 0 else datetime.fromtimestamp(x / 1000)
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(
+                    tzinfo=datetime.now(UTC).astimezone().tzinfo
+                )
             ),
             alias="nextStartTimestamp",
         ),
     )
-
+    next_start_timestamp: int | None = field(
+        metadata=field_options(alias="nextStartTimestamp")
+    )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
 
