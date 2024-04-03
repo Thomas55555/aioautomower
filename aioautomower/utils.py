@@ -3,13 +3,15 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
+import datetime
+import zoneinfo
 import aiohttp
 import jwt
-
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 from .exceptions import ApiException
 from .model import JWT, MowerAttributes, MowerList, snake_case
 from .const import ERRORCODES
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,3 +108,16 @@ def error_key_dict() -> dict[str, str]:
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text
     return codes
+
+
+def convert_timestamp_to_datetime_utc(
+    timestamp: int, time_zone: zoneinfo.ZoneInfo
+) -> datetime.datetime | None:
+    """Create datetime object in the requested timezone."""
+
+    if timestamp != 0:
+        local_datetime_unshifted = datetime.datetime.fromtimestamp(
+            timestamp / 1000, tz=time_zone
+        )
+        return local_datetime_unshifted - local_datetime_unshifted.utcoffset()
+    return None
