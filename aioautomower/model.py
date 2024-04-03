@@ -102,12 +102,15 @@ class Mower(DataClassDictMixin):
             deserialize=lambda x: (
                 None
                 if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(tz=UTC)
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(
+                    tzinfo=datetime.now(UTC).astimezone().tzinfo
+                )
             ),
             alias="errorCodeTimestamp",
         ),
+    )
+    error_timestamp: int | None = field(
+        metadata=field_options(alias="errorCodeTimestamp")
     )
 
 
@@ -158,9 +161,9 @@ class Planner(DataClassDictMixin):
             deserialize=lambda x: (
                 None
                 if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(tz=UTC)
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(
+                    tzinfo=datetime.now(UTC).astimezone().tzinfo
+                )
             ),
             alias="nextStartTimestamp",
         ),

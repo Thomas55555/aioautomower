@@ -6,7 +6,6 @@ import time
 from typing import cast
 import zoneinfo
 from aiohttp import ClientSession
-
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerSession
