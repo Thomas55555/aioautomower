@@ -10,8 +10,10 @@ from mashumaro import DataClassDictMixin, field_options
 from .const import ERRORCODES
 
 
-def snake_case(string) -> str:
+def snake_case(string: str | None) -> str:
     """Convert an error text to snake case"""
+    if string is None:
+        raise TypeError
     return "_".join(
         sub(
             "([A-Z][a-z][,]+)",
@@ -34,7 +36,7 @@ class User(DataClassDictMixin):
 
     first_name: str
     last_name: str
-    custom_attributes: dict
+    custom_attributes: dict[str, str]
     customer_id: str
 
 
@@ -45,9 +47,9 @@ class JWT(DataClassDictMixin):
     # pylint: disable=too-many-instance-attributes
     jti: str
     iss: str
-    roles: list
-    groups: list
-    scopes: list
+    roles: list[str]
+    groups: list[str]
+    scopes: list[str]
     scope: str
     client_id: str
     customer_id: str
@@ -267,7 +269,7 @@ class StayOutZones(DataClassDictMixin):
     zones: dict[str, Zone] = field(
         metadata=field_options(
             deserialize=lambda zone_list: {
-                area.id: Zone(name=area.name or None, enabled=area.enabled)
+                area.id: Zone(name=area.name, enabled=area.enabled)
                 for area in map(_Zones.from_dict, zone_list)
             },
         ),
@@ -312,7 +314,7 @@ class MowerAttributes(DataClassDictMixin):
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
-    work_areas: dict[str, WorkArea] | None = field(
+    work_areas: dict[int, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
                 area.work_area_id: WorkArea(

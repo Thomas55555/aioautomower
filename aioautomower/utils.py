@@ -3,6 +3,7 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
+from typing import cast, Mapping, Any
 import datetime
 import zoneinfo
 import aiohttp
@@ -16,13 +17,13 @@ from .const import ERRORCODES
 _LOGGER = logging.getLogger(__name__)
 
 
-def structure_token(access_token) -> JWT:
+def structure_token(access_token: str) -> JWT:
     """Decode JWT and convert to dataclass."""
     token_decoded = jwt.decode(access_token, options={"verify_signature": False})
     return JWT.from_dict(token_decoded)
 
 
-async def async_get_access_token(client_id, client_secret) -> dict:
+async def async_get_access_token(client_id: str, client_secret: str) -> dict[str, str]:
     """Get an access token from the Authentication API with client credentials.
 
     This grant type is intended only for you. If you want other
@@ -52,12 +53,12 @@ async def async_get_access_token(client_id, client_secret) -> dict:
                     Husqvarna Automower API: {result}"""
             )
     result["status"] = resp.status
-    return result
+    return cast(dict[str, str], result)
 
 
 async def async_invalidate_access_token(
-    valid_access_token, access_token_to_invalidate
-) -> dict:
+    valid_access_token: str, access_token_to_invalidate: str
+) -> dict[str, str]:
     """Invalidate the token.
 
     :param str valid_access_token: A working access token to authorize this request.
@@ -80,11 +81,11 @@ async def async_invalidate_access_token(
         if resp.status >= 400:
             resp.raise_for_status()
             _LOGGER.error("Response body delete token: %s", result)
-    return result
+    return cast(dict[str, str], result)
 
 
 def mower_list_to_dictionary_dataclass(
-    mower_list,
+    mower_list: Mapping[Any, Any],
 ) -> dict[str, MowerAttributes]:
     """Convert mower data to a dictionary DataClass."""
     mowers_list = MowerList.from_dict(mower_list)
@@ -111,13 +112,14 @@ def error_key_dict() -> dict[str, str]:
 
 
 def convert_timestamp_to_datetime_utc(
-    timestamp: int, time_zone: zoneinfo.ZoneInfo
+    timestamp: int | None, time_zone: zoneinfo.ZoneInfo
 ) -> datetime.datetime | None:
     """Create datetime object in the requested timezone."""
-
+    if timestamp is None:
+        raise TypeError
     if timestamp != 0:
-        local_datetime_unshifted = datetime.datetime.fromtimestamp(
+        local_unshifted = datetime.datetime.fromtimestamp(
             timestamp / 1000, tz=time_zone
         )
-        return local_datetime_unshifted - local_datetime_unshifted.utcoffset()
+        return local_unshifted - local_unshifted.utcoffset()  # type: ignore
     return None

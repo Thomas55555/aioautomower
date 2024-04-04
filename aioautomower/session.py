@@ -58,13 +58,13 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self._data: dict = {}
+        self._data: dict[str, str] = {}
         self.auth = auth
         self.data_update_cbs: list = []
         self.data: dict[str, MowerAttributes] = {}
         self.loop = asyncio.get_running_loop()
         self.poll = poll
-        self.rest_task = None
+        self.rest_task: asyncio.Task | None = None
         self.token = None
         self.token_task = None
         self.token_update_cbs: list = []
@@ -79,7 +79,7 @@ class AutomowerSession:
             raise NoDataAvailableException
         self.loop.call_soon_threadsafe(cb, self.data)
 
-    def _schedule_data_callbacks(self):
+    def _schedule_data_callbacks(self) -> None:
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
@@ -91,7 +91,7 @@ class AutomowerSession:
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to the API.
 
         This method handles the login and starts a task that keep the access
@@ -240,7 +240,7 @@ class AutomowerSession:
     async def set_calendar(
         self,
         mower_id: str,
-        task_list: list,
+        task_list: list[str],
     ):
         """Send calendar task to the mower."""
         body = {
@@ -292,14 +292,14 @@ class AutomowerSession:
         self.data = mower_list_to_dictionary_dataclass(self._data)
         self._schedule_data_callbacks()
 
-    async def _rest_task(self):
+    async def _rest_task(self) -> None:
         """Poll data periodically via Rest."""
         while True:
             await self.get_status()
             self._schedule_data_callbacks()
             await asyncio.sleep(REST_POLL_CYCLE)
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the session."""
         if self.rest_task:
             if not self.rest_task.cancelled():

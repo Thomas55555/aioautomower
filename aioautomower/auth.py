@@ -127,7 +127,7 @@ class AbstractAuth(ABC):
         except ClientError as err:
             raise AuthException(f"Access token failure: {err}") from err
 
-    async def headers(self) -> dict:
+    async def headers(self) -> dict[str, str]:
         """Generate headers for ReST requests."""
         access_token = await self._async_get_access_token()
         if not self._client_id:
