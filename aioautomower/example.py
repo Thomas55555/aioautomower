@@ -19,8 +19,8 @@ from aioautomower.utils import (
 _LOGGER = logging.getLogger(__name__)
 
 
-CLIENT_ID = "7ac6b068-7f58-4749-aaa3-607167543933"
-CLIENT_SECRET = "cf3d3d8c-7cb3-4143-8d7b-1c3a5e2eaaad"
+CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
+CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 

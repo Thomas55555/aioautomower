@@ -53,7 +53,6 @@ async def async_get_access_token(client_id: str, client_secret: str) -> dict[str
                     Husqvarna Automower API: {result}"""
             )
     result["status"] = resp.status
-    print(result)
     return cast(dict[str, str], result)
 
 
