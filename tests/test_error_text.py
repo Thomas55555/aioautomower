@@ -3,13 +3,13 @@
 import json
 
 
+from syrupy.assertion import SnapshotAssertion
 from aioautomower.utils import (
     mower_list_to_dictionary_dataclass,
     error_key_list,
     error_key_dict,
 )
 from tests import load_fixture
-
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
@@ -41,11 +41,11 @@ async def test_error_key() -> None:
     )
 
 
-async def test_error_keys_snapshot(snapshot) -> None:
+async def test_error_keys_snapshot(snapshot: SnapshotAssertion) -> None:
     """Make a snapshot of the error keys."""
     assert error_key_list() == snapshot
 
 
-async def test_error_key_dict_snapshot(snapshot) -> None:
+async def test_error_key_dict_snapshot(snapshot: SnapshotAssertion) -> None:
     """Make a snapshot of the error key dictionary."""
     assert error_key_dict() == snapshot

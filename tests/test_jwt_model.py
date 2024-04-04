@@ -2,7 +2,7 @@
 
 from dataclasses import fields
 import json
-
+from syrupy.assertion import SnapshotAssertion
 from aioautomower.utils import structure_token
 from tests import load_fixture
 
@@ -20,7 +20,7 @@ async def test_decode_token() -> None:
     assert token_structered.user.last_name == "Mustermann"
 
 
-async def test_jwt_snapshot(snapshot):
+async def test_jwt_snapshot(snapshot: SnapshotAssertion):
     """Testing a snapshot of a JWT."""
     token_fixture = load_fixture("jwt.json")
     token_python = json.loads(token_fixture)

@@ -3,7 +3,6 @@
 import logging
 import time
 from urllib.parse import quote_plus, urlencode
-from uuid import UUID
 from typing import cast, Mapping, Any
 import datetime
 import zoneinfo
@@ -24,9 +23,7 @@ def structure_token(access_token: str) -> JWT:
     return JWT.from_dict(token_decoded)
 
 
-async def async_get_access_token(
-    client_id: UUID, client_secret: UUID
-) -> dict[str, str]:
+async def async_get_access_token(client_id: str, client_secret: str) -> dict[str, str]:
     """Get an access token from the Authentication API with client credentials.
 
     This grant type is intended only for you. If you want other
@@ -116,13 +113,14 @@ def error_key_dict() -> dict[str, str]:
 
 
 def convert_timestamp_to_datetime_utc(
-    timestamp: int, time_zone: zoneinfo.ZoneInfo
+    timestamp: int | None, time_zone: zoneinfo.ZoneInfo
 ) -> datetime.datetime | None:
     """Create datetime object in the requested timezone."""
-
+    if timestamp is None:
+        raise TypeError
     if timestamp != 0:
-        local_datetime_unshifted = datetime.datetime.fromtimestamp(
+        local_unshifted = datetime.datetime.fromtimestamp(
             timestamp / 1000, tz=time_zone
         )
-        return local_datetime_unshifted - local_datetime_unshifted.utcoffset()
+        return local_unshifted - local_unshifted.utcoffset()  # type: ignore
     return None

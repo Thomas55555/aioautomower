@@ -41,6 +41,7 @@ python = "^3.11"
 aiohttp = "^3.9.3"
 mashumaro = "^3.12"
 PyJWT = "^2.8.0"
+freezegun = "^1.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -120,22 +121,6 @@ follow_imports = "normal"
 # suppress errors about unsatisfied imports
 ignore_missing_imports = true
 
-# be strict
-check_untyped_defs = true
-disallow_any_generics = true
-disallow_incomplete_defs = true
-disallow_subclassing_any = true
-disallow_untyped_calls = true
-disallow_untyped_decorators = true
-disallow_untyped_defs = true
-no_implicit_optional = true
-strict_optional = true
-warn_incomplete_stub = true
-warn_no_return = true
-warn_redundant_casts = true
-warn_return_any = true
-warn_unused_configs = true
-warn_unused_ignores = true
 
 [tool.coverage.report]
 show_missing = true

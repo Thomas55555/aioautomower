@@ -10,8 +10,10 @@ from mashumaro import DataClassDictMixin, field_options
 from .const import ERRORCODES
 
 
-def snake_case(string: str) -> str:
+def snake_case(string: str | None) -> str:
     """Convert an error text to snake case"""
+    if string is None:
+        raise TypeError
     return "_".join(
         sub(
             "([A-Z][a-z][,]+)",
@@ -312,7 +314,7 @@ class MowerAttributes(DataClassDictMixin):
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
-    work_areas: dict[str, WorkArea] | None = field(
+    work_areas: dict[int, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
                 area.work_area_id: WorkArea(

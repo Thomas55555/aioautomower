@@ -64,7 +64,7 @@ class AutomowerSession:
         self.data: dict[str, MowerAttributes] = {}
         self.loop = asyncio.get_running_loop()
         self.poll = poll
-        self.rest_task = None
+        self.rest_task: asyncio.Task | None = None
         self.token = None
         self.token_task = None
         self.token_update_cbs: list = []
