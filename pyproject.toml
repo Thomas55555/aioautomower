@@ -41,8 +41,6 @@ python = "^3.11"
 aiohttp = "^3.9.3"
 mashumaro = "^3.12"
 PyJWT = "^2.8.0"
-freezegun = "^1.4.0"
-
 
 [tool.poetry.group.dev.dependencies]
 codespell = "2.2.6"
