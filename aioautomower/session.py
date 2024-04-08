@@ -34,7 +34,10 @@ class AutomowerEndpoint:
     stay_out_zones = "mowers/{mower_id}/stayOutZones/{stay_out_id}"
     "Enable or disable the stay-out zone."
 
-    work_area_calendar = "mowers/{mower_id}/workAreas{work_area_id}/calendar"
+    work_area_cutting_height = "mowers/{mower_id}/workAreas/{work_area_id}"
+    "This will update cutting height on the work area."
+
+    work_area_calendar = "mowers/{mower_id}/workAreas/{work_area_id}/calendar"
     "Update the calendar for a work area on the mower."
 
 
@@ -207,7 +210,7 @@ class AutomowerSession:
         await self.auth.post_json(url, json=body)
 
     async def set_cutting_height(self, mower_id: str, cutting_height: int):
-        """Start the mower for a period of minutes."""
+        """Set the cutting height for the mower."""
         body = {
             "data": {
                 "type": "settings",
@@ -216,6 +219,22 @@ class AutomowerSession:
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
+
+    async def set_cutting_height_workarea(
+        self, mower_id: str, cutting_height: int, work_area_id: int
+    ):
+        """Set the cutting height for a specific work area."""
+        body = {
+            "data": {
+                "type": "workArea",
+                "id": work_area_id,
+                "attributes": {"cuttingHeight": cutting_height},
+            }
+        }
+        url = AutomowerEndpoint.work_area_cutting_height.format(
+            mower_id=mower_id, work_area_id=work_area_id
+        )
+        await self.auth.patch_json(url, json=body)
 
     async def set_headlight_mode(
         self,
