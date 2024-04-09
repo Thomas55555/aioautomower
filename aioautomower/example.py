@@ -1,5 +1,6 @@
 """An example file to use this library."""
 
+import datetime
 import asyncio
 import logging
 import time
@@ -18,9 +19,8 @@ from aioautomower.utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
-CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
+CLIENT_ID = "7ac6b068-7f58-4749-aaa3-607167543933"
+CLIENT_SECRET = "314ee40a-ea10-44e9-b286-9c5be8b27f38"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 
@@ -63,12 +63,14 @@ async def main():
     """Establish connection to mower and print states for 5 minutes."""
     websession = ClientSession()
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
-    # Add a callback, can be done at any point in time and
-    # multiple callbacks can be added.
-    asyncio.create_task(_client_listen(automower_api))
     await asyncio.sleep(1)
     await automower_api.connect()
+    asyncio.create_task(_client_listen(automower_api))
+    asyncio.create_task(_send_messages(automower_api))
+    # Add a callback, can be done at any point in time and
+    # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
+    automower_api.register_pong_callback(pong_callback)
     # pylint: disable=unused-variable
     for mower_id in automower_api.data:
         await asyncio.sleep(5)
@@ -101,6 +103,11 @@ def callback(ws_data: dict[str, MowerAttributes]):
         )
 
 
+def pong_callback(ws_data: datetime.datetime):
+    """Process websocket callbacks and write them to the DataUpdateCoordinator."""
+    print("Last websocket info: ", ws_data)
+
+
 async def _client_listen(
     automower_client: AutomowerSession,
     reconnect_time: int = 2,
@@ -119,6 +126,17 @@ async def _client_listen(
             automower_client=automower_client,
             reconnect_time=reconnect_time,
         )
+
+
+async def _send_messages(
+    automower_client: AutomowerSession,
+) -> None:
+    """Listen with the client."""
+    try:
+        await automower_client.send_empty_message()
+    except Exception as err:  # pylint: disable=broad-except
+        # We need to guard against unknown exceptions to not crash this task.
+        print("Unexpected exception: %s", err)
 
 
 asyncio.run(main())

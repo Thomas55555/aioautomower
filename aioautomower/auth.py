@@ -176,7 +176,7 @@ class AbstractAuth(ABC):
             message.append(error[MESSAGE])
         return message
 
-    async def websocket_connect(self) -> ClientWebSocketResponse:
+    async def websocket_connect(self):
         """Start a websocket connection."""
         token = await self._async_get_access_token()
         try:
@@ -187,5 +187,3 @@ class AbstractAuth(ABC):
             )
         except WSServerHandshakeError as err:
             raise HusqvarnaWSServerHandshakeError(err) from err
-
-        return self.ws

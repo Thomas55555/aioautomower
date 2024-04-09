@@ -1,5 +1,6 @@
 """Module to connect to Automower with websocket."""
 
+import datetime
 import asyncio
 import contextlib
 import logging
@@ -63,8 +64,10 @@ class AutomowerSession:
         """
         self._data: dict[str, str] = {}
         self.auth = auth
+        self.pong_cbs: list = []
         self.data_update_cbs: list = []
         self.data: dict[str, MowerAttributes] = {}
+        self.last_ws_message: datetime.datetime
         self.loop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task | None = None
@@ -94,6 +97,26 @@ class AutomowerSession:
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
 
+    def register_pong_callback(self, pong_callback):
+        """Register a data update callback."""
+        if pong_callback not in self.pong_cbs:
+            self.pong_cbs.append(pong_callback)
+
+    def _schedule_pong_callback(self, cb):
+        self.loop.call_soon_threadsafe(cb, self.last_ws_message)
+
+    def _schedule_pong_callbacks(self) -> None:
+        for cb in self.pong_cbs:
+            self._schedule_pong_callback(cb)
+
+    def unregister_pong_callback(self, pong_callback):
+        """Unregister a data update callback.
+
+        :param func callback: Takes one function, which should be unregistered.
+        """
+        if pong_callback in self.pong_cbs:
+            self.pong_cbs.remove(pong_callback)
+
     async def connect(self) -> None:
         """Connect to the API.
 
@@ -121,27 +144,39 @@ class AutomowerSession:
                 ):
                     break
                 if msg.type == WSMsgType.TEXT:
-                    msg_dict = msg.json()
-                    if "type" in msg_dict:
-                        if msg_dict["type"] in EVENT_TYPES:
+                    if not msg.data:
+                        self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
+                        _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
+                        self._schedule_pong_callbacks()
+                    if msg.data:
+                        msg_dict = msg.json()
+                        if "type" in msg_dict:
+                            if msg_dict["type"] in EVENT_TYPES:
+                                _LOGGER.debug(
+                                    "Got %s, data: %s", msg_dict["type"], msg_dict
+                                )
+                                self._update_data(msg_dict)
+                            else:
+                                _LOGGER.warning(
+                                    "Received unknown ws type %s", msg_dict["type"]
+                                )
+                        elif "ready" in msg_dict and "connectionId" in msg_dict:
                             _LOGGER.debug(
-                                "Got %s, data: %s", msg_dict["type"], msg_dict
+                                "Websocket ready=%s (id='%s')",
+                                msg_dict["ready"],
+                                msg_dict["connectionId"],
                             )
-                            self._update_data(msg_dict)
-                        else:
-                            _LOGGER.warning(
-                                "Received unknown ws type %s", msg_dict["type"]
-                            )
-                    elif "ready" in msg_dict and "connectionId" in msg_dict:
-                        _LOGGER.debug(
-                            "Websocket ready=%s (id='%s')",
-                            msg_dict["ready"],
-                            msg_dict["connectionId"],
-                        )
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:
                 raise TimeoutException from exc
+
+    async def send_empty_message(self) -> None:
+        """Send an empty message every 60s."""
+        while True:
+            await asyncio.sleep(60)
+            print("ping:%s", datetime.datetime.now(tz=datetime.UTC))
+            await self.auth.ws.send_str("")
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
