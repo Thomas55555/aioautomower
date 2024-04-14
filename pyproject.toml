@@ -10,7 +10,9 @@ description = "MPython module to talk to Husqvarna Automower."
 authors = ["Thomas55555"]
 license = "Apache 2.0"
 readme = "README.md"
-include = ["aioautomower/py.typed"]
+packages = [
+    { include = "aioautomower", from = "src" },
+]
 homepage = "https://github.com/Thomas55555/aioautomower"
 repository = "https://github.com/Thomas55555/aioautomower"
 documentation = "https://github.com/Thomas55555/aioautomower"
@@ -44,6 +46,7 @@ freezegun = "^1.4.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["src"]
 
 [tool.ruff]
 fix = true
