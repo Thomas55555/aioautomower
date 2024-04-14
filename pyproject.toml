@@ -11,10 +11,11 @@ authors = ["Thomas55555"]
 license = "Apache 2.0"
 readme = "README.md"
 include = ["aioautomower/py.typed"]
+homepage = "https://github.com/Thomas55555/aioautomower"
+repository = "https://github.com/Thomas55555/aioautomower"
+documentation = "https://github.com/Thomas55555/aioautomower"
 
 [tool.poetry.urls]
-Documentation = "https://github.com/Thomas55555/aioautomower"
-Repository = "https://github.com/Thomas55555/aioautomower"
 Issues = "https://github.com/Thomas55555/aioautomower/issues"
 
 [tool.poetry.dependencies]
