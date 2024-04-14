@@ -10,6 +10,7 @@ description = "MPython module to talk to Husqvarna Automower."
 authors = ["Thomas55555"]
 license = "Apache 2.0"
 readme = "README.md"
+include = ["aioautomower/py.typed"]
 
 [tool.poetry.urls]
 Documentation = "https://github.com/Thomas55555/aioautomower"
@@ -43,19 +44,9 @@ freezegun = "^1.4.0"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
-[tool.setuptools]
-platforms = ["any"]
-zip-safe  = false
-packages = ["aioautomower"]
-include-package-data = true
-
-[tool.setuptools.package-data]
-aioautomower = ["py.typed"]
-
 [tool.ruff]
 fix = true
 show-fixes = true
-
 
 [tool.pylint.FORMAT]
 max-line-length = 88
@@ -72,7 +63,6 @@ builtins-ignorelist = ["id"]
 convention = "pep257"
 
 [tool.ruff.lint.pylint]
-
 max-branches=25
 max-returns=15
 max-args=10
@@ -98,7 +88,6 @@ follow_imports = "normal"
 
 # suppress errors about unsatisfied imports
 ignore_missing_imports = true
-
 
 [tool.coverage.report]
 show_missing = true
