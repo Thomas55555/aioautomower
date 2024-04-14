@@ -3,9 +3,11 @@
 import asyncio
 import contextlib
 import logging
-from typing import Literal
 from dataclasses import dataclass
+from typing import Literal
+
 from aiohttp import WSMsgType
+
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException, TimeoutException

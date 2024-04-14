@@ -51,6 +51,9 @@ pythonpath = ["src"]
 [tool.ruff]
 fix = true
 show-fixes = true
+select = [
+    "I",
+]
 
 [tool.pylint.FORMAT]
 max-line-length = 88

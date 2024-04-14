@@ -1,8 +1,10 @@
 """Tests for asynchronous Python client for aioautomower."""
 
-from dataclasses import fields
 import json
+from dataclasses import fields
+
 from syrupy.assertion import SnapshotAssertion
+
 from aioautomower.utils import structure_token
 from tests import load_fixture
 
