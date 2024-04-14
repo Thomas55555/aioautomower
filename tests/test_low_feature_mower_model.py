@@ -2,12 +2,12 @@
 
 import json
 from dataclasses import fields
-from freezegun import freeze_time
 
+from freezegun import freeze_time
 from syrupy.assertion import SnapshotAssertion
+
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
-
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
