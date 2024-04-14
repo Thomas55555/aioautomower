@@ -21,9 +21,3 @@ For a first start you can run the `example.py`, by doing the following steps
 - `pip install -e ./`
 - Enter your personal `client_id` and `client_secret` in the `example.py`
 - Run with `python3 ./aioautomower/example.py`
-
-## AutomowerCLI example
-
-An AutomowerSession that provides you with the data in a CLI
-
-`automower --client_secret 12312312-12ec-486b-a7a7-9d9b06644a14  --api-key 12312312-0126-6222-2662-3e6c49f0012c`
