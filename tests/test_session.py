@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
+from aioautomower.model import HeadlightModes
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
@@ -27,3 +28,11 @@ async def test_connect(snapshot: SnapshotAssertion):
     await automower_api.pause_mowing(MOWER_ID)
     await automower_api.park_until_next_schedule(MOWER_ID)
     await automower_api.park_until_further_notice(MOWER_ID)
+    await automower_api.park_for(MOWER_ID, 30)
+    await automower_api.start_for(MOWER_ID, 30)
+    await automower_api.set_cutting_height(MOWER_ID, 9)
+    await automower_api.set_cutting_height_workarea(MOWER_ID, 9, 0)
+    await automower_api.set_headlight_mode(MOWER_ID, HeadlightModes.ALWAYS_OFF)
+    task_list = json.loads(load_fixture("task_list.json"))
+    await automower_api.set_calendar(MOWER_ID, task_list)
+    await automower_api.switch_stay_out_zone(MOWER_ID, "fake", True)
