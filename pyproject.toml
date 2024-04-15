@@ -233,4 +233,3 @@ fail_under = 50
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
-source = ["aioautomower/*.py"]
