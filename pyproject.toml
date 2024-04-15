@@ -51,10 +51,6 @@ pythonpath = ["src"]
 [tool.ruff]
 fix = true
 show-fixes = true
-select = [
-    "I",
-]
-
 
 [tool.ruff.lint]
 select = [
