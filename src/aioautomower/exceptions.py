@@ -30,4 +30,4 @@ class TimeoutException(HusqvarnaAutomowerException):
 
 
 class HusqvarnaWSServerHandshakeError(HusqvarnaAutomowerException):
-    """Raised due connecting the websocket if server not available"""
+    """Raised due connecting the websocket if server not available."""

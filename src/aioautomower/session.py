@@ -308,7 +308,7 @@ class AutomowerSession:
                                 datum["attributes"][attrib] = new_data["attributes"][
                                     attrib
                                 ]
-                        except KeyError:
+                        except KeyError:  # noqa: PERF203
                             datum["attributes"][attrib] = new_data["attributes"][attrib]
         self.data = mower_list_to_dictionary_dataclass(self._data)
         self._schedule_data_callbacks()
