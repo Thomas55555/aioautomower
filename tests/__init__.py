@@ -1,8 +1,7 @@
 """Tests for asynchronous Python client for aioautomower.
 
-run tests with `poetry run pytest --cov-report term-missing`
-and to update snapshots
-`poetry run pytest --snapshot-update --cov-report term-missing`
+Run tests with `poetry run pytest`
+and to update snapshots `poetry run pytest --snapshot-update`
 """
 
 from pathlib import Path

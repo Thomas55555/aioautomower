@@ -45,8 +45,8 @@ aioresponses = "0.7.6"
 freezegun = "^1.4.0"
 
 [tool.pytest.ini_options]
+addopts = "--cov"
 asyncio_mode = "auto"
-pythonpath = ["src"]
 
 [tool.ruff]
 fix = true
@@ -233,4 +233,3 @@ fail_under = 50
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
-include = ["aioautomower/*.py"]
