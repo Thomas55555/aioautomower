@@ -67,27 +67,28 @@ async def main():
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     # Add a callback, can be done at any point in time and
     # multiple callbacks can be added.
-    asyncio.create_task(_client_listen(automower_api))
+    api_task = asyncio.create_task(_client_listen(automower_api))
     await asyncio.sleep(1)
     await automower_api.connect()
     automower_api.register_data_callback(callback)
     # pylint: disable=unused-variable
-    for mower_id in automower_api.data:
+    for _mower_id in automower_api.data:
         await asyncio.sleep(5)
-        # await automower_api.park_until_next_schedule(mower_id)
+        # await automower_api.park_until_next_schedule(_mower_id)
         # Uncomment the line above to let all your mowers park until next schedule.
         await asyncio.sleep(5)
-        # await automower_api.park_until_further_notice(mower_id)
+        # await automower_api.park_until_further_notice(_mower_id)
         # Uncomment the line above to let all your mowers park until further notice.
         await asyncio.sleep(5)
-        # await automower_api.resume_schedule(mower_id)
+        # await automower_api.resume_schedule(_mower_id)
         # Uncomment the line above to let all your mowers resume their schedule.
         await asyncio.sleep(5)
-        # await automower_api.pause_mowing(mower_id)
+        # await automower_api.pause_mowing(_mower_id)
         # Uncomment the line above to let all your mowers pause.
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
+    await api_task.cancel()
     await websession.close()
 
 

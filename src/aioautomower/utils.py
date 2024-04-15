@@ -96,15 +96,13 @@ def mower_list_to_dictionary_dataclass(
 
 
 def error_key_list() -> list[str]:
-    """Create a list with all possible error keys"""
-    codes = []
-    for error_text in ERRORCODES.values():
-        codes.append(snake_case(error_text))
+    """Create a list with all possible error keys."""
+    codes = [snake_case(error_text) for error_text in ERRORCODES.values()]
     return sorted(codes)
 
 
 def error_key_dict() -> dict[str, str]:
-    """Create a dictionary with error keys and a human friendly text"""
+    """Create a dictionary with error keys and a human friendly text."""
     codes = {}
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text

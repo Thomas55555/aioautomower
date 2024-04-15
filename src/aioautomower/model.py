@@ -11,7 +11,7 @@ from .const import ERRORCODES
 
 
 def snake_case(string: str | None) -> str:
-    """Convert an error text to snake case"""
+    """Convert an error text to snake case."""
     if string is None:
         raise TypeError
     return "_".join(
