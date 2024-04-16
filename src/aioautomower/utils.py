@@ -1,18 +1,18 @@
 """Utils for Husqvarna Automower."""
 
+import datetime
 import logging
 import time
+from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
-from typing import cast, Mapping, Any
-import datetime
-import zoneinfo
+
 import aiohttp
 import jwt
-from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
+import zoneinfo  # pylint: disable=wrong-import-order
+
+from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
 from .exceptions import ApiException
 from .model import JWT, MowerAttributes, MowerList, snake_case
-from .const import ERRORCODES
-
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,12 +2,12 @@
 
 import json
 
-
 from syrupy.assertion import SnapshotAssertion
+
 from aioautomower.utils import (
-    mower_list_to_dictionary_dataclass,
-    error_key_list,
     error_key_dict,
+    error_key_list,
+    mower_list_to_dictionary_dataclass,
 )
 from tests import load_fixture
 

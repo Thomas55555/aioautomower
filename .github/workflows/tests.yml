@@ -38,7 +38,7 @@ jobs:
       - name: 🏗 Install dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run pytest
-        run: poetry run pytest --cov=aioautomower tests
+        run: poetry run pytest --cov src tests
       - name: ⬆️ Upload coverage artifact
         uses: actions/upload-artifact@v4.3.1
         with:
@@ -74,6 +74,6 @@ jobs:
           poetry run coverage combine coverage*/.coverage*
           poetry run coverage xml -i
       - name: 🚀 Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.2.0
+        uses: codecov/codecov-action@v4.3.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
