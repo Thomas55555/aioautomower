@@ -239,7 +239,7 @@ class AutomowerSession:
         """Start the mower for a period of minutes."""
         body = {
             "data": {
-                "type": "Park",
+                "type": "Start",
                 "attributes": {"duration": duration_in_min},
             }
         }
