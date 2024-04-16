@@ -1,7 +1,7 @@
 """An example file to use this library."""
 
-import datetime
 import asyncio
+import datetime
 import logging
 import time
 from typing import cast
@@ -21,8 +21,8 @@ from aioautomower.utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CLIENT_ID = "7ac6b068-7f58-4749-aaa3-607167543933"
-CLIENT_SECRET = "314ee40a-ea10-44e9-b286-9c5be8b27f38"
+CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
+CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 
@@ -67,8 +67,8 @@ async def main():
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     await asyncio.sleep(1)
     await automower_api.connect()
-    asyncio.create_task(_client_listen(automower_api))
-    asyncio.create_task(_send_messages(automower_api))
+    api_task = asyncio.create_task(_client_listen(automower_api))
+    ping_pong_task = asyncio.create_task(_send_messages(automower_api))
     # Add a callback, can be done at any point in time and
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
@@ -91,6 +91,7 @@ async def main():
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
     await api_task.cancel()
+    await ping_pong_task.cancel()
     await websession.close()
 
 

@@ -1,8 +1,8 @@
 """Module to connect to Automower with websocket."""
 
-import datetime
 import asyncio
 import contextlib
+import datetime
 import logging
 from dataclasses import dataclass
 from typing import Literal
@@ -134,7 +134,7 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    async def start_listening(self) -> None:
+    async def start_listening(self) -> None:  # noqa: C901
         """Start listening to the websocket (and receive initial state)."""
         while not self.auth.ws.closed:
             try:
@@ -177,7 +177,7 @@ class AutomowerSession:
         """Send an empty message every 60s."""
         while True:
             await asyncio.sleep(60)
-            print("ping:%s", datetime.datetime.now(tz=datetime.UTC))
+            _LOGGER.debug("ping:%s", datetime.datetime.now(tz=datetime.UTC))
             await self.auth.ws.send_str("")
 
     async def get_status(self) -> dict[str, MowerAttributes]:
