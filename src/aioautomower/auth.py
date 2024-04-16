@@ -53,7 +53,7 @@ class AbstractAuth(ABC):
     ) -> ClientResponse:
         """Make a request."""
         headers = await self.headers()
-        if not (url.startswith("http://") or url.startswith("https://")):
+        if not url.startswith(("http://", "https://")):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
         if method != "get" and "json" in kwargs:
