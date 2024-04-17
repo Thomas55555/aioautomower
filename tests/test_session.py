@@ -152,3 +152,5 @@ async def test_connect(
         }
     )
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
+    await automower_api.close()
+    assert automower_api.rest_task.cancelled()  # type: ignore
