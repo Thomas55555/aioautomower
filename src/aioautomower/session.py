@@ -53,6 +53,7 @@ class AutomowerSession:
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-public-methods
 
     def __init__(
         self,
@@ -157,7 +158,7 @@ class AutomowerSession:
                                 _LOGGER.debug(
                                     "Got %s, data: %s", msg_dict["type"], msg_dict
                                 )
-                                self._update_data(msg_dict)
+                                self.update_data(msg_dict)
                             else:
                                 _LOGGER.warning(
                                     "Received unknown ws type %s", msg_dict["type"]
@@ -324,7 +325,11 @@ class AutomowerSession:
         )
         await self.auth.patch_json(url, json=body)
 
-    def _update_data(self, new_data):
+    def update_data(self, new_data):
+        """Update internal data, with new data from websocket.
+
+        Empty tasks are ignored, so we always know the tasks.
+        """
         if self._data is None:
             raise NoDataAvailableException
         if self._data is not None:

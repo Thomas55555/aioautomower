@@ -1,0 +1,20 @@
+{
+  "id": "b2bc3443-b31a-4c7f-834e-d6e408c53f1b",
+  "type": "status-event",
+  "attributes": {
+    "battery": { "batteryPercent": 100 },
+    "mower": {
+      "mode": "MAIN_AREA",
+      "activity": "PARKED_IN_CS",
+      "state": "RESTRICTED",
+      "errorCode": 0,
+      "errorCodeTimestamp": 0
+    },
+    "planner": {
+      "nextStartTimestamp": 1713369600000,
+      "override": { "action": "NOT_ACTIVE" },
+      "restrictedReason": "WEEK_SCHEDULE"
+    },
+    "metadata": { "connected": true, "statusTimestamp": 1713342672602 }
+  }
+}

@@ -18,12 +18,11 @@ async def test_connect(
     snapshot: SnapshotAssertion, mock_automower_client: AbstractAuth
 ):
     """Test automower session."""
-    automower_api = AutomowerSession(mock_automower_client)
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-    data = await automower_api.get_status()
-    for field in fields(data[MOWER_ID]):
+    for field in fields(automower_api.data[MOWER_ID]):
         field_name = field.name
-        field_value = getattr(data[MOWER_ID], field_name)
+        field_value = getattr(automower_api.data[MOWER_ID], field_name)
         assert field_value == snapshot(name=f"{field_name}")
     mocked_method = AsyncMock()
     setattr(mock_automower_client, "post_json", mocked_method)
@@ -119,3 +118,37 @@ async def test_connect(
             "data": {"type": "workArea", "id": 0, "attributes": {"cuttingHeight": 9}}
         },
     )
+
+    automower_api.update_data(
+        {
+            "id": MOWER_ID,
+            "type": "status-event",
+            "attributes": {
+                "battery": {"batteryPercent": 100},
+                "mower": {
+                    "mode": "MAIN_AREA",
+                    "activity": "PARKED_IN_CS",
+                    "state": "RESTRICTED",
+                    "errorCode": 0,
+                    "errorCodeTimestamp": 0,
+                },
+                "planner": {
+                    "nextStartTimestamp": 1713369600000,
+                    "override": {"action": "NOT_ACTIVE"},
+                    "restrictedReason": "WEEK_SCHEDULE",
+                },
+                "metadata": {"connected": True, "statusTimestamp": 1713342672602},
+            },
+        }
+    )
+    calendar = automower_api.data[MOWER_ID].calendar.tasks
+    automower_api.update_data(
+        {
+            "id": MOWER_ID,
+            "type": "status-event",
+            "attributes": {
+                "calendar": {"tasks": []},
+            },
+        }
+    )
+    assert automower_api.data[MOWER_ID].calendar.tasks == calendar
