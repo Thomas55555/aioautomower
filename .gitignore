@@ -1,4 +1,4 @@
 __pycache__/
 **.egg-info/
 .coverage
-src/aioautomower/husqvarna_secrets.py
+src/aioautomower/secrets.yaml
