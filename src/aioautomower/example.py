@@ -11,6 +11,7 @@ from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
+from aioautomower.husqvarna_secrets import CLIENT_ID, CLIENT_SECRET
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
@@ -21,8 +22,8 @@ from aioautomower.utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
-CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
+# Fill out the secrets in husqvarna_secrets.py, you can find an example
+# _husqvarna_secrets.py file, which has to be renamed after filling out the secrets.
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 
