@@ -11,7 +11,12 @@ from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
-from aioautomower.husqvarna_secrets import CLIENT_ID, CLIENT_SECRET
+from aioautomower.husqvarna_secrets import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+)
+
+# pylint: disable=import-error, no-name-in-module
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
