@@ -145,9 +145,11 @@ async def test_connect(
     automower_api.update_data(
         {
             "id": MOWER_ID,
-            "type": "status-event",
+            "type": "settings-event",
             "attributes": {
                 "calendar": {"tasks": []},
+                "cuttingHeight": 1,
+                "headlight": {"mode": "EVENING_AND_NIGHT"},
             },
         }
     )
