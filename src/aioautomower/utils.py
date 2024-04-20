@@ -1,6 +1,5 @@
 """Utils for Husqvarna Automower."""
 
-import datetime
 import logging
 import time
 from typing import Any, Mapping, cast
@@ -8,7 +7,6 @@ from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import jwt
-import zoneinfo  # pylint: disable=wrong-import-order
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
 from .exceptions import ApiException
@@ -107,17 +105,3 @@ def error_key_dict() -> dict[str, str]:
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text
     return codes
-
-
-def convert_timestamp_to_datetime_utc(
-    timestamp: int | None, time_zone: zoneinfo.ZoneInfo
-) -> datetime.datetime | None:
-    """Create datetime object in the requested timezone."""
-    if timestamp is None:
-        raise TypeError
-    if timestamp != 0:
-        local_unshifted = datetime.datetime.fromtimestamp(
-            timestamp / 1000, tz=time_zone
-        )
-        return local_unshifted - local_unshifted.utcoffset()  # type: ignore
-    return None
