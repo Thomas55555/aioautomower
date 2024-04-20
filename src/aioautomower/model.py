@@ -65,7 +65,7 @@ class System(DataClassDictMixin):
 
     name: str
     model: str
-    serial_number: int = field(metadata=field_options(alias="serialNumber"))
+    serial_number: str = field(metadata=field_options(alias="serialNumber"))
 
 
 @dataclass
