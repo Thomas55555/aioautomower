@@ -7,7 +7,6 @@ import time
 from typing import cast
 
 import yaml
-import zoneinfo  # pylint: disable=wrong-import-order
 from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
@@ -16,7 +15,6 @@ from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
     async_get_access_token,
-    convert_timestamp_to_datetime_utc,
     structure_token,
 )
 
@@ -107,12 +105,6 @@ def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_id in ws_data:
         print(ws_data[mower_id])
-        print(
-            convert_timestamp_to_datetime_utc(
-                ws_data[mower_id].planner.next_start_timestamp,
-                zoneinfo.ZoneInfo("Europe/Berlin"),
-            )
-        )
 
 
 def pong_callback(ws_data: datetime.datetime):

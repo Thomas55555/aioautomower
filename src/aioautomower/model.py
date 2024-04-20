@@ -99,20 +99,15 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
-    error_datetime: datetime | None = field(
+    error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None
                 if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(
-                    tzinfo=datetime.now(UTC).astimezone().tzinfo
-                )
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
             ),
             alias="errorCodeTimestamp",
         ),
-    )
-    error_timestamp: int | None = field(
-        metadata=field_options(alias="errorCodeTimestamp")
     )
 
 
@@ -158,20 +153,15 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_datetime: datetime | None = field(
+    next_start_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
                 None
                 if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(
-                    tzinfo=datetime.now(UTC).astimezone().tzinfo
-                )
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
             ),
             alias="nextStartTimestamp",
         ),
-    )
-    next_start_timestamp: int | None = field(
-        metadata=field_options(alias="nextStartTimestamp")
     )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))

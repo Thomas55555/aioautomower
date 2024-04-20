@@ -4,7 +4,6 @@ import json
 from dataclasses import fields
 from typing import cast
 
-from freezegun import freeze_time
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.model import WorkArea
@@ -43,7 +42,6 @@ async def test_high_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) != 0  # type: ignore
 
 
-@freeze_time(tz_offset=2)
 def test_mower_snapshot(snapshot: SnapshotAssertion):
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
