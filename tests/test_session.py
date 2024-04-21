@@ -100,7 +100,7 @@ async def test_connect(
     await automower_api.error_confirm(MOWER_ID)
     assert mocked_method.call_count == 10
     mocked_method.assert_called_with(
-        f"mowers/{mower_id}/errors/confirm",
+        f"mowers/{MOWER_ID}/errors/confirm",
         json={}
     )
     mocked_method.reset_mock()
