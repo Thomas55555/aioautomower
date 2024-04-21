@@ -43,6 +43,9 @@ class AutomowerEndpoint:
     work_area_calendar = "mowers/{mower_id}/workAreas/{work_area_id}/calendar"
     "Update the calendar for a work area on the mower."
 
+    error_confirm = "mowers/{mower_id}/errors/confirm"
+    "Confirm mower non-fatal error"
+
 
 class AutomowerSession:
     """Automower API to communicate with an Automower.
@@ -323,6 +326,12 @@ class AutomowerSession:
             mower_id=mower_id, stay_out_id=stay_out_zone_id
         )
         await self.auth.patch_json(url, json=body)
+
+    async def error_confirm(self, mower_id: str):
+        """Confirm non-fatal mower error."""
+        body = {}
+        url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
+        await self.auth.post_json(url, json=body)
 
     def _update_data(self, new_data):
         if self._data is None:
