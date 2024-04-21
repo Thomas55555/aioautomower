@@ -329,7 +329,7 @@ class AutomowerSession:
 
     async def error_confirm(self, mower_id: str):
         """Confirm non-fatal mower error."""
-        body = {}
+        body = {} # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
