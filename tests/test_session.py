@@ -97,6 +97,9 @@ async def test_connect(
         f"mowers/{MOWER_ID}/calendar",
         json={"data": {"type": "calendar", "attributes": {"tasks": task_list}}},
     )
+    await automower_api.error_confirm(MOWER_ID)
+    assert mocked_method.call_count == 10
+    mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
     mocked_method.reset_mock()
     setattr(mock_automower_client, "patch_json", mocked_method)
     await automower_api.switch_stay_out_zone(MOWER_ID, "fake", True)
