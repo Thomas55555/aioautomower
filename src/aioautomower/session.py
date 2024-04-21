@@ -56,6 +56,7 @@ class AutomowerSession:
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-public-methods
 
     def __init__(
         self,
@@ -329,7 +330,7 @@ class AutomowerSession:
 
     async def error_confirm(self, mower_id: str):
         """Confirm non-fatal mower error."""
-        body = {} # type: dict[str, str]
+        body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
