@@ -18,10 +18,10 @@
   Metadata(connected=True, status_dateteime=datetime.datetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc))
 # ---
 # name: test_connect[mower]
-  Mower(mode='MAIN_AREA', activity='PARKED_IN_CS', state='RESTRICTED', error_code=0, error_key=None, error_datetime_naive=None)
+  Mower(mode='MAIN_AREA', activity='PARKED_IN_CS', state='RESTRICTED', error_code=0, error_key=None, error_datetime=None, error_datetime_naive=None)
 # ---
 # name: test_connect[planner]
-  Planner(next_start_datetime_naive=datetime.datetime(2023, 6, 5, 19, 0), override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
+  Planner(next_start_datetime=datetime.datetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc), next_start_datetime_naive=datetime.datetime(2023, 6, 5, 19, 0), override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
 # ---
 # name: test_connect[positions]
   list([
