@@ -47,12 +47,6 @@ To run just the Python tests:
 poetry run pytest
 ```
 
-To run just the Python tests:
-
-```bash
-poetry run pytest
-```
-
 To update snapshots:
 
 ```bash
