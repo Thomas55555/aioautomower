@@ -99,6 +99,18 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
+    error_datetime: datetime | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC)
+                .replace(tzinfo=None)
+                .astimezone(UTC)
+            ),
+            alias="errorCodeTimestamp",
+        ),
+    )
     error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
@@ -153,6 +165,18 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
+    next_start_datetime: datetime | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC)
+                .replace(tzinfo=None)
+                .astimezone(UTC)
+            ),
+            alias="nextStartTimestamp",
+        ),
+    )
     next_start_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
