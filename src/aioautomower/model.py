@@ -114,6 +114,7 @@ class Mower(DataClassDictMixin):
     error_timestamp: int | None = field(
         metadata=field_options(alias="errorCodeTimestamp")
     )
+    inactive_reason: str = field(metadata=field_options(alias="inactiveReason"))
 
 
 @dataclass
@@ -427,3 +428,10 @@ class ExternalReasons(Enum):
     IFTT_FROST_AND_RAIN = 4002
     IFTT_CALENDAR_CONNECTION = 4003
     IFTT_APPLETS = range(100000, 199999)
+
+class InactiveReasons(Enum):
+    """Inactive reasons why the mower is not working."""
+
+    NONE = "NONE"
+    PLANNING = "PLANNING"
+    SEARCHING_FOR_SATELLITES = "SEARCHING_FOR_SATELLITES"
