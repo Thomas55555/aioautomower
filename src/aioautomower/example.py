@@ -67,7 +67,7 @@ class AsyncTokenAuth(AbstractAuth):
         self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 
-async def main():
+async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
     websession = ClientSession()
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
@@ -96,8 +96,8 @@ async def main():
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
-    await api_task.cancel()
-    await ping_pong_task.cancel()
+    api_task.cancel()
+    ping_pong_task.cancel()
     await websession.close()
 
 
