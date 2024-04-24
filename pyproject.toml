@@ -230,6 +230,10 @@ follow_imports = "normal"
 # suppress errors about unsatisfied imports
 ignore_missing_imports = true
 
+# strict rules
+disallow_untyped_calls = true
+warn_no_return = true
+
 [tool.coverage.report]
 show_missing = true
 fail_under = 50
