@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal, Mapping
 
 from aiohttp import WSMsgType
 
@@ -68,7 +68,7 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self._data: dict[str, str] = {}
+        self._data: Mapping[Any, Any] = {}
         self.auth = auth
         self.pong_cbs: list = []
         self.data_update_cbs: list = []
@@ -81,21 +81,23 @@ class AutomowerSession:
         self.token_task = None
         self.token_update_cbs: list = []
 
-    def register_data_callback(self, callback):
+    def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
 
-    def _schedule_data_callback(self, cb):
+    def _schedule_data_callback(self, cb) -> None:
+        """Schedule a data callback."""
         if self.poll and self.data is None:
             raise NoDataAvailableException
         self.loop.call_soon_threadsafe(cb, self.data)
 
     def _schedule_data_callbacks(self) -> None:
+        """Schedule a data callbacks."""
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
-    def unregister_data_callback(self, callback):
+    def unregister_data_callback(self, callback) -> None:
         """Unregister a data update callback.
 
         :param func callback: Takes one function, which should be unregistered.
@@ -103,20 +105,26 @@ class AutomowerSession:
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
 
-    def register_pong_callback(self, pong_callback):
-        """Register a data update callback."""
+    def register_pong_callback(self, pong_callback) -> None:
+        """Register a pong callback.
+
+        It's not real ping/pong, but a way to check if the websocket
+        is still alive, by receiving an empty message.
+        """
         if pong_callback not in self.pong_cbs:
             self.pong_cbs.append(pong_callback)
 
-    def _schedule_pong_callback(self, cb):
+    def _schedule_pong_callback(self, cb) -> None:
+        """Schedule a pong callback."""
         self.loop.call_soon_threadsafe(cb, self.last_ws_message)
 
     def _schedule_pong_callbacks(self) -> None:
+        """Schedule pong callbacks."""
         for cb in self.pong_cbs:
             self._schedule_pong_callback(cb)
 
-    def unregister_pong_callback(self, pong_callback):
-        """Unregister a data update callback.
+    def unregister_pong_callback(self, pong_callback) -> None:
+        """Unregister a pong update callback.
 
         :param func callback: Takes one function, which should be unregistered.
         """
@@ -126,11 +134,8 @@ class AutomowerSession:
     async def connect(self) -> None:
         """Connect to the API.
 
-        This method handles the login and starts a task that keep the access
-        token constantly fresh. Also a REST task will be started, which
-        periodically polls the REST endpoint. This method works only, if the
-        token is created with the Authorization Code Grant. Call this method
-        before any other methods.
+        This method handles the login. Also a REST task will be started, which
+        periodically polls the REST endpoint, when polling is set to true.
         """
         self._schedule_data_callbacks()
 
@@ -334,7 +339,7 @@ class AutomowerSession:
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    def _update_data(self, new_data):
+    def _update_data(self, new_data) -> None:
         if self._data is None:
             raise NoDataAvailableException
         if self._data is not None:

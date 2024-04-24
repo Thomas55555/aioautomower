@@ -176,7 +176,7 @@ class AbstractAuth(ABC):
             message.append(error[MESSAGE])
         return message
 
-    async def websocket_connect(self):
+    async def websocket_connect(self) -> None:
         """Start a websocket connection."""
         token = await self._async_get_access_token()
         try:
