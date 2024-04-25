@@ -52,7 +52,7 @@
 # ---
 # name: test_connect[work_areas]
   dict({
-    0: WorkArea(name=None, cutting_height=50),
+    0: WorkArea(name='my_lawn', cutting_height=50),
     123456: WorkArea(name='Front lawn', cutting_height=50),
   })
 # ---
