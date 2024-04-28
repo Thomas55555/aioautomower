@@ -139,52 +139,13 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     """Test automower session patch commands."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-    automower_api._update_data(  # pylint: disable=protected-access
-        {
-            "id": MOWER_ID,
-            "type": "status-event",
-            "attributes": {
-                "battery": {"batteryPercent": 100},
-                "mower": {
-                    "mode": "MAIN_AREA",
-                    "activity": "PARKED_IN_CS",
-                    "state": "RESTRICTED",
-                    "errorCode": 0,
-                    "errorCodeTimestamp": 0,
-                },
-                "planner": {
-                    "nextStartTimestamp": 1713369600000,
-                    "override": {"action": "NOT_ACTIVE"},
-                    "restrictedReason": "WEEK_SCHEDULE",
-                },
-                "metadata": {"connected": True, "statusTimestamp": 1713342672602},
-            },
-        }
-    )
+    status_event = json.loads(load_fixture("status_event.json"))
+    automower_api._update_data(status_event)  # pylint: disable=protected-access
     calendar = automower_api.data[MOWER_ID].calendar.tasks
-    automower_api._update_data(  # pylint: disable=protected-access
-        {
-            "id": MOWER_ID,
-            "type": "settings-event",
-            "attributes": {
-                "calendar": {"tasks": []},
-                "cuttingHeight": 1,
-                "headlight": {"mode": "EVENING_AND_NIGHT"},
-            },
-        }
-    )
+    settings_event = json.loads(load_fixture("settings_event.json"))
+    automower_api._update_data(settings_event)  # pylint: disable=protected-access
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
 
     automower_api._data = None  # pylint: disable=protected-access
     with pytest.raises(NoDataAvailableException):
-        automower_api._update_data(  # pylint: disable=protected-access
-            {
-                "id": MOWER_ID,
-                "type": "settings-event",
-                "attributes": {
-                    "calendar": {"tasks": []},
-                    "cuttingHeight": 1,
-                    "headlight": {"mode": "EVENING_AND_NIGHT"},
-                },
-            }
-        )
+        automower_api._update_data(settings_event)  # pylint: disable=protected-access
