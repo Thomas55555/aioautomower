@@ -68,7 +68,7 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self._data: Mapping[Any, Any] = {}
+        self._data: Mapping[Any, Any] | None = {}
         self.auth = auth
         self.pong_cbs: list = []
         self.data_update_cbs: list = []
@@ -166,7 +166,7 @@ class AutomowerSession:
                                 _LOGGER.debug(
                                     "Got %s, data: %s", msg_dict["type"], msg_dict
                                 )
-                                self.update_data(msg_dict)
+                                self._update_data(msg_dict)
                             else:
                                 _LOGGER.warning(
                                     "Received unknown ws type %s", msg_dict["type"]
@@ -333,13 +333,13 @@ class AutomowerSession:
         )
         await self.auth.patch_json(url, json=body)
 
-      async def error_confirm(self, mower_id: str):
+    async def error_confirm(self, mower_id: str):
         """Confirm non-fatal mower error."""
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    def update_data(self, new_data) -> None:
+    def _update_data(self, new_data) -> None:
         """Update internal data, with new data from websocket.
 
         Empty tasks are ignored, so we always know the tasks.

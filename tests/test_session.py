@@ -1,12 +1,13 @@
 """Test automower session."""
 
 import json
-from dataclasses import fields
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
-from syrupy.assertion import SnapshotAssertion
+import pytest
 
 from aioautomower.auth import AbstractAuth
+from aioautomower.exceptions import NoDataAvailableException
 from aioautomower.model import HeadlightModes
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
@@ -14,16 +15,20 @@ from tests import load_fixture
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-async def test_connect(
-    snapshot: SnapshotAssertion, mock_automower_client: AbstractAuth
-):
-    """Test automower session."""
+async def test_connect_disconnect(mock_automower_client: AbstractAuth):
+    """Test automower session post commands."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-    for field in fields(automower_api.data[MOWER_ID]):
-        field_name = field.name
-        field_value = getattr(automower_api.data[MOWER_ID], field_name)
-        assert field_value == snapshot(name=f"{field_name}")
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_post_commands(mock_automower_client: AbstractAuth):
+    """Test automower session post commands."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
     mocked_method = AsyncMock()
     setattr(mock_automower_client, "post_json", mocked_method)
     await automower_api.resume_schedule(MOWER_ID)
@@ -100,6 +105,13 @@ async def test_connect(
     assert mocked_method.call_count == 10
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
     mocked_method.reset_mock()
+
+
+async def test_patch_commands(mock_automower_client: AbstractAuth):
+    """Test automower session patch commands."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    mocked_method = AsyncMock()
     setattr(mock_automower_client, "patch_json", mocked_method)
     await automower_api.switch_stay_out_zone(MOWER_ID, "fake", True)
     assert mocked_method.call_count == 1
@@ -122,7 +134,12 @@ async def test_connect(
         },
     )
 
-    automower_api.update_data(
+
+async def test_update_data(mock_automower_client: AbstractAuth):
+    """Test automower session patch commands."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    automower_api._update_data(  # pylint: disable=protected-access
         {
             "id": MOWER_ID,
             "type": "status-event",
@@ -145,7 +162,7 @@ async def test_connect(
         }
     )
     calendar = automower_api.data[MOWER_ID].calendar.tasks
-    automower_api.update_data(
+    automower_api._update_data(  # pylint: disable=protected-access
         {
             "id": MOWER_ID,
             "type": "settings-event",
@@ -157,5 +174,17 @@ async def test_connect(
         }
     )
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
-    await automower_api.close()
-    assert automower_api.rest_task.cancelled()  # type: ignore
+
+    automower_api._data = None  # pylint: disable=protected-access
+    with pytest.raises(NoDataAvailableException):
+        automower_api._update_data(  # pylint: disable=protected-access
+            {
+                "id": MOWER_ID,
+                "type": "settings-event",
+                "attributes": {
+                    "calendar": {"tasks": []},
+                    "cuttingHeight": 1,
+                    "headlight": {"mode": "EVENING_AND_NIGHT"},
+                },
+            }
+        )
