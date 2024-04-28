@@ -6,7 +6,7 @@ import logging
 import time
 from typing import cast
 
-import zoneinfo
+import yaml
 from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
@@ -15,14 +15,20 @@ from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
     async_get_access_token,
-    convert_timestamp_to_datetime_utc,
     structure_token,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CLIENT_ID = "1e33fa27-ca34-4762-9a9e-5967f873a733"
-CLIENT_SECRET = "763adf3c-1b16-4c3b-91cd-c07316243880"
+
+# Fill out the secrets in secrets.yaml, you can find an example
+# _secrets.yaml file, which has to be renamed after filling out the secrets.
+
+with open("./src/aioautomower/secrets.yaml", encoding="UTF-8") as file:
+    secrets = yaml.safe_load(file)
+
+CLIENT_ID = secrets["CLIENT_ID"]
+CLIENT_SECRET = secrets["CLIENT_SECRET"]
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 
@@ -61,7 +67,7 @@ class AsyncTokenAuth(AbstractAuth):
         self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 
-async def main():
+async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
     websession = ClientSession()
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
@@ -90,8 +96,8 @@ async def main():
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
-    await api_task.cancel()
-    await ping_pong_task.cancel()
+    api_task.cancel()
+    ping_pong_task.cancel()
     await websession.close()
 
 
@@ -99,12 +105,6 @@ def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_id in ws_data:
         print(ws_data[mower_id])
-        print(
-            convert_timestamp_to_datetime_utc(
-                ws_data[mower_id].planner.next_start_timestamp,
-                zoneinfo.ZoneInfo("Europe/Berlin"),
-            )
-        )
 
 
 def pong_callback(ws_data: datetime.datetime):
