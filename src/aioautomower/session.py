@@ -68,7 +68,7 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self._data: Mapping[Any, Any] = {}
+        self._data: Mapping[Any, Any] | None = {}
         self.auth = auth
         self.pong_cbs: list = []
         self.data_update_cbs: list = []
@@ -340,6 +340,10 @@ class AutomowerSession:
         await self.auth.post_json(url, json=body)
 
     def _update_data(self, new_data) -> None:
+        """Update internal data, with new data from websocket.
+
+        Empty tasks are ignored, so we always know the tasks.
+        """
         if self._data is None:
             raise NoDataAvailableException
         if self._data is not None:
