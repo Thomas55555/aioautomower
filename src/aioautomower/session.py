@@ -47,16 +47,6 @@ class AutomowerEndpoint:
     "Confirm mower non-fatal error"
 
 
-@dataclass
-class _HusqvarnaWebsocket:
-    """Data for websocekt handling."""
-
-    last_ws_message: datetime.datetime
-    loop: asyncio.AbstractEventLoop
-    pong_cbs: list = field(default_factory=list)
-    data_update_cbs: list = field(default_factory=list)
-
-
 class _MowerCommands:
     """Sending commands."""
 
@@ -207,6 +197,16 @@ class _MowerCommands:
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
+
+
+@dataclass
+class _HusqvarnaWebsocket:
+    """Data for websocekt handling."""
+
+    last_ws_message: datetime.datetime
+    loop: asyncio.AbstractEventLoop
+    pong_cbs: list = field(default_factory=list)
+    data_update_cbs: list = field(default_factory=list)
 
 
 class AutomowerSession:
