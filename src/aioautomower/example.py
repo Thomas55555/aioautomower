@@ -82,16 +82,16 @@ async def main() -> None:
     # pylint: disable=unused-variable
     for _mower_id in automower_api.data:
         await asyncio.sleep(5)
-        # await automower_api.park_until_next_schedule(_mower_id)
+        # await automower_api.commands.park_until_next_schedule(_mower_id)
         # Uncomment the line above to let all your mowers park until next schedule.
         await asyncio.sleep(5)
-        # await automower_api.park_until_further_notice(_mower_id)
+        # await automower_api.commands.park_until_further_notice(_mower_id)
         # Uncomment the line above to let all your mowers park until further notice.
         await asyncio.sleep(5)
-        # await automower_api.resume_schedule(_mower_id)
+        # await automower_api.commands.resume_schedule(_mower_id)
         # Uncomment the line above to let all your mowers resume their schedule.
         await asyncio.sleep(5)
-        # await automower_api.pause_mowing(_mower_id)
+        # await automower_api.commands.pause_mowing(_mower_id)
         # Uncomment the line above to let all your mowers pause.
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
