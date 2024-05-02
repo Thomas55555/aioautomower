@@ -4,7 +4,7 @@ import asyncio
 import contextlib
 import datetime
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Literal, Mapping
 
 from aiohttp import WSMsgType
@@ -199,16 +199,6 @@ class _MowerCommands:
         await self.auth.post_json(url, json=body)
 
 
-@dataclass
-class _HusqvarnaWebsocket:
-    """Data for websocekt handling."""
-
-    last_ws_message: datetime.datetime
-    loop: asyncio.AbstractEventLoop
-    pong_cbs: list = field(default_factory=list)
-    data_update_cbs: list = field(default_factory=list)
-
-
 class AutomowerSession:
     """Automower API to communicate with an Automower.
 
@@ -231,30 +221,28 @@ class AutomowerSession:
         self._data: Mapping[Any, Any] | None = {}
         self.auth = auth
         self.commands = _MowerCommands(self.auth)
+        self.pong_cbs: list = []
+        self.data_update_cbs: list = []
         self.data: dict[str, MowerAttributes] = {}
+        self.last_ws_message: datetime.datetime
+        self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task | None = None
-        self.websocket = _HusqvarnaWebsocket(
-            last_ws_message=datetime.datetime.fromtimestamp(0),
-            pong_cbs=[],
-            data_update_cbs=[],
-            loop=asyncio.get_running_loop(),
-        )
 
     def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
-        if callback not in self.websocket.data_update_cbs:
-            self.websocket.data_update_cbs.append(callback)
+        if callback not in self.data_update_cbs:
+            self.data_update_cbs.append(callback)
 
     def _schedule_data_callback(self, cb) -> None:
         """Schedule a data callback."""
         if self.poll and self.data is None:
             raise NoDataAvailableException
-        self.websocket.loop.call_soon_threadsafe(cb, self.data)
+        self.loop.call_soon_threadsafe(cb, self.data)
 
     def _schedule_data_callbacks(self) -> None:
         """Schedule a data callbacks."""
-        for cb in self.websocket.data_update_cbs:
+        for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
     def unregister_data_callback(self, callback) -> None:
@@ -262,8 +250,8 @@ class AutomowerSession:
 
         :param func callback: Takes one function, which should be unregistered.
         """
-        if callback in self.websocket.data_update_cbs:
-            self.websocket.data_update_cbs.remove(callback)
+        if callback in self.data_update_cbs:
+            self.data_update_cbs.remove(callback)
 
     def register_pong_callback(self, pong_callback) -> None:
         """Register a pong callback.
@@ -271,16 +259,16 @@ class AutomowerSession:
         It's not real ping/pong, but a way to check if the websocket
         is still alive, by receiving an empty message.
         """
-        if pong_callback not in self.websocket.pong_cbs:
-            self.websocket.pong_cbs.append(pong_callback)
+        if pong_callback not in self.pong_cbs:
+            self.pong_cbs.append(pong_callback)
 
     def _schedule_pong_callback(self, cb) -> None:
         """Schedule a pong callback."""
-        self.websocket.loop.call_soon_threadsafe(cb, self.websocket.last_ws_message)
+        self.loop.call_soon_threadsafe(cb, self.last_ws_message)
 
     def _schedule_pong_callbacks(self) -> None:
         """Schedule pong callbacks."""
-        for cb in self.websocket.pong_cbs:
+        for cb in self.pong_cbs:
             self._schedule_pong_callback(cb)
 
     def unregister_pong_callback(self, pong_callback) -> None:
@@ -288,8 +276,8 @@ class AutomowerSession:
 
         :param func callback: Takes one function, which should be unregistered.
         """
-        if pong_callback in self.websocket.pong_cbs:
-            self.websocket.pong_cbs.remove(pong_callback)
+        if pong_callback in self.pong_cbs:
+            self.pong_cbs.remove(pong_callback)
 
     async def connect(self) -> None:
         """Connect to the API.
@@ -316,12 +304,8 @@ class AutomowerSession:
                     break
                 if msg.type == WSMsgType.TEXT:
                     if not msg.data:
-                        self.websocket.last_ws_message = datetime.datetime.now(
-                            tz=datetime.UTC
-                        )
-                        _LOGGER.debug(
-                            "last_ws_message:%s", self.websocket.last_ws_message
-                        )
+                        self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
+                        _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
                         self._schedule_pong_callbacks()
                     if msg.data:
                         msg_dict = msg.json()

@@ -217,6 +217,12 @@ ignore = [
   "tests",
 ]
 
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "too-many-instance-attributes",
+    ]
+
+
 [tool.mypy]
 # Specify the target platform details in config, so your developers are
 # free to run mypy on Windows, Linux, or macOS and get consistent
