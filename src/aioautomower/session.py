@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Literal, Mapping
 
-from aiohttp import WSMsgType
+from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
@@ -206,8 +206,6 @@ class AutomowerSession:
     operations like getting a status or sending commands.
     """
 
-    # pylint: disable=too-many-nested-blocks
-
     def __init__(
         self,
         auth: AbstractAuth,
@@ -291,7 +289,28 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    async def start_listening(self) -> None:  # noqa: C901
+    def handle_text_message(self, msg: WSMessage) -> None:
+        """Send an empty message every 60s."""
+        if not msg.data:
+            self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
+            _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
+            self._schedule_pong_callbacks()
+        if msg.data:
+            msg_dict = msg.json()
+            if "type" in msg_dict:
+                if msg_dict["type"] in EVENT_TYPES:
+                    _LOGGER.debug("Got %s, data: %s", msg_dict["type"], msg_dict)
+                    self._update_data(msg_dict)
+                else:
+                    _LOGGER.warning("Received unknown ws type %s", msg_dict["type"])
+            elif "ready" in msg_dict and "connectionId" in msg_dict:
+                _LOGGER.debug(
+                    "Websocket ready=%s (id='%s')",
+                    msg_dict["ready"],
+                    msg_dict["connectionId"],
+                )
+
+    async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
         while not self.auth.ws.closed:
             try:
@@ -303,28 +322,7 @@ class AutomowerSession:
                 ):
                     break
                 if msg.type == WSMsgType.TEXT:
-                    if not msg.data:
-                        self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
-                        _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
-                        self._schedule_pong_callbacks()
-                    if msg.data:
-                        msg_dict = msg.json()
-                        if "type" in msg_dict:
-                            if msg_dict["type"] in EVENT_TYPES:
-                                _LOGGER.debug(
-                                    "Got %s, data: %s", msg_dict["type"], msg_dict
-                                )
-                                self._update_data(msg_dict)
-                            else:
-                                _LOGGER.warning(
-                                    "Received unknown ws type %s", msg_dict["type"]
-                                )
-                        elif "ready" in msg_dict and "connectionId" in msg_dict:
-                            _LOGGER.debug(
-                                "Websocket ready=%s (id='%s')",
-                                msg_dict["ready"],
-                                msg_dict["connectionId"],
-                            )
+                    self.handle_text_message(msg)
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:
@@ -356,24 +354,19 @@ class AutomowerSession:
         """
         if self._data is None:
             raise NoDataAvailableException
-        if self._data is not None:
-            for datum in self._data["data"]:
-                if datum["type"] == "mower" and datum["id"] == new_data["id"]:
-                    for attrib in new_data["attributes"]:
-                        try:
-                            tasks = new_data["attributes"]["calendar"]["tasks"]
-                            if len(tasks) == 0:
-                                temp_task = datum["attributes"]["calendar"]["tasks"]
-                                datum["attributes"][attrib] = new_data["attributes"][
-                                    attrib
-                                ]
-                                datum["attributes"]["calendar"]["tasks"] = temp_task
-                            if len(tasks) > 0:
-                                datum["attributes"][attrib] = new_data["attributes"][
-                                    attrib
-                                ]
-                        except KeyError:  # noqa: PERF203
-                            datum["attributes"][attrib] = new_data["attributes"][attrib]
+
+        for datum in self._data["data"]:
+            if datum["type"] == "mower" and datum["id"] == new_data["id"]:
+                new_attributes: Mapping[Any, Any] = new_data["attributes"]
+                value: Mapping[Any, Any]
+                for attrib, value in new_attributes.items():
+                    if attrib == "calendar":
+                        tasks = value.get("tasks", [])
+                        if tasks:
+                            datum["attributes"]["calendar"]["tasks"] = tasks
+                    else:
+                        datum["attributes"][attrib] = value
+
         self.data = mower_list_to_dictionary_dataclass(self._data)
         self._schedule_data_callbacks()
 
