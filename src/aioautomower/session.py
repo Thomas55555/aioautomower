@@ -310,7 +310,7 @@ class AutomowerSession:
                     msg_dict["connectionId"],
                 )
 
-    async def start_listening(self) -> None:  # noqa: C901
+    async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
         while not self.auth.ws.closed:
             try:
