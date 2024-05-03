@@ -1,0 +1,21 @@
+{
+  "id": "c7233734-b219-4287-a173-08e3643f89f0",
+  "type": "settings-event",
+  "attributes": {
+    "calendar": {
+      "tasks": [
+        {
+          "start": 720,
+          "duration": 300,
+          "monday": false,
+          "tuesday": false,
+          "wednesday": true,
+          "thursday": false,
+          "friday": false,
+          "saturday": false,
+          "sunday": false
+        }
+      ]
+    }
+  }
+}
