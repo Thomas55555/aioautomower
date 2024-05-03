@@ -8,7 +8,7 @@ import pytest
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import NoDataAvailableException
-from aioautomower.model import HeadlightModes
+from aioautomower.model import Calendar, HeadlightModes
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
@@ -139,13 +139,43 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     """Test automower session patch commands."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-    status_event = json.loads(load_fixture("status_event.json"))
-    automower_api._update_data(status_event)  # pylint: disable=protected-access
+
+    # Test empty tasks. doesn't delete the tasks
     calendar = automower_api.data[MOWER_ID].calendar.tasks
     settings_event = json.loads(load_fixture("settings_event.json"))
     automower_api._update_data(settings_event)  # pylint: disable=protected-access
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
 
+    # Test event of other mower doesn't overwrite the data
+    settings_event = json.loads(load_fixture("settings_event_other_mower.json"))
+    automower_api._update_data(settings_event)  # pylint: disable=protected-access
+    assert automower_api.data[MOWER_ID].headlight.mode == "EVENING_AND_NIGHT"
+
+    # Test new tasks arrive
+    settings_event = json.loads(load_fixture("settings_event_with_tasks.json"))
+    automower_api._update_data(settings_event)  # pylint: disable=protected-access
+    assert automower_api.data[MOWER_ID].calendar.tasks == [
+        Calendar(
+            start=720,
+            duration=300,
+            monday=False,
+            tuesday=False,
+            wednesday=True,
+            thursday=False,
+            friday=False,
+            saturday=False,
+            sunday=False,
+            work_area_id=None,
+        )
+    ]
+
+    # Test new positions arrive
+    positions_event = json.loads(load_fixture("positions_event.json"))
+    automower_api._update_data(positions_event)  # pylint: disable=protected-access
+    assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore
+    assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore
+
+    # Test NoDataAvailableException is risen, if there is no data
     automower_api._data = None  # pylint: disable=protected-access
     with pytest.raises(NoDataAvailableException):
         automower_api._update_data(settings_event)  # pylint: disable=protected-access
