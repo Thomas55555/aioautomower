@@ -47,158 +47,18 @@ class AutomowerEndpoint:
     "Confirm mower non-fatal error"
 
 
-class AutomowerSession:
-    """Automower API to communicate with an Automower.
-
-    The `AutomowerSession` is the primary API service for this library. It supports
-    operations like getting a status or sending commands.
-    """
-
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
+class _MowerCommands:
+    """Sending commands."""
 
     def __init__(
         self,
         auth: AbstractAuth,
-        poll: bool = False,
-    ) -> None:
-        """Create a session.
+    ):
+        """Send all commands to the API.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
-        :param bool poll: Poll data with rest if True.
         """
-        self._data: Mapping[Any, Any] | None = {}
         self.auth = auth
-        self.pong_cbs: list = []
-        self.data_update_cbs: list = []
-        self.data: dict[str, MowerAttributes] = {}
-        self.last_ws_message: datetime.datetime
-        self.loop = asyncio.get_running_loop()
-        self.poll = poll
-        self.rest_task: asyncio.Task | None = None
-        self.token = None
-        self.token_task = None
-        self.token_update_cbs: list = []
-
-    def register_data_callback(self, callback) -> None:
-        """Register a data update callback."""
-        if callback not in self.data_update_cbs:
-            self.data_update_cbs.append(callback)
-
-    def _schedule_data_callback(self, cb) -> None:
-        """Schedule a data callback."""
-        if self.poll and self.data is None:
-            raise NoDataAvailableException
-        self.loop.call_soon_threadsafe(cb, self.data)
-
-    def _schedule_data_callbacks(self) -> None:
-        """Schedule a data callbacks."""
-        for cb in self.data_update_cbs:
-            self._schedule_data_callback(cb)
-
-    def unregister_data_callback(self, callback) -> None:
-        """Unregister a data update callback.
-
-        :param func callback: Takes one function, which should be unregistered.
-        """
-        if callback in self.data_update_cbs:
-            self.data_update_cbs.remove(callback)
-
-    def register_pong_callback(self, pong_callback) -> None:
-        """Register a pong callback.
-
-        It's not real ping/pong, but a way to check if the websocket
-        is still alive, by receiving an empty message.
-        """
-        if pong_callback not in self.pong_cbs:
-            self.pong_cbs.append(pong_callback)
-
-    def _schedule_pong_callback(self, cb) -> None:
-        """Schedule a pong callback."""
-        self.loop.call_soon_threadsafe(cb, self.last_ws_message)
-
-    def _schedule_pong_callbacks(self) -> None:
-        """Schedule pong callbacks."""
-        for cb in self.pong_cbs:
-            self._schedule_pong_callback(cb)
-
-    def unregister_pong_callback(self, pong_callback) -> None:
-        """Unregister a pong update callback.
-
-        :param func callback: Takes one function, which should be unregistered.
-        """
-        if pong_callback in self.pong_cbs:
-            self.pong_cbs.remove(pong_callback)
-
-    async def connect(self) -> None:
-        """Connect to the API.
-
-        This method handles the login. Also a REST task will be started, which
-        periodically polls the REST endpoint, when polling is set to true.
-        """
-        self._schedule_data_callbacks()
-
-        if self.poll:
-            await self.get_status()
-            self.rest_task = asyncio.create_task(self._rest_task())
-
-    def handle_text_message(self, msg: WSMessage) -> None:
-        """Send an empty message every 60s."""
-        if not msg.data:
-            self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
-            _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
-            self._schedule_pong_callbacks()
-        if msg.data:
-            msg_dict = msg.json()
-            if "type" in msg_dict:
-                if msg_dict["type"] in EVENT_TYPES:
-                    _LOGGER.debug("Got %s, data: %s", msg_dict["type"], msg_dict)
-                    self._update_data(msg_dict)
-                else:
-                    _LOGGER.warning("Received unknown ws type %s", msg_dict["type"])
-            elif "ready" in msg_dict and "connectionId" in msg_dict:
-                _LOGGER.debug(
-                    "Websocket ready=%s (id='%s')",
-                    msg_dict["ready"],
-                    msg_dict["connectionId"],
-                )
-
-    async def start_listening(self) -> None:  # noqa: C901
-        """Start listening to the websocket (and receive initial state)."""
-        while not self.auth.ws.closed:
-            try:
-                msg = await self.auth.ws.receive(timeout=300)
-                if msg.type in (
-                    WSMsgType.CLOSE,
-                    WSMsgType.CLOSING,
-                    WSMsgType.CLOSED,
-                ):
-                    break
-                if msg.type == WSMsgType.TEXT:
-                    self.handle_text_message(msg)
-                elif msg.type == WSMsgType.ERROR:
-                    continue
-            except TimeoutError as exc:
-                raise TimeoutException from exc
-
-    async def send_empty_message(self) -> None:
-        """Send an empty message every 60s."""
-        while True:
-            await asyncio.sleep(60)
-            _LOGGER.debug("ping:%s", datetime.datetime.now(tz=datetime.UTC))
-            await self.auth.ws.send_str("")
-
-    async def get_status(self) -> dict[str, MowerAttributes]:
-        """Get mower status via Rest."""
-        mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
-        for idx, _ent in enumerate(mower_list["data"]):
-            mower_list["data"][idx]["attributes"].update(
-                mower_list["data"][idx]["attributes"]["settings"]
-            )
-            del mower_list["data"][idx]["attributes"]["settings"]
-        self._data = mower_list
-        self.data = mower_list_to_dictionary_dataclass(self._data)
-        return self.data
 
     async def resume_schedule(self, mower_id: str):
         """Resume schedule.
@@ -337,6 +197,155 @@ class AutomowerSession:
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
+
+
+class AutomowerSession:
+    """Automower API to communicate with an Automower.
+
+    The `AutomowerSession` is the primary API service for this library. It supports
+    operations like getting a status or sending commands.
+    """
+
+    def __init__(
+        self,
+        auth: AbstractAuth,
+        poll: bool = False,
+    ) -> None:
+        """Create a session.
+
+        :param class auth: The AbstractAuth class from aioautomower.auth.
+        :param bool poll: Poll data with rest if True.
+        """
+        self._data: Mapping[Any, Any] | None = {}
+        self.auth = auth
+        self.commands = _MowerCommands(self.auth)
+        self.pong_cbs: list = []
+        self.data_update_cbs: list = []
+        self.data: dict[str, MowerAttributes] = {}
+        self.last_ws_message: datetime.datetime
+        self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self.poll = poll
+        self.rest_task: asyncio.Task | None = None
+
+    def register_data_callback(self, callback) -> None:
+        """Register a data update callback."""
+        if callback not in self.data_update_cbs:
+            self.data_update_cbs.append(callback)
+
+    def _schedule_data_callback(self, cb) -> None:
+        """Schedule a data callback."""
+        if self.poll and self.data is None:
+            raise NoDataAvailableException
+        self.loop.call_soon_threadsafe(cb, self.data)
+
+    def _schedule_data_callbacks(self) -> None:
+        """Schedule a data callbacks."""
+        for cb in self.data_update_cbs:
+            self._schedule_data_callback(cb)
+
+    def unregister_data_callback(self, callback) -> None:
+        """Unregister a data update callback.
+
+        :param func callback: Takes one function, which should be unregistered.
+        """
+        if callback in self.data_update_cbs:
+            self.data_update_cbs.remove(callback)
+
+    def register_pong_callback(self, pong_callback) -> None:
+        """Register a pong callback.
+
+        It's not real ping/pong, but a way to check if the websocket
+        is still alive, by receiving an empty message.
+        """
+        if pong_callback not in self.pong_cbs:
+            self.pong_cbs.append(pong_callback)
+
+    def _schedule_pong_callback(self, cb) -> None:
+        """Schedule a pong callback."""
+        self.loop.call_soon_threadsafe(cb, self.last_ws_message)
+
+    def _schedule_pong_callbacks(self) -> None:
+        """Schedule pong callbacks."""
+        for cb in self.pong_cbs:
+            self._schedule_pong_callback(cb)
+
+    def unregister_pong_callback(self, pong_callback) -> None:
+        """Unregister a pong update callback.
+
+        :param func callback: Takes one function, which should be unregistered.
+        """
+        if pong_callback in self.pong_cbs:
+            self.pong_cbs.remove(pong_callback)
+
+    async def connect(self) -> None:
+        """Connect to the API.
+
+        This method handles the login. Also a REST task will be started, which
+        periodically polls the REST endpoint, when polling is set to true.
+        """
+        self._schedule_data_callbacks()
+
+        if self.poll:
+            await self.get_status()
+            self.rest_task = asyncio.create_task(self._rest_task())
+
+    def handle_text_message(self, msg: WSMessage) -> None:
+        """Send an empty message every 60s."""
+        if not msg.data:
+            self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
+            _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
+            self._schedule_pong_callbacks()
+        if msg.data:
+            msg_dict = msg.json()
+            if "type" in msg_dict:
+                if msg_dict["type"] in EVENT_TYPES:
+                    _LOGGER.debug("Got %s, data: %s", msg_dict["type"], msg_dict)
+                    self._update_data(msg_dict)
+                else:
+                    _LOGGER.warning("Received unknown ws type %s", msg_dict["type"])
+            elif "ready" in msg_dict and "connectionId" in msg_dict:
+                _LOGGER.debug(
+                    "Websocket ready=%s (id='%s')",
+                    msg_dict["ready"],
+                    msg_dict["connectionId"],
+                )
+
+    async def start_listening(self) -> None:  # noqa: C901
+        """Start listening to the websocket (and receive initial state)."""
+        while not self.auth.ws.closed:
+            try:
+                msg = await self.auth.ws.receive(timeout=300)
+                if msg.type in (
+                    WSMsgType.CLOSE,
+                    WSMsgType.CLOSING,
+                    WSMsgType.CLOSED,
+                ):
+                    break
+                if msg.type == WSMsgType.TEXT:
+                    self.handle_text_message(msg)
+                elif msg.type == WSMsgType.ERROR:
+                    continue
+            except TimeoutError as exc:
+                raise TimeoutException from exc
+
+    async def send_empty_message(self) -> None:
+        """Send an empty message every 60s."""
+        while True:
+            await asyncio.sleep(60)
+            _LOGGER.debug("ping:%s", datetime.datetime.now(tz=datetime.UTC))
+            await self.auth.ws.send_str("")
+
+    async def get_status(self) -> dict[str, MowerAttributes]:
+        """Get mower status via Rest."""
+        mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
+        for idx, _ent in enumerate(mower_list["data"]):
+            mower_list["data"][idx]["attributes"].update(
+                mower_list["data"][idx]["attributes"]["settings"]
+            )
+            del mower_list["data"][idx]["attributes"]["settings"]
+        self._data = mower_list
+        self.data = mower_list_to_dictionary_dataclass(self._data)
+        return self.data
 
     def _update_data(self, new_data) -> None:
         """Update internal data, with new data from websocket.
