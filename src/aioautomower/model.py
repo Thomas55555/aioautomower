@@ -258,10 +258,14 @@ class ConvertScheduleToCalendar:
             hour=0, minute=0, second=0, microsecond=0
         ).astimezone()
         return AutomowerCalendarEvent(
-            start=begin_of_day_with_schedule + timedelta(minutes=self.task.start),
-            end=begin_of_day_with_schedule
-            + timedelta(minutes=self.task.start)
-            + timedelta(minutes=self.task.duration),
+            start=(
+                begin_of_day_with_schedule + timedelta(minutes=self.task.start)
+            ).astimezone(tz=UTC),
+            end=(
+                begin_of_day_with_schedule
+                + timedelta(minutes=self.task.start)
+                + timedelta(minutes=self.task.duration)
+            ).astimezone(tz=UTC),
             rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
         )

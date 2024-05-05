@@ -3,6 +3,7 @@
 import json
 from dataclasses import fields
 
+from freezegun import freeze_time
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
@@ -21,6 +22,7 @@ async def test_low_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) == 0  # type: ignore
 
 
+@freeze_time("2024-05-04 03:21:34")
 def test_mower_snapshot(snapshot: SnapshotAssertion) -> None:
     """Testing a snapshot of a high feature mower."""
     mower_fixture = load_fixture("low_feature_mower.json")
