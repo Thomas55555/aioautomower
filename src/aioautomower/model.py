@@ -6,9 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
-from typing import Any
 
-from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
@@ -182,7 +180,7 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 
     start: datetime
     end: datetime
-    rrule: Any
+    rrule: str
     uid: str
 
 
@@ -268,7 +266,7 @@ class ConvertScheduleToCalendar:
                 + timedelta(minutes=self.task.start)
                 + timedelta(minutes=self.task.duration)
             ).astimezone(tz=UTC),
-            rrule=Recur.from_rrule(f"FREQ=WEEKLY;BYDAY={daylist}"),
+            rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
         )
 
