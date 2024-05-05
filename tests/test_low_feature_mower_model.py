@@ -22,7 +22,7 @@ async def test_low_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) == 0  # type: ignore
 
 
-@freeze_time("2024-05-04 8:00:00")
+@freeze_time("2024-05-05 8:00:00")
 def test_mower_snapshot(snapshot: SnapshotAssertion) -> None:
     """Testing a snapshot of a high feature mower."""
     mower_fixture = load_fixture("low_feature_mower.json")

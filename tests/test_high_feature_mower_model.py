@@ -43,7 +43,7 @@ async def test_high_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) != 0  # type: ignore
 
 
-@freeze_time("2024-05-04 03:21:34")
+@freeze_time("2024-05-04 8:00:00")
 def test_mower_snapshot(snapshot: SnapshotAssertion):
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code

@@ -209,10 +209,8 @@ class ConvertScheduleToCalendar:
         )
         self.current_day = self.now.weekday()
 
-    # pylint: disable=inconsistent-return-statements
     def next_weekday_with_schedule(self) -> datetime:
         """Find the next weekday with a schedule entry."""
-        # pylint: disable=too-many-nested-blocks
         for days in range(8):
             time_to_check = self.now + timedelta(days=days)
             time_to_check_begin_of_day = time_to_check.replace(
@@ -223,17 +221,16 @@ class ConvertScheduleToCalendar:
             for task_field in fields(self.task):
                 field_name = task_field.name
                 field_value = getattr(self.task, field_name)
-                if field_value is True:
-                    if field_name is day_to_check_as_string:
-                        end_task = (
-                            time_to_check_begin_of_day
-                            + timedelta(minutes=self.task.start)
-                            + timedelta(minutes=self.task.duration)
-                        )
-                        if self.begin_of_current_day == time_to_check_begin_of_day:
-                            if end_task < self.now:
-                                break
-                        return self.now + timedelta(days)
+                if field_value is True and field_name is day_to_check_as_string:
+                    end_task = (
+                        time_to_check_begin_of_day
+                        + timedelta(minutes=self.task.start)
+                        + timedelta(minutes=self.task.duration)
+                    )
+                    if self.begin_of_current_day == time_to_check_begin_of_day:
+                        if end_task < self.now:
+                            break
+                    return self.now + timedelta(days)
         return self.now
 
     def make_daylist(self) -> str:
