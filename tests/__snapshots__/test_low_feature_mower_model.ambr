@@ -3,7 +3,7 @@
   Battery(battery_percent=100)
 # ---
 # name: test_mower_snapshot[calendar]
-  Tasks(tasks=[Calendar(start=120, duration=49, monday=True, tuesday=False, wednesday=False, thursday=False, friday=False, saturday=False, sunday=False, work_area_id=None)], events=[AutomowerCalendarEvent(start=FakeDatetime(2024, 5, 13, 0, 0, tzinfo=datetime.timezone.utc), end=FakeDatetime(2024, 5, 13, 0, 49, tzinfo=datetime.timezone.utc), rrule='FREQ=WEEKLY;BYDAY=MO', uid='120_49_MO')])
+  Tasks(tasks=[Calendar(start=120, duration=49, monday=True, tuesday=False, wednesday=False, thursday=False, friday=False, saturday=False, sunday=False, work_area_id=None)], events=[AutomowerCalendarEvent(start=FakeDatetime(2024, 5, 13, 0, 0, tzinfo=datetime.timezone.utc), end=FakeDatetime(2024, 5, 13, 0, 49, tzinfo=datetime.timezone.utc), rrule='FREQ=WEEKLY;BYDAY=MO', uid='120_49_MO', work_area_id=None)])
 # ---
 # name: test_mower_snapshot[capabilities]
   Capabilities(headlights=False, work_areas=False, position=False, stay_out_zones=False)

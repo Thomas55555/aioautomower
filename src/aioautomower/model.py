@@ -12,6 +12,7 @@ from mashumaro import DataClassDictMixin, field_options
 from .const import ERRORCODES
 
 logging.basicConfig(level=logging.DEBUG)
+
 WEEKDAYS = (
     "monday",
     "tuesday",
@@ -21,7 +22,6 @@ WEEKDAYS = (
     "saturday",
     "sunday",
 )
-
 
 WEEKDAYS_TO_RFC5545 = {
     "monday": "MO",
@@ -182,6 +182,7 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     end: datetime
     rrule: str
     uid: str
+    work_area_id: int | None
 
 
 def husqvarna_schedule_to_calendar(
@@ -265,6 +266,7 @@ class ConvertScheduleToCalendar:
             ).astimezone(tz=UTC),
             rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
+            work_area_id=self.task.work_area_id,
         )
 
 
