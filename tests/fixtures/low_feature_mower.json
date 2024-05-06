@@ -28,25 +28,14 @@
         "calendar": {
           "tasks": [
             {
-              "start": 1140,
-              "duration": 300,
+              "start": 120,
+              "duration": 49,
               "monday": true,
               "tuesday": false,
-              "wednesday": true,
-              "thursday": false,
-              "friday": true,
-              "saturday": false,
-              "sunday": false
-            },
-            {
-              "start": 0,
-              "duration": 480,
-              "monday": false,
-              "tuesday": true,
               "wednesday": false,
-              "thursday": true,
+              "thursday": false,
               "friday": false,
-              "saturday": true,
+              "saturday": false,
               "sunday": false
             }
           ]
