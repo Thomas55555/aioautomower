@@ -1,13 +1,37 @@
 """Models for Husqvarna Automower data."""
 
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
+import logging
+import operator
+from dataclasses import dataclass, field, fields
+from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
+
+logging.basicConfig(level=logging.DEBUG)
+
+WEEKDAYS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
+
+WEEKDAYS_TO_RFC5545 = {
+    "monday": "MO",
+    "tuesday": "TU",
+    "wednesday": "WE",
+    "thursday": "TH",
+    "friday": "FR",
+    "saturday": "SA",
+    "sunday": "SU",
+}
 
 
 def snake_case(string: str | None) -> str:
@@ -146,10 +170,117 @@ class Calendar(DataClassDictMixin):
 
 
 @dataclass
+class AutomowerCalendarEvent(DataClassDictMixin):
+    """Information about the calendar tasks.
+
+    An Automower can have several tasks. If the mower supports
+    work areas the property workAreaId is required to connect
+    the task to an work area.
+    """
+
+    start: datetime
+    end: datetime
+    rrule: str
+    uid: str
+    work_area_id: int | None
+
+
+def husqvarna_schedule_to_calendar(
+    task_list: list,
+) -> list[AutomowerCalendarEvent]:
+    """Convert the schedule to an sorted list of calendar events."""
+    eventlist = []
+    for task_dict in task_list:
+        calendar_dataclass = Calendar.from_dict(task_dict)
+        event = ConvertScheduleToCalendar(calendar_dataclass)
+        eventlist.append(event.make_event())
+    eventlist.sort(key=operator.attrgetter("start"))
+    return eventlist
+
+
+class ConvertScheduleToCalendar:
+    """Convert the Husqvarna task to an AutomowerCalendarEvent."""
+
+    def __init__(self, task: Calendar) -> None:
+        """Initialize the schedule to calendar converter."""
+        self.task = task
+        self.now = datetime.now().astimezone()
+        self.begin_of_current_day = self.now.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        self.current_day = self.now.weekday()
+
+    def next_weekday_with_schedule(self) -> datetime:
+        """Find the next weekday with a schedule entry."""
+        for days in range(8):
+            time_to_check = self.now + timedelta(days=days)
+            time_to_check_begin_of_day = time_to_check.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            day_to_check = time_to_check.weekday()
+            day_to_check_as_string = WEEKDAYS[day_to_check]
+            for task_field in fields(self.task):
+                field_name = task_field.name
+                field_value = getattr(self.task, field_name)
+                if field_value is True and field_name is day_to_check_as_string:
+                    end_task = (
+                        time_to_check_begin_of_day
+                        + timedelta(minutes=self.task.start)
+                        + timedelta(minutes=self.task.duration)
+                    )
+                    if self.begin_of_current_day == time_to_check_begin_of_day:
+                        if end_task < self.now:
+                            break
+                    return self.now + timedelta(days)
+        return self.now
+
+    def make_daylist(self) -> str:
+        """Generate a RFC5545 daylist from a task."""
+        day_list = ""
+        for task_field in fields(self.task):
+            field_name = task_field.name
+            field_value = getattr(self.task, field_name)
+            if field_value is True:
+                today_rfc = WEEKDAYS_TO_RFC5545[field_name]
+                if day_list == "":
+                    day_list = today_rfc
+                else:
+                    day_list += "," + str(today_rfc)
+        return day_list
+
+    def make_event(self) -> AutomowerCalendarEvent:
+        """Generate a AutomowerCalendarEvent from a task."""
+        daylist = self.make_daylist()
+        next_wd_with_schedule = self.next_weekday_with_schedule()
+        begin_of_day_with_schedule = next_wd_with_schedule.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ).astimezone()
+        return AutomowerCalendarEvent(
+            start=(
+                begin_of_day_with_schedule + timedelta(minutes=self.task.start)
+            ).astimezone(tz=UTC),
+            end=(
+                begin_of_day_with_schedule
+                + timedelta(minutes=self.task.start)
+                + timedelta(minutes=self.task.duration)
+            ).astimezone(tz=UTC),
+            rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
+            uid=f"{self.task.start}_{self.task.duration}_{daylist}",
+            work_area_id=self.task.work_area_id,
+        )
+
+
+@dataclass
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
     tasks: list[Calendar]
+    events: list[AutomowerCalendarEvent] = field(
+        metadata=field_options(
+            deserialize=husqvarna_schedule_to_calendar,
+            alias="tasks",
+        ),
+    )
 
 
 @dataclass
