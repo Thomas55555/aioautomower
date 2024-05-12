@@ -60,7 +60,7 @@ class _MowerCommands:
         """
         self.auth = auth
 
-    async def resume_schedule(self, mower_id: str):
+    async def resume_schedule(self, mower_id: str) -> dict[str, dict[str, str]]:
         """Resume schedule.
 
         Remove any override on the Planner and let the mower
@@ -68,27 +68,33 @@ class _MowerCommands:
         """
         body = {"data": {"type": "ResumeSchedule"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
-    async def pause_mowing(self, mower_id: str):
+    async def pause_mowing(self, mower_id: str) -> dict[str, dict[str, str]]:
         """Send pause mowing command to the mower via Rest."""
         body = {"data": {"type": "Pause"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
-    async def park_until_next_schedule(self, mower_id: str):
+    async def park_until_next_schedule(
+        self, mower_id: str
+    ) -> dict[str, dict[str, str]]:
         """Send park until next schedule command to the mower."""
         body = {"data": {"type": "ParkUntilNextSchedule"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
-    async def park_until_further_notice(self, mower_id: str):
+    async def park_until_further_notice(
+        self, mower_id: str
+    ) -> dict[str, dict[str, str]]:
         """Send park until further notice command to the mower."""
         body = {"data": {"type": "ParkUntilFurtherNotice"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, duration_in_min: int):
+    async def park_for(
+        self, mower_id: str, duration_in_min: int
+    ) -> dict[str, dict[str, str]]:
         """Parks the mower for a period of minutes.
 
         The mower will drive to
@@ -101,9 +107,11 @@ class _MowerCommands:
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
-    async def start_for(self, mower_id: str, duration_in_min: int):
+    async def start_for(
+        self, mower_id: str, duration_in_min: int
+    ) -> dict[str, dict[str, str]]:
         """Start the mower for a period of minutes."""
         body = {
             "data": {
@@ -112,9 +120,11 @@ class _MowerCommands:
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
-    async def set_cutting_height(self, mower_id: str, cutting_height: int):
+    async def set_cutting_height(
+        self, mower_id: str, cutting_height: int
+    ) -> dict[str, dict[str, str]]:
         """Set the cutting height for the mower."""
         body = {
             "data": {
@@ -123,11 +133,11 @@ class _MowerCommands:
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
     async def set_cutting_height_workarea(
         self, mower_id: str, cutting_height: int, work_area_id: int
-    ):
+    ) -> dict[str, dict[str, str]]:
         """Set the cutting height for a specific work area."""
         body = {
             "data": {
@@ -139,7 +149,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.work_area_cutting_height.format(
             mower_id=mower_id, work_area_id=work_area_id
         )
-        await self.auth.patch_json(url, json=body)
+        return await self.auth.patch_json(url, json=body)
 
     async def set_headlight_mode(
         self,
@@ -150,7 +160,7 @@ class _MowerCommands:
             HeadlightModes.EVENING_AND_NIGHT,
             HeadlightModes.EVENING_ONLY,
         ],
-    ):
+    ) -> dict[str, dict[str, str]]:
         """Send headlight mode to the mower."""
         body = {
             "data": {
@@ -159,13 +169,13 @@ class _MowerCommands:
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
     async def set_calendar(
         self,
         mower_id: str,
         task_list: list[str],
-    ):
+    ) -> dict[str, dict[str, str]]:
         """Send calendar task to the mower."""
         body = {
             "data": {
@@ -174,11 +184,11 @@ class _MowerCommands:
             }
         }
         url = AutomowerEndpoint.calendar.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
     async def switch_stay_out_zone(
         self, mower_id: str, stay_out_zone_id: str, switch: bool
-    ):
+    ) -> dict[str, dict[str, str]]:
         """Enable or disable a stay out zone."""
         body = {
             "data": {
@@ -190,13 +200,13 @@ class _MowerCommands:
         url = AutomowerEndpoint.stay_out_zones.format(
             mower_id=mower_id, stay_out_id=stay_out_zone_id
         )
-        await self.auth.patch_json(url, json=body)
+        return await self.auth.patch_json(url, json=body)
 
-    async def error_confirm(self, mower_id: str):
+    async def error_confirm(self, mower_id: str) -> dict[str, dict[str, str]]:
         """Confirm non-fatal mower error."""
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        return await self.auth.post_json(url, json=body)
 
 
 class AutomowerSession:
