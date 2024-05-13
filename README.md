@@ -26,7 +26,7 @@ For a first start you can run the `example.py`, by doing the following steps
 - `cd aioautomower`
 - `poetry install`
 - Enter your personal `client_id` and `client_secret` in the `_secrets.yaml` and rename it to `secrets.yaml`
-- Run with `poetry run ./src/aioautomower/example.py`
+- Run with `poetry run ./example.py`
 
 ## Contributing
 

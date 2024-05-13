@@ -187,7 +187,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Allow for main entry & scripts to write to stdout
-"src/aioautomower/example.py" = ["T201"]
+"example.py" = ["T201"]
 
 [tool.pylint.FORMAT]
 max-line-length = 88
@@ -246,3 +246,4 @@ fail_under = 50
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
+source = ["aioautomower"]
