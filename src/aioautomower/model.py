@@ -439,6 +439,16 @@ class WorkArea(DataClassDictMixin):
 
 
 @dataclass
+class Settings(DataClassDictMixin):
+    """DataClass for WorkAreas values."""
+
+    headlight: Headlight
+    cutting_height: int | None = field(
+        metadata=field_options(alias="cuttingHeight"), default=None
+    )
+
+
+@dataclass
 class MowerAttributes(DataClassDictMixin):
     """DataClass for MowerAttributes."""
 
@@ -450,11 +460,8 @@ class MowerAttributes(DataClassDictMixin):
     planner: Planner
     metadata: Metadata
     positions: list[Positions] | None
+    settings: Settings
     statistics: Statistics
-    headlight: Headlight
-    cutting_height: int | None = field(
-        metadata=field_options(alias="cuttingHeight"), default=None
-    )
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )

@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping
+from typing import Any, Iterable, Literal, Mapping
 
 from aiohttp import WSMessage, WSMsgType
 
@@ -16,6 +16,8 @@ from .model import HeadlightModes, MowerAttributes
 from .utils import mower_list_to_dictionary_dataclass
 
 _LOGGER = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 @dataclass
@@ -216,7 +218,7 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self._data: Mapping[Any, Any] | None = {}
+        self._data: dict[str, Iterable[Any]] | None = {}
         self.auth = auth
         self.commands = _MowerCommands(self.auth)
         self.pong_cbs: list = []
@@ -289,8 +291,56 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    def handle_text_message(self, msg: WSMessage) -> None:
-        """Send an empty message every 60s."""
+    def add_settigs_tree(self, msg_dict: dict) -> dict:
+        """Add settings key and ignore empty calendar tasks.
+
+        Needed, because when polling the API `headlight` and `cuttingHeight` are
+        nested under the `settings` key. But when receiving a websocket message,
+        the `settings` key is missing.
+        """
+        copy_msg_dict = dict(msg_dict)
+        current_data = self._data
+        if current_data is None:
+            raise NoDataAvailableException
+        dater_iter = current_data["data"]
+        for _, current_data_mower in enumerate(dater_iter):
+            if current_data_mower["id"] == copy_msg_dict["id"]:
+                current_attributes = current_data_mower["attributes"]
+                formated_msg = {
+                    "id": current_data_mower["id"],
+                    "type": "settings-event",
+                    "attributes": {
+                        "calendar": {"tasks": current_attributes["calendar"]["tasks"]},
+                        "settings": {
+                            "cuttingHeight": current_attributes["settings"][
+                                "cuttingHeight"
+                            ],
+                            "headlight": {
+                                "mode": current_attributes["settings"]["headlight"][
+                                    "mode"
+                                ]
+                            },
+                        },
+                    },
+                }
+                new_attributes = copy_msg_dict["attributes"]
+                if len(new_attributes["calendar"]["tasks"]) > 0:
+                    formated_msg["attributes"]["calendar"]["tasks"] = copy_msg_dict[
+                        "attributes"
+                    ]["calendar"]["tasks"]
+                if "cuttingHeight" in new_attributes:
+                    formated_msg["attributes"]["settings"]["cuttingHeight"] = (
+                        copy_msg_dict["attributes"]["cuttingHeight"]
+                    )
+                if "headlight" in new_attributes:
+                    formated_msg["attributes"]["settings"]["headlight"]["mode"] = (
+                        copy_msg_dict["attributes"]["headlight"]["mode"]
+                    )
+                return formated_msg
+        return copy_msg_dict
+
+    def _handle_text_message(self, msg: WSMessage) -> None:
+        """Process a text message to data."""
         if not msg.data:
             self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
             _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
@@ -299,6 +349,9 @@ class AutomowerSession:
             msg_dict = msg.json()
             if "type" in msg_dict:
                 if msg_dict["type"] in EVENT_TYPES:
+                    if msg_dict["type"] == "settings-event":
+                        copy = dict(msg_dict)
+                        msg_dict = self.add_settigs_tree(copy)
                     _LOGGER.debug("Got %s, data: %s", msg_dict["type"], msg_dict)
                     self._update_data(msg_dict)
                 else:
@@ -322,7 +375,7 @@ class AutomowerSession:
                 ):
                     break
                 if msg.type == WSMsgType.TEXT:
-                    self.handle_text_message(msg)
+                    self._handle_text_message(msg)
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:
@@ -338,35 +391,22 @@ class AutomowerSession:
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
-        for idx, _ent in enumerate(mower_list["data"]):
-            mower_list["data"][idx]["attributes"].update(
-                mower_list["data"][idx]["attributes"]["settings"]
-            )
-            del mower_list["data"][idx]["attributes"]["settings"]
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data)
         return self.data
 
     def _update_data(self, new_data) -> None:
-        """Update internal data, with new data from websocket.
-
-        Empty tasks are ignored, so we always know the tasks.
-        """
+        """Update internal data, with new data from websocket."""
         if self._data is None:
             raise NoDataAvailableException
 
-        for datum in self._data["data"]:
-            if datum["type"] == "mower" and datum["id"] == new_data["id"]:
+        data = self._data["data"]
+        for mower in data:
+            if mower["type"] == "mower" and mower["id"] == new_data["id"]:
                 new_attributes: Mapping[Any, Any] = new_data["attributes"]
                 value: Mapping[Any, Any]
                 for attrib, value in new_attributes.items():
-                    if attrib == "calendar":
-                        tasks = value.get("tasks", [])
-                        if tasks:
-                            datum["attributes"]["calendar"]["tasks"] = tasks
-                    else:
-                        datum["attributes"][attrib] = value
-
+                    mower["attributes"][attrib] = value
         self.data = mower_list_to_dictionary_dataclass(self._data)
         self._schedule_data_callbacks()
 
