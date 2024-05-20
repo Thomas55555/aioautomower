@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
 
-MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
+MOWER_ID = "1234"
 
 
 async def test_low_feature_mower() -> None:
@@ -17,8 +17,8 @@ async def test_low_feature_mower() -> None:
     mower_fixture = load_fixture("low_feature_mower.json")
     mower_python = json.loads(mower_fixture)
     mowers = mower_list_to_dictionary_dataclass(mower_python)
-    assert mowers[MOWER_ID].headlight.mode is None
-    assert mowers[MOWER_ID].cutting_height is None
+    assert mowers[MOWER_ID].settings.headlight.mode is None
+    assert mowers[MOWER_ID].settings.cutting_height is None
     assert len(mowers[MOWER_ID].positions) == 0  # type: ignore
 
 

@@ -1,18 +1,12 @@
 # serializer version: 1
 # name: test_mower_snapshot[battery]
-  Battery(battery_percent=100)
+  Battery(battery_percent=50)
 # ---
 # name: test_mower_snapshot[calendar]
   Tasks(tasks=[Calendar(start=120, duration=49, monday=True, tuesday=False, wednesday=False, thursday=False, friday=False, saturday=False, sunday=False, work_area_id=None)], events=[AutomowerCalendarEvent(start=FakeDatetime(2024, 5, 13, 0, 0, tzinfo=datetime.timezone.utc), end=FakeDatetime(2024, 5, 13, 0, 49, tzinfo=datetime.timezone.utc), rrule='FREQ=WEEKLY;BYDAY=MO', uid='120_49_MO', work_area_id=None)])
 # ---
 # name: test_mower_snapshot[capabilities]
   Capabilities(headlights=False, work_areas=False, position=False, stay_out_zones=False)
-# ---
-# name: test_mower_snapshot[cutting_height]
-  None
-# ---
-# name: test_mower_snapshot[headlight]
-  Headlight(mode=None)
 # ---
 # name: test_mower_snapshot[metadata]
   Metadata(connected=True, status_dateteime=FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc))
@@ -26,6 +20,9 @@
 # name: test_mower_snapshot[positions]
   list([
   ])
+# ---
+# name: test_mower_snapshot[settings]
+  Settings(headlight=Headlight(mode=None), cutting_height=None)
 # ---
 # name: test_mower_snapshot[statistics]
   Statistics(cutting_blade_usage_time=None, number_of_charging_cycles=None, number_of_collisions=None, total_charging_time=None, total_cutting_time=None, total_drive_distance=None, total_running_time=None, total_searching_time=None)

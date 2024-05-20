@@ -8,12 +8,6 @@
 # name: test_mower_snapshot[capabilities]
   Capabilities(headlights=True, work_areas=True, position=True, stay_out_zones=True)
 # ---
-# name: test_mower_snapshot[cutting_height]
-  4
-# ---
-# name: test_mower_snapshot[headlight]
-  Headlight(mode='EVENING_ONLY')
-# ---
 # name: test_mower_snapshot[metadata]
   Metadata(connected=True, status_dateteime=FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc))
 # ---
@@ -40,6 +34,9 @@
     Positions(latitude=35.5403437, longitude=-82.5523917),
     Positions(latitude=35.5403481, longitude=-82.5520054),
   ])
+# ---
+# name: test_mower_snapshot[settings]
+  Settings(headlight=Headlight(mode='EVENING_ONLY'), cutting_height=4)
 # ---
 # name: test_mower_snapshot[statistics]
   Statistics(cutting_blade_usage_time=1234, number_of_charging_cycles=1380, number_of_collisions=11396, total_charging_time=4334400, total_cutting_time=4194000, total_drive_distance=1780272, total_running_time=4564800, total_searching_time=370800)
