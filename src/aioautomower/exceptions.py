@@ -21,6 +21,10 @@ class ApiForbiddenException(HusqvarnaAutomowerException):
     """Raised due to permission errors talking to API."""
 
 
+class ApiUnauthorizedException(HusqvarnaAutomowerException):
+    """Raised occasionally, mustn't harm the connection."""
+
+
 class NoDataAvailableException(HusqvarnaAutomowerException):
     """Raised due updating data, when no data is available."""
 

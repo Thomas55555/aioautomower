@@ -20,6 +20,7 @@ from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from .exceptions import (
     ApiException,
     ApiForbiddenException,
+    ApiUnauthorizedException,
     AuthException,
     HusqvarnaWSServerHandshakeError,
 )
@@ -152,7 +153,9 @@ class AbstractAuth(ABC):
                     f"Forbidden response from API: {err}"
                 ) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
-                raise AuthException(f"Unable to authenticate with API: {err}") from err
+                raise ApiUnauthorizedException(
+                    f"Unable to authenticate with API: {err}"
+                ) from err
             detail.append(err.message)
             raise ApiException(": ".join(detail)) from err
         except ClientError as err:
