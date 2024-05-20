@@ -2,7 +2,7 @@
   "data": [
     {
       "type": "mower",
-      "id": "c7233734-b219-4287-a173-08e3643f89f0",
+      "id": "1234",
       "attributes": {
         "system": {
           "name": "Test Mower 1",
@@ -10,7 +10,7 @@
           "serialNumber": 123
         },
         "battery": {
-          "batteryPercent": 100
+          "batteryPercent": 50
         },
         "capabilities": {
           "headlights": false,
@@ -52,9 +52,11 @@
           "statusTimestamp": 1697669932683
         },
         "positions": [],
-        "cuttingHeight": null,
-        "headlight": {
-          "mode": null
+        "settings": {
+          "cuttingHeight": null,
+          "headlight": {
+            "mode": null
+          }
         },
         "statistics": {}
       }
