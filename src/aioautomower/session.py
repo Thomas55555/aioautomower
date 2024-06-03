@@ -105,6 +105,25 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
+    async def start_in_workarea(
+        self,
+        mower_id: str,
+        work_area_id: int,
+        duration_in_min: int | None = None,
+    ):
+        """Start the mower in a work area for a period of minutes.
+
+        If duration is skipped the mower will continue forever.
+        """
+        body = {
+            "data": {
+                "type": "StartInMWorkArea",
+                "attributes": {"duration": duration_in_min, "workAreaId": work_area_id},
+            }
+        }
+        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
+        await self.auth.post_json(url, json=body)
+
     async def start_for(self, mower_id: str, duration_in_min: int):
         """Start the mower for a period of minutes."""
         body = {
