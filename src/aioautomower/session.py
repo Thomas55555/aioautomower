@@ -117,7 +117,7 @@ class _MowerCommands:
         """
         body = {
             "data": {
-                "type": "StartInMWorkArea",
+                "type": "StartInWorkArea",
                 "attributes": {"duration": duration_in_min, "workAreaId": work_area_id},
             }
         }
