@@ -73,7 +73,7 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
         f"mowers/{MOWER_ID}/actions",
         json={
             "data": {
-                "type": "StartInMWorkArea",
+                "type": "StartInWorkArea",
                 "attributes": {"duration": None, "workAreaId": 30},
             }
         },
@@ -84,7 +84,7 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
         f"mowers/{MOWER_ID}/actions",
         json={
             "data": {
-                "type": "StartInMWorkArea",
+                "type": "StartInWorkArea",
                 "attributes": {"duration": 2, "workAreaId": 30},
             }
         },
