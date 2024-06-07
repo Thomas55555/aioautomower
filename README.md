@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/Thomas55555/aioautomower/graph/badge.svg?token=2BG3S61T6K)](https://codecov.io/gh/Thomas55555/aioautomower)
+[![Python Versions](https://img.shields.io/pypi/pyversions/aioautomower)](https://pypi.org/project/aioautomower/)
+
 # Aioautomower
 
 Asynchronous library to communicate with the Automower Connect API
