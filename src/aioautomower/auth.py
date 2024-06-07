@@ -18,6 +18,7 @@ from aiohttp import (
 
 from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from .exceptions import (
+    ApiBadRequestException,
     ApiException,
     ApiForbiddenException,
     ApiUnauthorizedException,
@@ -148,13 +149,17 @@ class AbstractAuth(ABC):
         try:
             resp.raise_for_status()
         except ClientResponseError as err:
-            if err.status == HTTPStatus.FORBIDDEN:
-                raise ApiForbiddenException(
-                    f"Forbidden response from API: {err}"
+            if err.status == HTTPStatus.BAD_REQUEST:
+                raise ApiBadRequestException(
+                    f"Unable to send request with API: {err}"
                 ) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise ApiUnauthorizedException(
                     f"Unable to authenticate with API: {err}"
+                ) from err
+            if err.status == HTTPStatus.FORBIDDEN:
+                raise ApiForbiddenException(
+                    f"Forbidden response from API: {err}"
                 ) from err
             detail.append(err.message)
             raise ApiException(": ".join(detail)) from err

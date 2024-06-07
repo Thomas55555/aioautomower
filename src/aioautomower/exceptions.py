@@ -17,6 +17,10 @@ class InvalidSyncTokenException(HusqvarnaAutomowerException):
     """Raised when the sync token is invalid."""
 
 
+class ApiBadRequestException(HusqvarnaAutomowerException):
+    """Raised due sending a Rest command resulting in a bad request."""
+
+
 class ApiForbiddenException(HusqvarnaAutomowerException):
     """Raised due to permission errors talking to API."""
 
