@@ -6,6 +6,7 @@
     "mower": {
       "mode": "MAIN_AREA",
       "activity": "PARKED_IN_CS",
+      "inactiveReason": "NONE",
       "state": "RESTRICTED",
       "errorCode": 0,
       "errorCodeTimestamp": 0
