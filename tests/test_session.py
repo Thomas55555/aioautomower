@@ -67,8 +67,30 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
             }
         },
     )
-    await automower_api.commands.start_for(MOWER_ID, 30)
+    await automower_api.commands.start_in_workarea(MOWER_ID, 30)
     assert mocked_method.call_count == 6
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/actions",
+        json={
+            "data": {
+                "type": "StartInWorkArea",
+                "attributes": {"duration": None, "workAreaId": 30},
+            }
+        },
+    )
+    await automower_api.commands.start_in_workarea(MOWER_ID, 30, 2)
+    assert mocked_method.call_count == 7
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/actions",
+        json={
+            "data": {
+                "type": "StartInWorkArea",
+                "attributes": {"duration": 2, "workAreaId": 30},
+            }
+        },
+    )
+    await automower_api.commands.start_for(MOWER_ID, 30)
+    assert mocked_method.call_count == 8
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
         json={
@@ -79,13 +101,13 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
         },
     )
     await automower_api.commands.set_cutting_height(MOWER_ID, 9)
-    assert mocked_method.call_count == 7
+    assert mocked_method.call_count == 9
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
         json={"data": {"type": "settings", "attributes": {"cuttingHeight": 9}}},
     )
     await automower_api.commands.set_headlight_mode(MOWER_ID, HeadlightModes.ALWAYS_OFF)
-    assert mocked_method.call_count == 8
+    assert mocked_method.call_count == 10
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
         json={
@@ -97,13 +119,13 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
     )
     task_list = json.loads(load_fixture("task_list.json"))
     await automower_api.commands.set_calendar(MOWER_ID, task_list)
-    assert mocked_method.call_count == 9
+    assert mocked_method.call_count == 11
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/calendar",
         json={"data": {"type": "calendar", "attributes": {"tasks": task_list}}},
     )
     await automower_api.commands.error_confirm(MOWER_ID)
-    assert mocked_method.call_count == 10
+    assert mocked_method.call_count == 12
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
     mocked_method.reset_mock()
     await automower_api.close()
