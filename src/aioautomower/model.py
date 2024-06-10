@@ -145,6 +145,12 @@ class Mower(DataClassDictMixin):
         ),
     )
     inactive_reason: str = field(metadata=field_options(alias="inactiveReason"))
+    is_error_confirmable: bool | None = field(
+        metadata=field_options(alias="isErrorConfirmable"), default=None
+    )
+    work_area_id: int | None = field(
+        metadata=field_options(alias="workAreaId"), default=None
+    )
 
 
 @dataclass

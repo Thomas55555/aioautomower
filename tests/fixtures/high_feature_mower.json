@@ -23,8 +23,10 @@
           "activity": "PARKED_IN_CS",
           "inactiveReason": "NONE",
           "state": "RESTRICTED",
+          "workAreaId": 123456,
           "errorCode": 0,
-          "errorCodeTimestamp": 0
+          "errorCodeTimestamp": 0,
+          "isErrorConfirmable": false
         },
         "calendar": {
           "tasks": [
