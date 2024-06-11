@@ -13,7 +13,7 @@ from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException, TimeoutException
 from .model import HeadlightModes, MowerAttributes
-from .utils import mower_list_to_dictionary_dataclass
+from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, duration_in_min: int):
+    async def park_for(self, mower_id: str, tdelta: datetime.timedelta):
         """Parks the mower for a period of minutes.
 
         The mower will drive to
@@ -99,7 +99,7 @@ class _MowerCommands:
         body = {
             "data": {
                 "type": "Park",
-                "attributes": {"duration": duration_in_min},
+                "attributes": {"duration": timedelta_to_minutes(tdelta)},
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
@@ -109,7 +109,7 @@ class _MowerCommands:
         self,
         mower_id: str,
         work_area_id: int,
-        duration_in_min: int | None = None,
+        tdelta: datetime.timedelta | None = None,
     ):
         """Start the mower in a work area for a period of minutes.
 
@@ -118,7 +118,10 @@ class _MowerCommands:
         body = {
             "data": {
                 "type": "StartInWorkArea",
-                "attributes": {"duration": duration_in_min, "workAreaId": work_area_id},
+                "attributes": {
+                    "duration": timedelta_to_minutes(tdelta),
+                    "workAreaId": work_area_id,
+                },
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)

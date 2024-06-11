@@ -94,8 +94,10 @@ async def main() -> None:
         # await automower_api.commands.pause_mowing(_mower_id)
         # Uncomment the line above to let all your mowers pause.
         await asyncio.sleep(5)
-        # await automower_api.commands.start_in_workarea(_mower_id, 0, 30)
-        # Uncomment the line above to start your mower in workarea 0 for 30min.
+        # await automower_api.commands.start_in_workarea(
+        #     _mower_id, 0, datetime.timedelta(minutes=30)
+        # )
+        # Uncomment the lines above to start your mower in workarea 0 for 30min.
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()

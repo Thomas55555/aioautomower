@@ -2,6 +2,7 @@
 
 import logging
 import time
+from datetime import timedelta
 from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
 
@@ -105,3 +106,10 @@ def error_key_dict() -> dict[str, str]:
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text
     return codes
+
+
+def timedelta_to_minutes(delta: timedelta | None) -> int | None:
+    """Convert a timedelta to minutes."""
+    if delta is None:
+        return None
+    return int(delta.total_seconds() / 60)
