@@ -127,12 +127,12 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def start_for(self, mower_id: str, duration_in_min: int):
+    async def start_for(self, mower_id: str, tdelta: datetime.timedelta):
         """Start the mower for a period of minutes."""
         body = {
             "data": {
                 "type": "Start",
-                "attributes": {"duration": duration_in_min},
+                "attributes": {"duration": timedelta_to_minutes(tdelta)},
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)

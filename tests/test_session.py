@@ -57,7 +57,7 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
         f"mowers/{MOWER_ID}/actions",
         json={"data": {"type": "ParkUntilFurtherNotice"}},
     )
-    await automower_api.commands.park_for(MOWER_ID, timedelta(minutes=30))
+    await automower_api.commands.park_for(MOWER_ID, timedelta(minutes=30, seconds=59))
     assert mocked_method.call_count == 5
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
@@ -90,14 +90,14 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
             }
         },
     )
-    await automower_api.commands.start_for(MOWER_ID, 30)
+    await automower_api.commands.start_for(MOWER_ID, timedelta(hours=1, minutes=30))
     assert mocked_method.call_count == 8
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
         json={
             "data": {
                 "type": "Start",
-                "attributes": {"duration": 30},
+                "attributes": {"duration": 90},
             }
         },
     )
