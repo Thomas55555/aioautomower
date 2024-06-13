@@ -8,7 +8,10 @@ import pytest
 from aiohttp import WSMessage, WSMsgType
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.exceptions import NoDataAvailableException
+from aioautomower.exceptions import (
+    FeatureNotSupportedException,
+    NoDataAvailableException,
+)
 from aioautomower.model import Calendar, HeadlightModes
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
@@ -26,12 +29,12 @@ async def test_connect_disconnect(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_post_commands(mock_automower_client: AbstractAuth):
+async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     """Test automower session post commands."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
     await automower_api.connect()
     mocked_method = AsyncMock()
-    setattr(mock_automower_client, "post_json", mocked_method)
+    setattr(mock_automower_client_two_mowers, "post_json", mocked_method)
     await automower_api.commands.resume_schedule(MOWER_ID)
     assert mocked_method.call_count == 1
     mocked_method.assert_called_with(
@@ -127,6 +130,14 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
     await automower_api.commands.error_confirm(MOWER_ID)
     assert mocked_method.call_count == 12
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.set_headlight_mode(
+            "1234", HeadlightModes.ALWAYS_OFF
+        )
+
     mocked_method.reset_mock()
     await automower_api.close()
     if TYPE_CHECKING:
