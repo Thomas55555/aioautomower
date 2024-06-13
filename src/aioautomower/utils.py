@@ -108,8 +108,6 @@ def error_key_dict() -> dict[str, str]:
     return codes
 
 
-def timedelta_to_minutes(delta: timedelta | None) -> int | None:
+def timedelta_to_minutes(delta: timedelta) -> int:
     """Convert a timedelta to minutes."""
-    if delta is None:
-        return None
     return int(delta.total_seconds() / 60)

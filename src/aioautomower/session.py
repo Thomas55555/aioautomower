@@ -109,12 +109,9 @@ class _MowerCommands:
         self,
         mower_id: str,
         work_area_id: int,
-        tdelta: datetime.timedelta | None = None,
+        tdelta: datetime.timedelta,
     ):
-        """Start the mower in a work area for a period of minutes.
-
-        If duration is skipped the mower will continue forever.
-        """
+        """Start the mower in a work area for a period of minutes."""
         body = {
             "data": {
                 "type": "StartInWorkArea",
