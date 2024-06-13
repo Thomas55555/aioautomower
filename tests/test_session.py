@@ -1,6 +1,7 @@
 """Test automower session."""
 
 import json
+from datetime import timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -56,7 +57,7 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
         f"mowers/{MOWER_ID}/actions",
         json={"data": {"type": "ParkUntilFurtherNotice"}},
     )
-    await automower_api.commands.park_for(MOWER_ID, 30)
+    await automower_api.commands.park_for(MOWER_ID, timedelta(minutes=30, seconds=59))
     assert mocked_method.call_count == 5
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
@@ -67,36 +68,36 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
             }
         },
     )
-    await automower_api.commands.start_in_workarea(MOWER_ID, 30)
+    await automower_api.commands.start_in_workarea(MOWER_ID, 123456)
     assert mocked_method.call_count == 6
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
         json={
             "data": {
                 "type": "StartInWorkArea",
-                "attributes": {"duration": None, "workAreaId": 30},
+                "attributes": {"duration": None, "workAreaId": 123456},
             }
         },
     )
-    await automower_api.commands.start_in_workarea(MOWER_ID, 30, 2)
+    await automower_api.commands.start_in_workarea(MOWER_ID, 0, timedelta(minutes=30))
     assert mocked_method.call_count == 7
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
         json={
             "data": {
                 "type": "StartInWorkArea",
-                "attributes": {"duration": 2, "workAreaId": 30},
+                "attributes": {"duration": 30, "workAreaId": 0},
             }
         },
     )
-    await automower_api.commands.start_for(MOWER_ID, 30)
+    await automower_api.commands.start_for(MOWER_ID, timedelta(hours=1, minutes=30))
     assert mocked_method.call_count == 8
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
         json={
             "data": {
                 "type": "Start",
-                "attributes": {"duration": 30},
+                "attributes": {"duration": 90},
             }
         },
     )
