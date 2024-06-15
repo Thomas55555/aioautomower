@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 # Fill out the secrets in secrets.yaml, you can find an example
 # _secrets.yaml file, which has to be renamed after filling out the secrets.
 
-with open("./src/aioautomower/secrets.yaml", encoding="UTF-8") as file:
+with open("./secrets.yaml", encoding="UTF-8") as file:
     secrets = yaml.safe_load(file)
 
 CLIENT_ID = secrets["CLIENT_ID"]
