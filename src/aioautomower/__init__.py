@@ -4,6 +4,7 @@ __all__ = [
     "auth",
     "const",
     "exceptions",
+    "helper",
     "model",
     "session",
     "utils",
