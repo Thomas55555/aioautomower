@@ -700,6 +700,23 @@ files = [
 ]
 
 [[package]]
+name = "ical"
+version = "8.1.0"
+description = "Python iCalendar implementation (rfc 2445)"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "ical-8.1.0-py3-none-any.whl", hash = "sha256:ee03b7c0795505f1b9ccddd08f925dec797bb4167801bbe947543841c901f5e5"},
+    {file = "ical-8.1.0.tar.gz", hash = "sha256:12ca7ef2ce3f571a2e768ac200d5b875ea348820902d48882afc93ac68d33a65"},
+]
+
+[package.dependencies]
+pydantic = ">=1.9.1"
+pyparsing = ">=3.0.9"
+python-dateutil = ">=2.8.2"
+tzdata = ">=2023.3"
+
+[[package]]
 name = "identify"
 version = "2.5.36"
 description = "File identification library for Python"
@@ -1352,6 +1369,20 @@ spelling = ["pyenchant (>=3.2,<4.0)"]
 testutils = ["gitpython (>3)"]
 
 [[package]]
+name = "pyparsing"
+version = "3.1.2"
+description = "pyparsing module - Classes and methods to define and execute parsing grammars"
+optional = false
+python-versions = ">=3.6.8"
+files = [
+    {file = "pyparsing-3.1.2-py3-none-any.whl", hash = "sha256:f9db75911801ed778fe61bb643079ff86601aca99fcae6345aa67292038fb742"},
+    {file = "pyparsing-3.1.2.tar.gz", hash = "sha256:a1bac0ce561155ecc3ed78ca94d3c9378656ad4c94c1270de543f621420f94ad"},
+]
+
+[package.extras]
+diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
 name = "pytest"
 version = "8.2.2"
 description = "pytest: simple powerful testing with Python"
@@ -1776,6 +1807,17 @@ files = [
 ]
 
 [[package]]
+name = "tzdata"
+version = "2024.1"
+description = "Provider of IANA time zone data"
+optional = false
+python-versions = ">=2"
+files = [
+    {file = "tzdata-2024.1-py2.py3-none-any.whl", hash = "sha256:9068bc196136463f5245e51efda838afa15aaeca9903f49050dfa2679db4d252"},
+    {file = "tzdata-2024.1.tar.gz", hash = "sha256:2674120f8d891909751c38abcdfd386ac0a5a1127954fbc332af6b5ceae07efd"},
+]
+
+[[package]]
 name = "urllib3"
 version = "2.2.1"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -1936,4 +1978,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8a9b7eda4b2ee09ba47a2c09ccda64c97546c8c6b5f1a932ca8f8652b6f0f4be"
+content-hash = "576599f4d129d3f1803c975643d8aade6f0565f5a29848de4fea314c627d73de"
