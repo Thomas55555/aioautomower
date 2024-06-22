@@ -25,6 +25,7 @@ python = "^3.11"
 aiohttp = "^3.9.3"
 mashumaro = "^3.12"
 PyJWT = "^2.8.0"
+pydantic = "^1.10.17"
 
 [tool.poetry.group.dev.dependencies]
 codespell = "2.3.0"
