@@ -1,7 +1,8 @@
+# Aioautomower
+
 [![codecov](https://codecov.io/gh/Thomas55555/aioautomower/graph/badge.svg?token=2BG3S61T6K)](https://codecov.io/gh/Thomas55555/aioautomower)
 [![Python Versions](https://img.shields.io/pypi/pyversions/aioautomower)](https://pypi.org/project/aioautomower/)
-
-# Aioautomower
+[![License](https://img.shields.io/github/license/Thomas55555/aioautomower.svg)](LICENSE.md)
 
 Asynchronous library to communicate with the Automower Connect API
 To use this library, you need to register on the [Husqvarna Developers Portal](https://developer.husqvarnagroup.cloud/).
