@@ -18,6 +18,17 @@ packages = [
 homepage = "https://github.com/Thomas55555/aioautomower"
 repository = "https://github.com/Thomas55555/aioautomower"
 documentation = "https://github.com/Thomas55555/aioautomower"
+keywords = ["Husqvarna", "Automower", "api", "async", "client"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
 
 [tool.poetry.urls]
 Issues = "https://github.com/Thomas55555/aioautomower/issues"
