@@ -255,7 +255,7 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
-    def make_event(self) -> Event:
+    def make_event(self) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
         daylist = self.make_daylist()
         next_wd_with_schedule = self.next_weekday_with_schedule()
