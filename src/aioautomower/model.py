@@ -6,7 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
-
+from ical.event import Event
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
@@ -32,6 +32,22 @@ WEEKDAYS_TO_RFC5545 = {
     "saturday": "SA",
     "sunday": "SU",
 }
+
+from ical.calendar import Calendar
+from ical.event import Event
+from ical.types.recur import Recur
+
+
+class AutomowerCalendar(Calendar):
+    """Copy of ical.calendar."""
+
+
+class AutomowerEvent(Event):
+    """Copy of ical.event."""
+
+
+class AutomowerRecur(Recur):
+    """Copy of ical.types.recur."""
 
 
 def snake_case(string: str | None) -> str:
@@ -255,7 +271,7 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
-    def make_event(self) -> AutomowerCalendarEvent:
+    def make_event(self) -> Event:
         """Generate a AutomowerCalendarEvent from a task."""
         daylist = self.make_daylist()
         next_wd_with_schedule = self.next_weekday_with_schedule()
