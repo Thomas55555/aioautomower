@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
+from ical.event import Event
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
