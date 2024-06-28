@@ -33,22 +33,6 @@ WEEKDAYS_TO_RFC5545 = {
     "sunday": "SU",
 }
 
-from ical.calendar import Calendar
-from ical.event import Event
-from ical.types.recur import Recur
-
-
-class AutomowerCalendar(Calendar):
-    """Copy of ical.calendar."""
-
-
-class AutomowerEvent(Event):
-    """Copy of ical.event."""
-
-
-class AutomowerRecur(Recur):
-    """Copy of ical.types.recur."""
-
 
 def snake_case(string: str | None) -> str:
     """Convert an error text to snake case."""
