@@ -194,7 +194,7 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 
 def husqvarna_schedule_to_calendar(
     task_list: list,
-) -> list[AutomowerCalendarEvent]:
+) -> list[Event]:
     """Convert the schedule to an sorted list of calendar events."""
     eventlist = []
     for task_dict in task_list:
