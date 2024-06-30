@@ -196,13 +196,20 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 def husqvarna_schedule_to_calendar(
     task_list: list,
 ) -> list[AutomowerCalendarEvent]:
-    """Convert the schedule to an sorted list of calendar events."""
+    """Return a sorted list of calendar events.
+
+    The currently active event which will end next is on top.
+    If there is no active event, the next event is on top.
+    """
     eventlist = []
     for task_dict in task_list:
         calendar_dataclass = Calendar.from_dict(task_dict)
         event = ConvertScheduleToCalendar(calendar_dataclass)
         eventlist.append(event.make_event())
-    eventlist.sort(key=operator.attrgetter("start"))
+    eventlist.sort(key=operator.attrgetter("end"))
+    now = datetime.now(UTC)
+    if getattr(eventlist[0], "end") > now:
+        eventlist.sort(key=operator.attrgetter("start"))
     return eventlist
 
 
