@@ -202,7 +202,10 @@ def husqvarna_schedule_to_calendar(
         calendar_dataclass = Calendar.from_dict(task_dict)
         event = ConvertScheduleToCalendar(calendar_dataclass)
         eventlist.append(event.make_event())
-    eventlist.sort(key=operator.attrgetter("start"))
+    eventlist.sort(key=operator.attrgetter("end"))
+    now = datetime.now(UTC)
+    if getattr(eventlist[0], "end") > now:
+        eventlist.sort(key=operator.attrgetter("start"))
     return eventlist
 
 
