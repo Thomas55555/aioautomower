@@ -1,55 +1,204 @@
 # serializer version: 1
 # name: test_mower_snapshot[battery]
-  Battery(battery_percent=100)
+  dict({
+    'battery_percent': 100,
+  })
 # ---
 # name: test_mower_snapshot[calendar]
-  Tasks(tasks=[Calendar(start=1140, duration=300, monday=True, tuesday=False, wednesday=True, thursday=False, friday=True, saturday=False, sunday=False, work_area_id=123456), Calendar(start=0, duration=480, monday=False, tuesday=True, wednesday=False, thursday=True, friday=False, saturday=True, sunday=False, work_area_id=0)], events=[AutomowerCalendarEvent(start=FakeDatetime(2024, 5, 3, 22, 0, tzinfo=datetime.timezone.utc), end=FakeDatetime(2024, 5, 4, 6, 0, tzinfo=datetime.timezone.utc), rrule='FREQ=WEEKLY;BYDAY=TU,TH,SA', uid='0_480_TU,TH,SA', work_area_id=0), AutomowerCalendarEvent(start=FakeDatetime(2024, 5, 6, 17, 0, tzinfo=datetime.timezone.utc), end=FakeDatetime(2024, 5, 6, 22, 0, tzinfo=datetime.timezone.utc), rrule='FREQ=WEEKLY;BYDAY=MO,WE,FR', uid='1140_300_MO,WE,FR', work_area_id=123456)])
+  dict({
+    'events': list([
+      dict({
+        'end': FakeDatetime(2024, 5, 4, 6, 0, tzinfo=datetime.timezone.utc),
+        'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
+        'start': FakeDatetime(2024, 5, 3, 22, 0, tzinfo=datetime.timezone.utc),
+        'uid': '0_480_TU,TH,SA',
+        'work_area_id': 0,
+      }),
+      dict({
+        'end': FakeDatetime(2024, 5, 6, 22, 0, tzinfo=datetime.timezone.utc),
+        'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
+        'start': FakeDatetime(2024, 5, 6, 17, 0, tzinfo=datetime.timezone.utc),
+        'uid': '1140_300_MO,WE,FR',
+        'work_area_id': 123456,
+      }),
+    ]),
+    'tasks': list([
+      dict({
+        'duration': 300,
+        'friday': True,
+        'monday': True,
+        'saturday': False,
+        'start': 1140,
+        'sunday': False,
+        'thursday': False,
+        'tuesday': False,
+        'wednesday': True,
+        'work_area_id': 123456,
+      }),
+      dict({
+        'duration': 480,
+        'friday': False,
+        'monday': False,
+        'saturday': True,
+        'start': 0,
+        'sunday': False,
+        'thursday': True,
+        'tuesday': True,
+        'wednesday': False,
+        'work_area_id': 0,
+      }),
+    ]),
+  })
 # ---
 # name: test_mower_snapshot[capabilities]
-  Capabilities(headlights=True, work_areas=True, position=True, stay_out_zones=True)
+  dict({
+    'headlights': True,
+    'position': True,
+    'stay_out_zones': True,
+    'work_areas': True,
+  })
 # ---
 # name: test_mower_snapshot[metadata]
-  Metadata(connected=True, status_dateteime=FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc))
+  dict({
+    'connected': True,
+    'status_dateteime': FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
+  })
 # ---
 # name: test_mower_snapshot[mower]
-  Mower(mode='MAIN_AREA', activity='PARKED_IN_CS', state='RESTRICTED', error_code=0, error_key=None, error_datetime=None, error_datetime_naive=None, inactive_reason='NONE', is_error_confirmable=False, work_area_id=123456)
+  dict({
+    'activity': 'PARKED_IN_CS',
+    'error_code': 0,
+    'error_datetime': None,
+    'error_datetime_naive': None,
+    'error_key': None,
+    'inactive_reason': 'NONE',
+    'is_error_confirmable': False,
+    'mode': 'MAIN_AREA',
+    'state': 'RESTRICTED',
+    'work_area_id': 123456,
+  })
 # ---
 # name: test_mower_snapshot[planner]
-  Planner(next_start_datetime=FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc), next_start_datetime_naive=FakeDatetime(2023, 6, 5, 19, 0), override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
+  dict({
+    'next_start_datetime': FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc),
+    'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
+    'override': dict({
+      'action': 'NOT_ACTIVE',
+    }),
+    'restricted_reason': 'WEEK_SCHEDULE',
+  })
 # ---
 # name: test_mower_snapshot[positions]
   list([
-    Positions(latitude=35.5402913, longitude=-82.5527055),
-    Positions(latitude=35.5407693, longitude=-82.5521503),
-    Positions(latitude=35.5403241, longitude=-82.5522924),
-    Positions(latitude=35.5406973, longitude=-82.5518579),
-    Positions(latitude=35.5404659, longitude=-82.5516567),
-    Positions(latitude=35.5406318, longitude=-82.5515709),
-    Positions(latitude=35.5402477, longitude=-82.5519437),
-    Positions(latitude=35.5403503, longitude=-82.5516889),
-    Positions(latitude=35.5401429, longitude=-82.551536),
-    Positions(latitude=35.5405489, longitude=-82.5512195),
-    Positions(latitude=35.5404005, longitude=-82.5512115),
-    Positions(latitude=35.5405969, longitude=-82.551418),
-    Positions(latitude=35.5403437, longitude=-82.5523917),
-    Positions(latitude=35.5403481, longitude=-82.5520054),
+    dict({
+      'latitude': 35.5402913,
+      'longitude': -82.5527055,
+    }),
+    dict({
+      'latitude': 35.5407693,
+      'longitude': -82.5521503,
+    }),
+    dict({
+      'latitude': 35.5403241,
+      'longitude': -82.5522924,
+    }),
+    dict({
+      'latitude': 35.5406973,
+      'longitude': -82.5518579,
+    }),
+    dict({
+      'latitude': 35.5404659,
+      'longitude': -82.5516567,
+    }),
+    dict({
+      'latitude': 35.5406318,
+      'longitude': -82.5515709,
+    }),
+    dict({
+      'latitude': 35.5402477,
+      'longitude': -82.5519437,
+    }),
+    dict({
+      'latitude': 35.5403503,
+      'longitude': -82.5516889,
+    }),
+    dict({
+      'latitude': 35.5401429,
+      'longitude': -82.551536,
+    }),
+    dict({
+      'latitude': 35.5405489,
+      'longitude': -82.5512195,
+    }),
+    dict({
+      'latitude': 35.5404005,
+      'longitude': -82.5512115,
+    }),
+    dict({
+      'latitude': 35.5405969,
+      'longitude': -82.551418,
+    }),
+    dict({
+      'latitude': 35.5403437,
+      'longitude': -82.5523917,
+    }),
+    dict({
+      'latitude': 35.5403481,
+      'longitude': -82.5520054,
+    }),
   ])
 # ---
 # name: test_mower_snapshot[settings]
-  Settings(headlight=Headlight(mode='EVENING_ONLY'), cutting_height=4)
+  dict({
+    'cutting_height': 4,
+    'headlight': dict({
+      'mode': 'EVENING_ONLY',
+    }),
+  })
 # ---
 # name: test_mower_snapshot[statistics]
-  Statistics(cutting_blade_usage_time=1234, number_of_charging_cycles=1380, number_of_collisions=11396, total_charging_time=4334400, total_cutting_time=4194000, total_drive_distance=1780272, total_running_time=4564800, total_searching_time=370800)
+  dict({
+    'cutting_blade_usage_time': 1234,
+    'number_of_charging_cycles': 1380,
+    'number_of_collisions': 11396,
+    'total_charging_time': 4334400,
+    'total_cutting_time': 4194000,
+    'total_drive_distance': 1780272,
+    'total_running_time': 4564800,
+    'total_searching_time': 370800,
+  })
 # ---
 # name: test_mower_snapshot[stay_out_zones]
-  StayOutZones(dirty=False, zones={'81C6EEA2-D139-4FEA-B134-F22A6B3EA403': Zone(name='Springflowers', enabled=True), 'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': Zone(name='Danger Zone', enabled=False)})
+  dict({
+    'dirty': False,
+    'zones': dict({
+      '81C6EEA2-D139-4FEA-B134-F22A6B3EA403': dict({
+        'enabled': True,
+        'name': 'Springflowers',
+      }),
+      'AAAAAAAA-BBBB-CCCC-DDDD-123456789101': dict({
+        'enabled': False,
+        'name': 'Danger Zone',
+      }),
+    }),
+  })
 # ---
 # name: test_mower_snapshot[system]
-  System(name='Test Mower 1', model='450XH-TEST', serial_number=123)
+  dict({
+    'model': '450XH-TEST',
+    'name': 'Test Mower 1',
+    'serial_number': 123,
+  })
 # ---
 # name: test_mower_snapshot[work_areas]
   dict({
-    0: WorkArea(name='my_lawn', cutting_height=50),
-    123456: WorkArea(name='Front lawn', cutting_height=50),
+    0: dict({
+      'cutting_height': 50,
+      'name': 'my_lawn',
+    }),
+    123456: dict({
+      'cutting_height': 50,
+      'name': 'Front lawn',
+    }),
   })
 # ---
