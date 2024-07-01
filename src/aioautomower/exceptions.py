@@ -9,6 +9,10 @@ class ApiException(HusqvarnaAutomowerException):
     """Raised during problems talking to the API."""
 
 
+class FeatureNotSupportedException(HusqvarnaAutomowerException):
+    """Raised when the feature is not supported by the mower."""
+
+
 class AuthException(HusqvarnaAutomowerException):
     """Raised due to auth problems talking to API."""
 
