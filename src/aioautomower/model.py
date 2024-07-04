@@ -55,7 +55,7 @@ def snake_case(string: str | None) -> str:
     ).lower()
 
 
-def generate_work_area_list(workarea_list):
+def generate_work_area_list(workarea_list) -> list[str]:
     """Return a list of names extracted from each work area dictionary."""
     wa_names = [_WorkAreas.from_dict(area).name for area in workarea_list]
     wa_names.append("no_work_area_active")
