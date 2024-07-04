@@ -191,6 +191,13 @@
     'serial_number': 123,
   })
 # ---
+# name: test_mower_snapshot[work_area_names]
+  list([
+    'Front lawn',
+    'my_lawn',
+    'no_work_area_active',
+  ])
+# ---
 # name: test_mower_snapshot[work_areas]
   dict({
     0: dict({

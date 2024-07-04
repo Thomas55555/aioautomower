@@ -104,6 +104,9 @@
     'serial_number': 123,
   })
 # ---
+# name: test_mower_snapshot[work_area_names]
+  None
+# ---
 # name: test_mower_snapshot[work_areas]
   None
 # ---
