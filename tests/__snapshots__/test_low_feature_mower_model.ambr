@@ -57,6 +57,7 @@
     'mode': 'MAIN_AREA',
     'state': 'RESTRICTED',
     'work_area_id': None,
+    'work_area_name': None,
   })
 # ---
 # name: test_mower_snapshot[planner]

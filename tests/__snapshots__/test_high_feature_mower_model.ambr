@@ -76,6 +76,7 @@
     'mode': 'MAIN_AREA',
     'state': 'RESTRICTED',
     'work_area_id': 123456,
+    'work_area_name': 'Front lawn',
   })
 # ---
 # name: test_mower_snapshot[planner]

@@ -152,6 +152,11 @@ class Mower(DataClassDictMixin):
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
+    work_area_name: str | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.work_area_name = None
 
 
 @dataclass
@@ -492,6 +497,16 @@ class MowerAttributes(DataClassDictMixin):
         ),
         default=None,
     )
+
+    def __post_init__(self):
+        """Set the name after init."""
+        if self.capabilities.work_areas:
+            if self.mower.work_area_id is None:
+                self.mower.work_area_name = "no_work_area_active"
+            if self.work_areas is not None:
+                work_area = self.work_areas.get(self.mower.work_area_id)
+                if work_area:
+                    self.mower.work_area_name = work_area.name
 
 
 @dataclass
