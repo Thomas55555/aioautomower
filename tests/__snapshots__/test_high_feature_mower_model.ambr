@@ -81,6 +81,7 @@
 # name: test_mower_snapshot[planner]
   dict({
     'next_start_datetime': FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc),
+    'next_start_datetime_local': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=tzlocal()),
     'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
       'action': 'NOT_ACTIVE',

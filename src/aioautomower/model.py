@@ -35,6 +35,24 @@ WEEKDAYS_TO_RFC5545 = {
 }
 
 
+def convert_to_local(timestamp_as_int: int) -> datetime | None:
+    """Convert an error text to snake case."""
+    if timestamp_as_int == 0:
+        return None
+    now = datetime.now()
+    local_now = now.astimezone()
+    local_tz = local_now.tzinfo
+    time_local = datetime.fromtimestamp(timestamp_as_int / 1000, tz=local_tz)
+    if local_tz is not None:
+        local_tzdelta = local_tz.utcoffset(local_now)
+        if local_tzdelta is not None:
+            time_local = (
+                datetime.fromtimestamp(timestamp_as_int / 1000, tz=local_tz)
+                - local_tzdelta
+            )
+    return time_local.astimezone()
+
+
 def snake_case(string: str | None) -> str:
     """Convert an error text to snake case."""
     if string is None:
@@ -328,6 +346,12 @@ class Planner(DataClassDictMixin):
                 if x == 0
                 else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
             ),
+            alias="nextStartTimestamp",
+        ),
+    )
+    next_start_datetime_local: datetime | None = field(
+        metadata=field_options(
+            deserialize=convert_to_local,
             alias="nextStartTimestamp",
         ),
     )
