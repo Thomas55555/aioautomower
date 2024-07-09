@@ -209,7 +209,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Allow for main entry & scripts to write to stdout
-"example.py" = ["T201"]
+"example.py" = ["T201", "T203"]
 
 [tool.pylint.FORMAT]
 max-line-length = 88
