@@ -1,0 +1,31 @@
+---
+- name: "breaking-change"
+  color: ee0701
+  description: "A breaking change for existing users."
+- name: "bugfix"
+  color: ee0701
+  description: "Inconsistencies or issues which will cause a problem for users or implementers."
+- name: "documentation"
+  color: 0052cc
+  description: "Solely about the documentation of the project."
+- name: "enhancement"
+  color: 1d76db
+  description: "Enhancement of the code, not introducing new features."
+- name: "refactor"
+  color: 1d76db
+  description: "Improvement of existing code, not introducing new features."
+- name: "performance"
+  color: 1d76db
+  description: "Improving performance, not introducing new features."
+- name: "new-feature"
+  color: 0e8a16
+  description: "New features or options."
+- name: "maintenance"
+  color: 2af79e
+  description: "Generic maintenance tasks."
+- name: "ci"
+  color: 1d76db
+  description: "Work that improves the continue integration."
+- name: "dependencies"
+  color: 1d76db
+  description: "Upgrade or downgrade of project dependencies."
