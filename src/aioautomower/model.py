@@ -62,6 +62,14 @@ def generate_work_area_list(workarea_list) -> list[str]:
     return wa_names
 
 
+def generate_work_area_dict(workarea_list) -> dict[int, str]:
+    """Return a dict of names extracted from each work area dictionary."""
+    return {
+        _WorkAreas.from_dict(area).work_area_id: _WorkAreas.from_dict(area).name
+        for area in workarea_list
+    }
+
+
 @dataclass
 class User(DataClassDictMixin):
     """The user details of the JWT."""
@@ -187,6 +195,7 @@ class Calendar(DataClassDictMixin):
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
+    work_area_name: str | None = None
 
 
 @dataclass
@@ -203,6 +212,11 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     rrule: str
     uid: str
     work_area_id: int | None
+    work_area_name: str | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.work_area_name = None
 
 
 def husqvarna_schedule_to_calendar(
@@ -511,6 +525,13 @@ class MowerAttributes(DataClassDictMixin):
         ),
         default=None,
     )
+    work_area_dict: dict[int, str] | None = field(
+        metadata=field_options(
+            deserialize=generate_work_area_dict,
+            alias="workAreas",
+        ),
+        default=None,
+    )
 
     def __post_init__(self):
         """Set the name after init."""
@@ -521,6 +542,15 @@ class MowerAttributes(DataClassDictMixin):
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name
+            for task in self.calendar.tasks:
+                task.work_area_name = self.work_areas.get(task.work_area_id)
+            for event in self.calendar.events:
+                event.work_area_name = self.work_area_dict.get(event.work_area_id)
+        if not self.capabilities.work_areas:
+            for task in self.calendar.tasks:
+                task.work_area_name = ""
+                for event in self.calendar.events:
+                    event.work_area_name = task.work_area_name
 
 
 @dataclass

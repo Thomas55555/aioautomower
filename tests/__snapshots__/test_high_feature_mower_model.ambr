@@ -13,6 +13,7 @@
         'start': FakeDatetime(2024, 5, 3, 22, 0, tzinfo=datetime.timezone.utc),
         'uid': '0_480_TU,TH,SA',
         'work_area_id': 0,
+        'work_area_name': 'my_lawn',
       }),
       dict({
         'end': FakeDatetime(2024, 5, 6, 22, 0, tzinfo=datetime.timezone.utc),
@@ -20,6 +21,7 @@
         'start': FakeDatetime(2024, 5, 6, 17, 0, tzinfo=datetime.timezone.utc),
         'uid': '1140_300_MO,WE,FR',
         'work_area_id': 123456,
+        'work_area_name': 'Front lawn',
       }),
     ]),
     'tasks': list([
@@ -34,6 +36,10 @@
         'tuesday': False,
         'wednesday': True,
         'work_area_id': 123456,
+        'work_area_name': dict({
+          'cutting_height': 50,
+          'name': 'Front lawn',
+        }),
       }),
       dict({
         'duration': 480,
@@ -46,6 +52,10 @@
         'tuesday': True,
         'wednesday': False,
         'work_area_id': 0,
+        'work_area_name': dict({
+          'cutting_height': 50,
+          'name': 'my_lawn',
+        }),
       }),
     ]),
   })
@@ -189,6 +199,12 @@
     'model': '450XH-TEST',
     'name': 'Test Mower 1',
     'serial_number': 123,
+  })
+# ---
+# name: test_mower_snapshot[work_area_dict]
+  dict({
+    0: 'my_lawn',
+    123456: 'Front lawn',
   })
 # ---
 # name: test_mower_snapshot[work_area_names]

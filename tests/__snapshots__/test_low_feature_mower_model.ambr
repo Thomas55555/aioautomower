@@ -13,6 +13,7 @@
         'start': FakeDatetime(2024, 5, 13, 0, 0, tzinfo=datetime.timezone.utc),
         'uid': '120_49_MO',
         'work_area_id': None,
+        'work_area_name': '',
       }),
     ]),
     'tasks': list([
@@ -27,6 +28,7 @@
         'tuesday': False,
         'wednesday': False,
         'work_area_id': None,
+        'work_area_name': '',
       }),
     ]),
   })
@@ -103,6 +105,9 @@
     'name': 'Test Mower 1',
     'serial_number': 123,
   })
+# ---
+# name: test_mower_snapshot[work_area_dict]
+  None
 # ---
 # name: test_mower_snapshot[work_area_names]
   None
