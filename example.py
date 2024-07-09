@@ -4,6 +4,7 @@ import asyncio
 import datetime
 import logging
 import time
+from pprint import pprint
 from typing import cast
 
 import yaml
@@ -49,6 +50,7 @@ class AsyncTokenAuth(AbstractAuth):
         if not self.token:
             self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
             token_structured = structure_token(self.token["access_token"])
+            pprint(token_structured)
             print("Token expires at: ", token_structured.exp)
         return self.token["access_token"]
 
@@ -109,7 +111,7 @@ async def main() -> None:
 def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_id in ws_data:
-        print(ws_data[mower_id])
+        pprint(ws_data[mower_id])
 
 
 def pong_callback(ws_data: datetime.datetime):
