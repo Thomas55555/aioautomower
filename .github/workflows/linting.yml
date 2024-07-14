@@ -56,9 +56,9 @@ jobs:
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run ruff linter
-        run: poetry run ruff check --output-format=github .
+        run: poetry run ruff check --output-format=github ./src
       - name: 🚀 Run ruff formatter
-        run: poetry run ruff format --check .
+        run: poetry run ruff format --check ./src
 
   pre-commit-hooks:
     name: pre-commit-hooks
