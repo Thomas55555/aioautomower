@@ -6,10 +6,10 @@ from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, timedelta, tzinfo
 from enum import Enum, StrEnum
 from re import sub
-
+import zoneinfo
 from ical.event import Event  # noqa: F401 # pylint: disable=unused-import
 from mashumaro import DataClassDictMixin, field_options
-
+from typing import Any
 from .const import ERRORCODES
 
 logging.basicConfig(level=logging.DEBUG)
@@ -338,11 +338,11 @@ class Planner(DataClassDictMixin):
     )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
-    # tz_info: tzinfo | None = field(init=False, default=None)
+    tz_info: Any | None = field(init=False, default=None)
 
-    # def __post_init__(self):
-    #     """Initialize work_area_name to None for later external setting."""
-    #     self.tz_info = None
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.tz_info = None
 
 
 @dataclass
@@ -528,12 +528,12 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
-    tz_info: tzinfo
+    tz_info: Any
 
-    # def __post_init__(self):
-    #     """Set the name after init."""
-    #     for ent, _ in enumerate(self.data):
-    #         self.data[ent].attributes.planner.tz_info = self.tz_info
+    def __post_init__(self):
+        """Set the name after init."""
+        for ent, _ in enumerate(self.data):
+            self.data[ent].attributes.planner.tz_info = self.tz_info
 
 
 class HeadlightModes(StrEnum):

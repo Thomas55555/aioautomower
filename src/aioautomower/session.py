@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Literal, Mapping
 
 from aiohttp import WSMessage, WSMsgType
-
+import zoneinfo
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
 from .exceptions import NoDataAvailableException, TimeoutException
@@ -232,7 +232,7 @@ class AutomowerSession:
     """
 
     def __init__(
-        self, auth: AbstractAuth, tz_info: datetime.tzinfo, poll: bool = False
+        self, auth: AbstractAuth, tz_info: zoneinfo.ZoneInfo, poll: bool = False
     ) -> None:
         """Create a session.
 
