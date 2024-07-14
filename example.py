@@ -8,6 +8,7 @@ from pprint import pprint
 from typing import cast
 
 import yaml
+import zoneinfo
 from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
@@ -20,7 +21,6 @@ from aioautomower.utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
 
 # Fill out the secrets in secrets.yaml, you can find an example
 # _secrets.yaml file, which has to be renamed after filling out the secrets.
@@ -72,7 +72,10 @@ class AsyncTokenAuth(AbstractAuth):
 async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
     websession = ClientSession()
-    automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
+    tz_info = zoneinfo.ZoneInfo("Africa/Abidjan")
+    automower_api = AutomowerSession(
+        AsyncTokenAuth(websession), mower_tz=tz_info, poll=True
+    )
     await asyncio.sleep(1)
     await automower_api.connect()
     api_task = asyncio.create_task(_client_listen(automower_api))

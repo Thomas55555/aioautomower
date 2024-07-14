@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
+from typing import Any
 
 from ical.event import Event  # noqa: F401
 from mashumaro import DataClassDictMixin, field_options
@@ -175,6 +176,11 @@ class Calendar(DataClassDictMixin):
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
+    work_area_name: str | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.work_area_name = None
 
 
 @dataclass
@@ -333,6 +339,11 @@ class Planner(DataClassDictMixin):
     )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
+    mower_tz: Any | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.mower_tz = None
 
 
 @dataclass
@@ -493,6 +504,16 @@ class MowerAttributes(DataClassDictMixin):
         default=None,
     )
 
+    def __post_init__(self):
+        """Set the name after init."""
+        if self.capabilities.work_areas:
+            if self.mower.work_area_id is None:
+                self.mower.work_area_name = "no_work_area_active"
+            if self.work_areas is not None:
+                work_area = self.work_areas.get(self.mower.work_area_id)
+                if work_area:
+                    self.mower.work_area_name = work_area.name
+
 
 @dataclass
 class MowerData(DataClassDictMixin):
@@ -508,6 +529,12 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
+    mower_tz: Any
+
+    def __post_init__(self):
+        """Set the name after init."""
+        for ent, _ in enumerate(self.data):
+            self.data[ent].attributes.planner.mower_tz = self.mower_tz
 
 
 class HeadlightModes(StrEnum):
