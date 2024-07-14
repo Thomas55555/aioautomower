@@ -2,12 +2,13 @@
 
 import logging
 import time
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import jwt
+import zoneinfo
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
 from .exceptions import ApiException
@@ -111,3 +112,16 @@ def error_key_dict() -> dict[str, str]:
 def timedelta_to_minutes(delta: timedelta) -> int:
     """Convert a timedelta to minutes."""
     return int(delta.total_seconds() / 60)
+
+
+def naive_to_aware(
+    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Create datetime object in the requested timezone."""
+    if datetime_naive is None:
+        return None
+    local_datetime = datetime.astimezone(datetime_naive, tz=time_zone)
+    offset = local_datetime.utcoffset()
+    if offset is None:
+        return local_datetime
+    return datetime.astimezone((local_datetime + offset), UTC)
