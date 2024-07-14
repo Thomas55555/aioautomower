@@ -120,8 +120,31 @@ def naive_to_aware(
     """Create datetime object in the requested timezone."""
     if datetime_naive is None:
         return None
-    local_datetime = datetime.astimezone(datetime_naive, tz=time_zone)
+    local_datetime = datetime_naive.astimezone(None)
+    utc_datetime = datetime.astimezone(datetime_naive, tz=UTC)
     offset = local_datetime.utcoffset()
     if offset is None:
         return local_datetime
-    return datetime.astimezone((local_datetime + offset), UTC)
+    if local_datetime.utcoffset() == utc_datetime.utcoffset():
+        test = datetime_naive.astimezone(time_zone)
+        offset = test.utcoffset()
+        if offset is None:
+            return local_datetime
+        return datetime.astimezone((utc_datetime - offset), UTC)
+    return datetime.astimezone((utc_datetime + offset), UTC)
+
+
+def convert_timestamp_to_datetime_utc(
+    timestamp: int, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Create datetime object in the requested timezone."""
+
+    if timestamp != 0:
+        local_datetime_unshifted = datetime.fromtimestamp(
+            timestamp / 1000, tz=time_zone
+        )
+        utcoffset = local_datetime_unshifted.utcoffset()
+        if utcoffset is None:
+            return local_datetime_unshifted
+        return local_datetime_unshifted - utcoffset
+    return None

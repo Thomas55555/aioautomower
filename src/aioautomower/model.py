@@ -295,6 +295,11 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
+    next_start: int = field(
+        metadata=field_options(
+            alias="nextStartTimestamp",
+        ),
+    )
     next_start_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (

@@ -8,6 +8,7 @@ from pprint import pprint
 from typing import cast
 
 import yaml
+import zoneinfo
 from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
@@ -16,6 +17,8 @@ from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
     async_get_access_token,
+    convert_timestamp_to_datetime_utc,
+    naive_to_aware,
     structure_token,
 )
 
@@ -72,6 +75,7 @@ class AsyncTokenAuth(AbstractAuth):
 async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
     websession = ClientSession()
+    mower_tz = zoneinfo.ZoneInfo("Europe/Berlin")
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     await asyncio.sleep(1)
     await automower_api.connect()
@@ -83,6 +87,19 @@ async def main() -> None:
     automower_api.register_pong_callback(pong_callback)
     # pylint: disable=unused-variable
     for _mower_id in automower_api.data:
+        print(
+            "next start:",
+            naive_to_aware(
+                automower_api.data[_mower_id].planner.next_start_datetime_naive,
+                mower_tz,
+            ),
+        )
+        print(
+            "from timestamp",
+            convert_timestamp_to_datetime_utc(
+                automower_api.data[_mower_id].planner.next_start, mower_tz
+            ),
+        )
         await asyncio.sleep(5)
         # await automower_api.commands.park_until_next_schedule(_mower_id)
         # Uncomment the line above to let all your mowers park until next schedule.
