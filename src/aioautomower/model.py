@@ -123,18 +123,6 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
-    error_datetime: datetime | None = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(UTC)
-            ),
-            alias="errorCodeTimestamp",
-        ),
-    )
     error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
@@ -269,16 +257,14 @@ class ConvertScheduleToCalendar:
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
-        ).astimezone()
+        )
         return AutomowerCalendarEvent(
-            start=(
-                begin_of_day_with_schedule + timedelta(minutes=self.task.start)
-            ).astimezone(tz=UTC),
+            start=(begin_of_day_with_schedule + timedelta(minutes=self.task.start)),
             end=(
                 begin_of_day_with_schedule
                 + timedelta(minutes=self.task.start)
                 + timedelta(minutes=self.task.duration)
-            ).astimezone(tz=UTC),
+            ),
             rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
             work_area_id=self.task.work_area_id,
@@ -309,18 +295,6 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_datetime: datetime | None = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(UTC)
-            ),
-            alias="nextStartTimestamp",
-        ),
-    )
     next_start_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (

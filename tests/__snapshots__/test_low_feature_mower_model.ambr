@@ -8,9 +8,9 @@
   dict({
     'events': list([
       dict({
-        'end': FakeDatetime(2024, 5, 13, 0, 49, tzinfo=datetime.timezone.utc),
+        'end': FakeDatetime(2024, 5, 13, 2, 49, tzinfo=tzlocal()),
         'rrule': 'FREQ=WEEKLY;BYDAY=MO',
-        'start': FakeDatetime(2024, 5, 13, 0, 0, tzinfo=datetime.timezone.utc),
+        'start': FakeDatetime(2024, 5, 13, 2, 0, tzinfo=tzlocal()),
         'uid': '120_49_MO',
         'work_area_id': None,
       }),
@@ -49,7 +49,6 @@
   dict({
     'activity': 'PARKED_IN_CS',
     'error_code': 0,
-    'error_datetime': None,
     'error_datetime_naive': None,
     'error_key': None,
     'inactive_reason': 'NONE',
@@ -61,7 +60,6 @@
 # ---
 # name: test_mower_snapshot[planner]
   dict({
-    'next_start_datetime': FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc),
     'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
       'action': 'NOT_ACTIVE',
