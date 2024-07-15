@@ -21,10 +21,10 @@ MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
         ("America/Regina", datetime(2023, 6, 6, 1, 0, tzinfo=UTC)),
     ],
 )
-async def test_timezone(
+async def test_naive_to_aware(
     mock_automower_client: AbstractAuth, tz_str: str, expected: datetime
 ):
-    """Test automower session patch commands."""
+    """Test naive_to_aware function."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     mower_tz = zoneinfo.ZoneInfo(tz_str)
@@ -36,6 +36,11 @@ async def test_timezone(
     assert next_start_aware.astimezone(mower_tz) == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
+    automower_api.data[MOWER_ID].planner.next_start_datetime_naive = None
+    next_start_aware = naive_to_aware(
+        automower_api.data[MOWER_ID].planner.next_start_datetime_naive, mower_tz
+    )
+    assert next_start_aware is None
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
@@ -50,10 +55,10 @@ async def test_timezone(
         ("America/Regina", datetime(2023, 6, 6, 1, 0, tzinfo=UTC)),
     ],
 )
-async def test_timezone2(
+async def test_convert_timestamp_to_datetime_utc2(
     mock_automower_client: AbstractAuth, tz_str: str, expected: datetime
 ):
-    """Test automower session patch commands."""
+    """Test convert_timestamp_to_datetime_utc function."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     mower_tz = zoneinfo.ZoneInfo(tz_str)
@@ -65,6 +70,11 @@ async def test_timezone2(
     assert next_start_aware.astimezone(mower_tz) == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
+    automower_api.data[MOWER_ID].planner.next_start = 0
+    next_start_aware = convert_timestamp_to_datetime_utc(
+        automower_api.data[MOWER_ID].planner.next_start, mower_tz
+    )
+    assert next_start_aware is None
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
