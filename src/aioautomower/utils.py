@@ -2,7 +2,7 @@
 
 import logging
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
 
@@ -114,37 +114,58 @@ def timedelta_to_minutes(delta: timedelta) -> int:
     return int(delta.total_seconds() / 60)
 
 
-def naive_to_aware(
-    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
-) -> datetime | None:
-    """Create datetime object in the requested timezone."""
-    if datetime_naive is None:
-        return None
-    local_datetime = datetime_naive.astimezone(None)
-    utc_datetime = datetime.astimezone(datetime_naive, tz=UTC)
-    offset = local_datetime.utcoffset()
-    if offset is None:
-        return local_datetime
-    if local_datetime.utcoffset() == utc_datetime.utcoffset():
-        test = datetime_naive.astimezone(time_zone)
-        offset = test.utcoffset()
-        if offset is None:
-            return local_datetime
-        return datetime.astimezone((utc_datetime - offset), UTC)
-    return datetime.astimezone((utc_datetime + offset), UTC)
-
-
 def convert_timestamp_to_datetime_utc(
     timestamp: int, time_zone: zoneinfo.ZoneInfo
 ) -> datetime | None:
-    """Create datetime object in the requested timezone."""
+    """Convert a "local timestamp" to an aware datetime object in the specified time zone.
 
-    if timestamp != 0:
-        local_datetime_unshifted = datetime.fromtimestamp(
-            timestamp / 1000, tz=time_zone
-        )
-        utcoffset = local_datetime_unshifted.utcoffset()
-        if utcoffset is None:
-            return local_datetime_unshifted
-        return local_datetime_unshifted - utcoffset
-    return None
+    This function takes a naive (timezone-unaware) datetime object and a time zone object,
+    and returns the datetime object adjusted to the specified time zone. If the input
+    is 0, the function returns None.
+
+    Parameters:
+    -----------
+    timestamp : int
+        A local timestamp to be converted. If 0 then the function returns None.
+    time_zone : zoneinfo.ZoneInfo
+        The time zone to which the timestamp should be converted. This is the timezone in which the mower is.
+
+    Returns:
+    --------
+    datetime | None
+        An aware datetime object in UTC adjusted to the specified time zone, or None if the timestamp was 0.
+
+
+    As the timestamp is always in the local time of the mower an offset has to be subtracted from the actual time.
+    This is because a local timestamp in python doesn't exist and python always assumes this in UTC.
+    The offset is the difference between the `time_zone` and UTC.
+    Example for "Europe/Berlin" which is in DST 2h ahead of UTC:
+    timestamp = 1685991600000
+    This means 2023, 6, 5, 19, 0 in the timezone of the mower.
+    But converting it with `datetime.fromtimestamp(timestamp / 1000, tz=time_zone)`returns
+    `datetime(2023, 6, 5, 21, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))`, which is not yet
+    correct. So this functions discovers the offset between `time_zone` and `UTC` which is 2:00
+    So the result is datetime(2023, 6, 5, 17, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), which would be
+    datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")) again.
+    """
+    if timestamp == 0:
+        return None
+    local_datetime_unshifted = datetime.fromtimestamp(timestamp / 1000, tz=time_zone)
+    _LOGGER.debug("local_datetime_unshifted: %s", local_datetime_unshifted)
+    utcoffset = local_datetime_unshifted.utcoffset() or timezone.utc.utcoffset(
+        local_datetime_unshifted
+    )
+    _LOGGER.debug("utcoffset: %s", utcoffset)
+    _LOGGER.debug(
+        "result: %s", (local_datetime_unshifted - utcoffset).astimezone(timezone.utc)
+    )
+    return (local_datetime_unshifted - utcoffset).astimezone(timezone.utc)
+
+
+def naive_to_aware(
+    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert a naive datetime to an UTC datetime, current timezone of the mower is required."""
+    if datetime_naive is None:
+        return None
+    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)
