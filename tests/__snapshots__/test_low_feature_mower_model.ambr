@@ -8,9 +8,9 @@
   dict({
     'events': list([
       dict({
-        'end': FakeDatetime(2024, 5, 13, 2, 49, tzinfo=tzlocal()),
+        'end': FakeDatetime(2024, 5, 13, 2, 49),
         'rrule': 'FREQ=WEEKLY;BYDAY=MO',
-        'start': FakeDatetime(2024, 5, 13, 2, 0, tzinfo=tzlocal()),
+        'start': FakeDatetime(2024, 5, 13, 2, 0),
         'uid': '120_49_MO',
         'work_area_id': None,
         'work_area_name': '',
