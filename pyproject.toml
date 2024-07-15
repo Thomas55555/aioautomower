@@ -387,6 +387,7 @@ disable = [
     "wrong-import-position", # E402
     "comparison-of-constants", # PLR0133
     "comparison-with-itself", # PLR0124
+    "consider-using-dict-items",
     "consider-merging-isinstance", # PLR1701
     "consider-using-dict-comprehension", # C402
     "consider-using-generator", # C417
