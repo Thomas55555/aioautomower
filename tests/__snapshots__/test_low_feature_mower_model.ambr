@@ -13,6 +13,7 @@
         'start': FakeDatetime(2024, 5, 13, 2, 0, tzinfo=tzlocal()),
         'uid': '120_49_MO',
         'work_area_id': None,
+        'work_area_name': '',
       }),
     ]),
     'tasks': list([
@@ -27,6 +28,7 @@
         'tuesday': False,
         'wednesday': False,
         'work_area_id': None,
+        'work_area_name': '',
       }),
     ]),
   })
@@ -56,6 +58,7 @@
     'mode': 'MAIN_AREA',
     'state': 'RESTRICTED',
     'work_area_id': None,
+    'work_area_name': None,
   })
 # ---
 # name: test_mower_snapshot[planner]
@@ -101,6 +104,12 @@
     'name': 'Test Mower 1',
     'serial_number': 123,
   })
+# ---
+# name: test_mower_snapshot[work_area_dict]
+  None
+# ---
+# name: test_mower_snapshot[work_area_names]
+  None
 # ---
 # name: test_mower_snapshot[work_areas]
   None

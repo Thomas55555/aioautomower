@@ -171,6 +171,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
             saturday=False,
             sunday=False,
             work_area_id=None,
+            work_area_name=None,
         )
     ]
 
