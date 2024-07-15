@@ -1,37 +1,106 @@
 # serializer version: 1
 # name: test_mower_snapshot[battery]
-  Battery(battery_percent=50)
+  dict({
+    'battery_percent': 50,
+  })
 # ---
 # name: test_mower_snapshot[calendar]
-  Tasks(tasks=[Calendar(start=120, duration=49, monday=True, tuesday=False, wednesday=False, thursday=False, friday=False, saturday=False, sunday=False, work_area_id=None)], events=[AutomowerCalendarEvent(start=FakeDatetime(2024, 5, 13, 0, 0, tzinfo=datetime.timezone.utc), end=FakeDatetime(2024, 5, 13, 0, 49, tzinfo=datetime.timezone.utc), rrule='FREQ=WEEKLY;BYDAY=MO', uid='120_49_MO', work_area_id=None)])
+  dict({
+    'events': list([
+      dict({
+        'end': FakeDatetime(2024, 5, 13, 2, 49, tzinfo=tzlocal()),
+        'rrule': 'FREQ=WEEKLY;BYDAY=MO',
+        'start': FakeDatetime(2024, 5, 13, 2, 0, tzinfo=tzlocal()),
+        'uid': '120_49_MO',
+        'work_area_id': None,
+      }),
+    ]),
+    'tasks': list([
+      dict({
+        'duration': 49,
+        'friday': False,
+        'monday': True,
+        'saturday': False,
+        'start': 120,
+        'sunday': False,
+        'thursday': False,
+        'tuesday': False,
+        'wednesday': False,
+        'work_area_id': None,
+      }),
+    ]),
+  })
 # ---
 # name: test_mower_snapshot[capabilities]
-  Capabilities(headlights=False, work_areas=False, position=False, stay_out_zones=False)
+  dict({
+    'headlights': False,
+    'position': False,
+    'stay_out_zones': False,
+    'work_areas': False,
+  })
 # ---
 # name: test_mower_snapshot[metadata]
-  Metadata(connected=True, status_dateteime=FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc))
+  dict({
+    'connected': True,
+    'status_dateteime': FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
+  })
 # ---
 # name: test_mower_snapshot[mower]
-  Mower(mode='MAIN_AREA', activity='PARKED_IN_CS', state='RESTRICTED', error_code=0, error_key=None, error_datetime=None, error_datetime_naive=None, inactive_reason='NONE', is_error_confirmable=False, work_area_id=None)
+  dict({
+    'activity': 'PARKED_IN_CS',
+    'error_code': 0,
+    'error_datetime_naive': None,
+    'error_key': None,
+    'inactive_reason': 'NONE',
+    'is_error_confirmable': False,
+    'mode': 'MAIN_AREA',
+    'state': 'RESTRICTED',
+    'work_area_id': None,
+  })
 # ---
 # name: test_mower_snapshot[planner]
-  Planner(next_start_datetime=FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc), next_start_datetime_naive=FakeDatetime(2023, 6, 5, 19, 0), override=Override(action='NOT_ACTIVE'), restricted_reason='WEEK_SCHEDULE')
+  dict({
+    'next_start': 1685991600000,
+    'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
+    'override': dict({
+      'action': 'NOT_ACTIVE',
+    }),
+    'restricted_reason': 'WEEK_SCHEDULE',
+  })
 # ---
 # name: test_mower_snapshot[positions]
   list([
   ])
 # ---
 # name: test_mower_snapshot[settings]
-  Settings(headlight=Headlight(mode=None), cutting_height=None)
+  dict({
+    'cutting_height': None,
+    'headlight': dict({
+      'mode': None,
+    }),
+  })
 # ---
 # name: test_mower_snapshot[statistics]
-  Statistics(cutting_blade_usage_time=None, number_of_charging_cycles=None, number_of_collisions=None, total_charging_time=None, total_cutting_time=None, total_drive_distance=None, total_running_time=None, total_searching_time=None)
+  dict({
+    'cutting_blade_usage_time': None,
+    'number_of_charging_cycles': None,
+    'number_of_collisions': None,
+    'total_charging_time': None,
+    'total_cutting_time': None,
+    'total_drive_distance': None,
+    'total_running_time': None,
+    'total_searching_time': None,
+  })
 # ---
 # name: test_mower_snapshot[stay_out_zones]
   None
 # ---
 # name: test_mower_snapshot[system]
-  System(name='Test Mower 1', model='Automower Aspire', serial_number=123)
+  dict({
+    'model': 'Automower Aspire',
+    'name': 'Test Mower 1',
+    'serial_number': 123,
+  })
 # ---
 # name: test_mower_snapshot[work_areas]
   None

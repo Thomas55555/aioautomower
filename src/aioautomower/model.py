@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
+from ical.event import Event  # noqa: F401
 from mashumaro import DataClassDictMixin, field_options
 
 from .const import ERRORCODES
@@ -122,18 +123,6 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
-    error_datetime: datetime | None = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(UTC)
-            ),
-            alias="errorCodeTimestamp",
-        ),
-    )
     error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
@@ -195,13 +184,20 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 def husqvarna_schedule_to_calendar(
     task_list: list,
 ) -> list[AutomowerCalendarEvent]:
-    """Convert the schedule to an sorted list of calendar events."""
+    """Return a sorted list of calendar events.
+
+    The currently active event which will end next is on top.
+    If there is no active event, the next event is on top.
+    """
     eventlist = []
     for task_dict in task_list:
         calendar_dataclass = Calendar.from_dict(task_dict)
         event = ConvertScheduleToCalendar(calendar_dataclass)
         eventlist.append(event.make_event())
-    eventlist.sort(key=operator.attrgetter("start"))
+    eventlist.sort(key=operator.attrgetter("end"))
+    now = datetime.now(UTC)
+    if getattr(eventlist[0], "end") > now:
+        eventlist.sort(key=operator.attrgetter("start"))
     return eventlist
 
 
@@ -261,16 +257,14 @@ class ConvertScheduleToCalendar:
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
-        ).astimezone()
+        )
         return AutomowerCalendarEvent(
-            start=(
-                begin_of_day_with_schedule + timedelta(minutes=self.task.start)
-            ).astimezone(tz=UTC),
+            start=(begin_of_day_with_schedule + timedelta(minutes=self.task.start)),
             end=(
                 begin_of_day_with_schedule
                 + timedelta(minutes=self.task.start)
                 + timedelta(minutes=self.task.duration)
-            ).astimezone(tz=UTC),
+            ),
             rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
             work_area_id=self.task.work_area_id,
@@ -301,15 +295,8 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_datetime: datetime | None = field(
+    next_start: int = field(
         metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(UTC)
-            ),
             alias="nextStartTimestamp",
         ),
     )

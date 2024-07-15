@@ -45,5 +45,12 @@
   '5a93141e-55a7-479f-96e2-8a63188c054f'
 # ---
 # name: test_jwt_snapshot[user]
-  User(first_name='Erika', last_name='Mustermann', custom_attributes={'hc_country': 'DE'}, customer_id='4755997720458xxxx')
+  dict({
+    'custom_attributes': dict({
+      'hc_country': 'DE',
+    }),
+    'customer_id': '4755997720458xxxx',
+    'first_name': 'Erika',
+    'last_name': 'Mustermann',
+  })
 # ---

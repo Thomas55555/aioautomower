@@ -2,12 +2,13 @@
 
 import logging
 import time
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import jwt
+import zoneinfo
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
 from .exceptions import ApiException
@@ -111,3 +112,57 @@ def error_key_dict() -> dict[str, str]:
 def timedelta_to_minutes(delta: timedelta) -> int:
     """Convert a timedelta to minutes."""
     return int(delta.total_seconds() / 60)
+
+
+def convert_timestamp_to_datetime_utc(
+    timestamp: int, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert a local timestamp to an aware UTC datetime in the specified time zone.
+
+    Parameters:
+    -----------
+    timestamp : int
+        A local timestamp to be converted. If 0, the function returns None.
+    time_zone : zoneinfo.ZoneInfo
+        The time zone of the local timestamp (e.g., where the mower is located).
+
+    Returns:
+    --------
+    datetime | None
+        An aware UTC datetime adjusted to the specified time zone, or None if timestamp is 0.
+
+    Example:
+    --------
+    For "Europe/Berlin" in DST (UTC+2):
+    timestamp = 1685991600000 -> 2023-06-05 19:00 in time of the mower.
+    But converting it with `datetime.fromtimestamp(timestamp / 1000, tz=time_zone)`
+    returns `datetime(2023, 6, 5, 21, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))`,
+    which is not yet correct. So this functions discovers the offset between
+    `time_zone` and `UTC` which is 2:00. So the result is
+    datetime(2023, 6, 5, 17, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), which would be
+    datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")) again.
+    """
+    if timestamp == 0:
+        return None
+    local_datetime_unshifted = datetime.fromtimestamp(timestamp / 1000, tz=time_zone)
+    _LOGGER.debug("local_datetime_unshifted: %s", local_datetime_unshifted)
+    utcoffset = local_datetime_unshifted.utcoffset() or timezone.utc.utcoffset(
+        local_datetime_unshifted
+    )
+    _LOGGER.debug("utcoffset: %s", utcoffset)
+    _LOGGER.debug(
+        "result: %s", (local_datetime_unshifted - utcoffset).astimezone(timezone.utc)
+    )
+    return (local_datetime_unshifted - utcoffset).astimezone(timezone.utc)
+
+
+def naive_to_aware(
+    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert a naive datetime to a UTC datetime.
+
+    Requiring the mower's current time zone.
+    """
+    if datetime_naive is None:
+        return None
+    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)

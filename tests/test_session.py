@@ -150,7 +150,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     # Test empty tasks. doesn't delete the tasks
     calendar = automower_api.data[MOWER_ID].calendar.tasks
     msg = WSMessage(WSMsgType.TEXT, load_fixture("settings_event.json"), None)
-    automower_api._handle_text_message(msg)  # pylint: disable=protected-access
+    automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
     assert automower_api.data[MOWER_ID].settings.headlight.mode == "EVENING_AND_NIGHT"
 
@@ -158,7 +158,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     msg = WSMessage(
         WSMsgType.TEXT, load_fixture("settings_event_with_tasks.json"), None
     )
-    automower_api._handle_text_message(msg)  # pylint: disable=protected-access
+    automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=720,
@@ -176,14 +176,14 @@ async def test_update_data(mock_automower_client: AbstractAuth):
 
     # Test new positions arrive
     msg = WSMessage(WSMsgType.TEXT, load_fixture("positions_event.json"), None)
-    automower_api._handle_text_message(msg)  # pylint: disable=protected-access
-    assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore
-    assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore[index]
+    assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore[index]
 
     # Test NoDataAvailableException is risen, if there is no data
-    automower_api._data = None  # pylint: disable=protected-access
+    automower_api._data = None  # noqa: SLF001
     with pytest.raises(NoDataAvailableException):
-        automower_api._handle_text_message(msg)  # pylint: disable=protected-access
+        automower_api._handle_text_message(msg)  # noqa: SLF001
 
     await automower_api.close()
     if TYPE_CHECKING:
