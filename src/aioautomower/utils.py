@@ -117,35 +117,29 @@ def timedelta_to_minutes(delta: timedelta) -> int:
 def convert_timestamp_to_datetime_utc(
     timestamp: int, time_zone: zoneinfo.ZoneInfo
 ) -> datetime | None:
-    """Convert a "local timestamp" to an aware datetime object in the specified time zone.
-
-    This function takes a naive (timezone-unaware) datetime object and a time zone object,
-    and returns the datetime object adjusted to the specified time zone. If the input
-    is 0, the function returns None.
+    """Convert a local timestamp to an aware UTC datetime in the specified time zone.
 
     Parameters:
     -----------
     timestamp : int
-        A local timestamp to be converted. If 0 then the function returns None.
+        A local timestamp to be converted. If 0, the function returns None.
     time_zone : zoneinfo.ZoneInfo
-        The time zone to which the timestamp should be converted. This is the timezone in which the mower is.
+        The time zone of the local timestamp (e.g., where the mower is located).
 
     Returns:
     --------
     datetime | None
-        An aware datetime object in UTC adjusted to the specified time zone, or None if the timestamp was 0.
+        An aware UTC datetime adjusted to the specified time zone, or None if timestamp is 0.
 
-
-    As the timestamp is always in the local time of the mower an offset has to be subtracted from the actual time.
-    This is because a local timestamp in python doesn't exist and python always assumes this in UTC.
-    The offset is the difference between the `time_zone` and UTC.
-    Example for "Europe/Berlin" which is in DST 2h ahead of UTC:
-    timestamp = 1685991600000
-    This means 2023, 6, 5, 19, 0 in the timezone of the mower.
-    But converting it with `datetime.fromtimestamp(timestamp / 1000, tz=time_zone)`returns
-    `datetime(2023, 6, 5, 21, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))`, which is not yet
-    correct. So this functions discovers the offset between `time_zone` and `UTC` which is 2:00
-    So the result is datetime(2023, 6, 5, 17, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), which would be
+    Example:
+    --------
+    For "Europe/Berlin" in DST (UTC+2):
+    timestamp = 1685991600000 -> 2023-06-05 19:00 in time of the mower.
+    But converting it with `datetime.fromtimestamp(timestamp / 1000, tz=time_zone)`
+    returns `datetime(2023, 6, 5, 21, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))`,
+    which is not yet correct. So this functions discovers the offset between
+    `time_zone` and `UTC` which is 2:00. So the result is
+    datetime(2023, 6, 5, 17, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), which would be
     datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")) again.
     """
     if timestamp == 0:
@@ -165,7 +159,10 @@ def convert_timestamp_to_datetime_utc(
 def naive_to_aware(
     datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
 ) -> datetime | None:
-    """Convert a naive datetime to an UTC datetime, current timezone of the mower is required."""
+    """Convert a naive datetime to a UTC datetime.
+
+    Requiring the mower's current time zone.
+    """
     if datetime_naive is None:
         return None
     return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)
