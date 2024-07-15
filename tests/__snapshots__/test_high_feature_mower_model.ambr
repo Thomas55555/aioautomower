@@ -80,6 +80,7 @@
     'error_code': 0,
     'error_datetime_naive': None,
     'error_key': None,
+    'error_timestamp': 0,
     'inactive_reason': 'NONE',
     'is_error_confirmable': False,
     'mode': 'MAIN_AREA',

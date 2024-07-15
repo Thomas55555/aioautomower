@@ -138,6 +138,11 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
+    error_timestamp: int = field(
+        metadata=field_options(
+            alias="errorCodeTimestamp",
+        ),
+    )
     error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
