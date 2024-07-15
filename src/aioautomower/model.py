@@ -226,7 +226,7 @@ def husqvarna_schedule_to_calendar(
         event = ConvertScheduleToCalendar(calendar_dataclass)
         eventlist.append(event.make_event())
     eventlist.sort(key=operator.attrgetter("end"))
-    now = datetime.now(UTC)
+    now = datetime.now()
     if getattr(eventlist[0], "end") > now:
         eventlist.sort(key=operator.attrgetter("start"))
     return eventlist
@@ -238,7 +238,7 @@ class ConvertScheduleToCalendar:
     def __init__(self, task: Calendar) -> None:
         """Initialize the schedule to calendar converter."""
         self.task = task
-        self.now = datetime.now().astimezone()
+        self.now = datetime.now()
         self.begin_of_current_day = self.now.replace(
             hour=0, minute=0, second=0, microsecond=0
         )

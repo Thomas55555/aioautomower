@@ -8,17 +8,17 @@
   dict({
     'events': list([
       dict({
-        'end': FakeDatetime(2024, 5, 4, 8, 0, tzinfo=tzlocal()),
+        'end': FakeDatetime(2024, 5, 4, 8, 0),
         'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
-        'start': FakeDatetime(2024, 5, 4, 0, 0, tzinfo=tzlocal()),
+        'start': FakeDatetime(2024, 5, 4, 0, 0),
         'uid': '0_480_TU,TH,SA',
         'work_area_id': 0,
         'work_area_name': 'my_lawn',
       }),
       dict({
-        'end': FakeDatetime(2024, 5, 7, 0, 0, tzinfo=tzlocal()),
+        'end': FakeDatetime(2024, 5, 7, 0, 0),
         'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
-        'start': FakeDatetime(2024, 5, 6, 19, 0, tzinfo=tzlocal()),
+        'start': FakeDatetime(2024, 5, 6, 19, 0),
         'uid': '1140_300_MO,WE,FR',
         'work_area_id': 123456,
         'work_area_name': 'Front lawn',
