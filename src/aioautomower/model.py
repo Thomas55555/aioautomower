@@ -220,6 +220,8 @@ def husqvarna_schedule_to_calendar(
     The currently active event which will end next is on top.
     If there is no active event, the next event is on top.
     """
+    if task_list == []:
+        return []
     eventlist = []
     for task_dict in task_list:
         calendar_dataclass = Calendar.from_dict(task_dict)
@@ -306,8 +308,8 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar]
-    events: list[AutomowerCalendarEvent] = field(
+    tasks: list[Calendar | None]
+    events: list[AutomowerCalendarEvent | None] = field(
         metadata=field_options(
             deserialize=husqvarna_schedule_to_calendar,
             alias="tasks",
