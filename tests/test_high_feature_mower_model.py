@@ -42,6 +42,12 @@ async def test_high_feature_mower() -> None:
     assert mowers[MOWER_ID].statistics.cutting_blade_usage_time == 1234
     assert len(mowers[MOWER_ID].positions) != 0  # type: ignore[arg-type]
 
+    # Test empty task list
+    mower_python["data"][0]["attributes"]["calendar"]["tasks"] = []
+    mowers = mower_list_to_dictionary_dataclass(mower_python)
+    assert mowers[MOWER_ID].calendar.tasks == []
+    assert mowers[MOWER_ID].calendar.events == []
+
 
 @freeze_time("2024-05-04 8:00:00")
 def test_mower_snapshot(snapshot: SnapshotAssertion):
