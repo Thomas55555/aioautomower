@@ -117,43 +117,15 @@ def timedelta_to_minutes(delta: timedelta) -> int:
 def convert_timestamp_to_datetime_utc(
     timestamp: int, time_zone: zoneinfo.ZoneInfo
 ) -> datetime | None:
-    """Convert a local timestamp to an aware UTC datetime in the specified time zone.
-
-    Parameters:
-    -----------
-    timestamp : int
-        A local timestamp to be converted. If 0, the function returns None.
-    time_zone : zoneinfo.ZoneInfo
-        The time zone of the local timestamp (e.g., where the mower is located).
-
-    Returns:
-    --------
-    datetime | None
-        An aware UTC datetime adjusted to the specified time zone, or None if timestamp is 0.
-
-    Example:
-    --------
-    For "Europe/Berlin" in DST (UTC+2):
-    timestamp = 1685991600000 -> 2023-06-05 19:00 in time of the mower.
-    But converting it with `datetime.fromtimestamp(timestamp / 1000, tz=time_zone)`
-    returns `datetime(2023, 6, 5, 21, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin"))`,
-    which is not yet correct. So this functions discovers the offset between
-    `time_zone` and `UTC` which is 2:00. So the result is
-    datetime(2023, 6, 5, 17, 0, tzinfo=zoneinfo.ZoneInfo("UTC")), which would be
-    datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")) again.
+    """The Python datetime library expects timestamps to be anchored in UTC,
+    however, the automower timestamps are anchored in local time. So we convert
+    the timestamp to a datetime and replace the timezone with the local time.
+    After that we convert the timezone to UTC.
     """
     if timestamp == 0:
         return None
-    local_datetime_unshifted = datetime.fromtimestamp(timestamp / 1000, tz=time_zone)
-    _LOGGER.debug("local_datetime_unshifted: %s", local_datetime_unshifted)
-    utcoffset = local_datetime_unshifted.utcoffset() or timezone.utc.utcoffset(
-        local_datetime_unshifted
-    )
-    _LOGGER.debug("utcoffset: %s", utcoffset)
-    _LOGGER.debug(
-        "result: %s", (local_datetime_unshifted - utcoffset).astimezone(timezone.utc)
-    )
-    return (local_datetime_unshifted - utcoffset).astimezone(timezone.utc)
+    local_datetime_naive = datetime.fromtimestamp(timestamp / 1000, tz=UTC).replace(tzinfo=time_zone)
+    return local_datetime_naive.astimezone(UTC)
 
 
 def naive_to_aware(
