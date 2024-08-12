@@ -216,8 +216,8 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 
     start: datetime
     end: datetime
-    rule: Recur = field(
-        metadata=field_options(serialization_strategy=RecurSerializationStrategy()),
+    rrule: Recur = field(
+        metadata=field_options(serialization_strategy=RecurSerializationStrategy())
     )
     uid: str
     work_area_id: int | None
@@ -314,7 +314,7 @@ class ConvertScheduleToCalendar:
                 + timedelta(minutes=self.task.start)
                 + timedelta(minutes=self.task.duration)
             ),
-            rule=Recur.from_rrule(f"FREQ=WEEKLY;BYDAY={daylist}"),
+            rrule=Recur.from_rrule(f"FREQ=WEEKLY;BYDAY={daylist}"),
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
             work_area_id=self.task.work_area_id,
         )

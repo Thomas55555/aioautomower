@@ -9,7 +9,7 @@
     'events': list([
       dict({
         'end': FakeDatetime(2024, 5, 4, 8, 0),
-        'rule': Recur(freq=<Frequency.WEEKLY: 'WEEKLY'>, until=None, count=None, interval=1, by_weekday=[WeekdayValue(weekday=<Weekday.TUESDAY: 'TU'>, occurrence=None), WeekdayValue(weekday=<Weekday.THURSDAY: 'TH'>, occurrence=None), WeekdayValue(weekday=<Weekday.SATURDAY: 'SA'>, occurrence=None)], by_month_day=[], by_month=[], by_setpos=[]),
+        'rrule': Recur(freq=<Frequency.WEEKLY: 'WEEKLY'>, until=None, count=None, interval=1, by_weekday=[WeekdayValue(weekday=<Weekday.TUESDAY: 'TU'>, occurrence=None), WeekdayValue(weekday=<Weekday.THURSDAY: 'TH'>, occurrence=None), WeekdayValue(weekday=<Weekday.SATURDAY: 'SA'>, occurrence=None)], by_month_day=[], by_month=[], by_setpos=[]),
         'start': FakeDatetime(2024, 5, 4, 0, 0),
         'uid': '0_480_TU,TH,SA',
         'work_area_id': 0,
@@ -17,7 +17,7 @@
       }),
       dict({
         'end': FakeDatetime(2024, 5, 7, 0, 0),
-        'rule': Recur(freq=<Frequency.WEEKLY: 'WEEKLY'>, until=None, count=None, interval=1, by_weekday=[WeekdayValue(weekday=<Weekday.MONDAY: 'MO'>, occurrence=None), WeekdayValue(weekday=<Weekday.WEDNESDAY: 'WE'>, occurrence=None), WeekdayValue(weekday=<Weekday.FRIDAY: 'FR'>, occurrence=None)], by_month_day=[], by_month=[], by_setpos=[]),
+        'rrule': Recur(freq=<Frequency.WEEKLY: 'WEEKLY'>, until=None, count=None, interval=1, by_weekday=[WeekdayValue(weekday=<Weekday.MONDAY: 'MO'>, occurrence=None), WeekdayValue(weekday=<Weekday.WEDNESDAY: 'WE'>, occurrence=None), WeekdayValue(weekday=<Weekday.FRIDAY: 'FR'>, occurrence=None)], by_month_day=[], by_month=[], by_setpos=[]),
         'start': FakeDatetime(2024, 5, 6, 19, 0),
         'uid': '1140_300_MO,WE,FR',
         'work_area_id': 123456,
