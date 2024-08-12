@@ -8,7 +8,9 @@ from enum import Enum, StrEnum
 from re import sub
 
 from ical.event import Event  # noqa: F401
+from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
+from mashumaro.types import SerializationStrategy
 
 from .const import ERRORCODES
 
@@ -191,6 +193,18 @@ class Calendar(DataClassDictMixin):
     work_area_name: str | None = None
 
 
+class RecurSerializationStrategy(SerializationStrategy):
+    """Convert Recur and str."""
+
+    def serialize(self, value: Recur) -> str:
+        """Serialize the a Recur object to a string."""
+        return Recur.as_rrule_str(value)
+
+    def deserialize(self, value: str) -> Recur:
+        """Deserialize a string to a Recur object."""
+        return Recur.from_rrule(value)
+
+
 @dataclass
 class AutomowerCalendarEvent(DataClassDictMixin):
     """Information about the calendar tasks.
@@ -202,7 +216,9 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 
     start: datetime
     end: datetime
-    rrule: str
+    rule: Recur = field(
+        metadata=field_options(serialization_strategy=RecurSerializationStrategy()),
+    )
     uid: str
     work_area_id: int | None
     work_area_name: str | None = field(init=False, default=None)
@@ -298,7 +314,7 @@ class ConvertScheduleToCalendar:
                 + timedelta(minutes=self.task.start)
                 + timedelta(minutes=self.task.duration)
             ),
-            rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
+            rule=Recur.from_rrule(f"FREQ=WEEKLY;BYDAY={daylist}"),
             uid=f"{self.task.start}_{self.task.duration}_{daylist}",
             work_area_id=self.task.work_area_id,
         )
