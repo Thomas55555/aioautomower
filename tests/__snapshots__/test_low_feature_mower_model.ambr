@@ -36,6 +36,7 @@
 # ---
 # name: test_mower_snapshot[capabilities]
   dict({
+    'can_confirm_error': False,
     'headlights': False,
     'position': False,
     'stay_out_zones': False,
