@@ -8,7 +8,9 @@ from enum import Enum, StrEnum
 from re import sub
 
 from ical.event import Event  # noqa: F401
+from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
+from mashumaro.types import SerializationStrategy
 
 from .const import ERRORCODES
 
@@ -96,6 +98,18 @@ class JWT(DataClassDictMixin):
     iat: int
     exp: int
     sub: str
+
+
+class RecurSerializationStrategy(SerializationStrategy):
+    """SerializationStrategy for Recur object."""
+
+    def serialize(self, value: Recur) -> str:
+        """Serialize the a Recur object to a string."""
+        return Recur.as_rrule_str(value)
+
+    def deserialize(self, value: str) -> Recur:
+        """Deserialize a string to a Recur object."""
+        return Recur.from_rrule(value)
 
 
 @dataclass
@@ -202,7 +216,9 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 
     start: datetime
     end: datetime
-    rrule: str
+    rrule: Recur = field(
+        metadata=field_options(serialization_strategy=RecurSerializationStrategy())
+    )
     uid: str
     work_area_id: int | None
     work_area_name: str | None = field(init=False, default=None)
@@ -291,16 +307,20 @@ class ConvertScheduleToCalendar:
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        return AutomowerCalendarEvent(
-            start=(begin_of_day_with_schedule + timedelta(minutes=self.task.start)),
-            end=(
-                begin_of_day_with_schedule
-                + timedelta(minutes=self.task.start)
-                + timedelta(minutes=self.task.duration)
-            ),
-            rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
-            uid=f"{self.task.start}_{self.task.duration}_{daylist}",
-            work_area_id=self.task.work_area_id,
+        return AutomowerCalendarEvent.from_dict(
+            {
+                "start": (
+                    begin_of_day_with_schedule + timedelta(minutes=self.task.start)
+                ).isoformat(),
+                "end": (
+                    begin_of_day_with_schedule
+                    + timedelta(minutes=self.task.start)
+                    + timedelta(minutes=self.task.duration)
+                ).isoformat(),
+                "rrule": f"FREQ=WEEKLY;BYDAY={daylist}",
+                "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
+                "work_area_id": self.task.work_area_id,
+            }
         )
 
 
