@@ -220,6 +220,7 @@ class AutomowerCalendarEvent(DataClassDictMixin):
         metadata=field_options(serialization_strategy=RecurSerializationStrategy())
     )
     uid: str
+    schedule_no: int
     work_area_id: int | None
     work_area_name: str | None = field(init=False, default=None)
 
@@ -239,10 +240,12 @@ def husqvarna_schedule_to_calendar(
     if task_list == []:
         return []
     eventlist = []
+    schedule_no = 0
     for task_dict in task_list:
         calendar_dataclass = Calendar.from_dict(task_dict)
         event = ConvertScheduleToCalendar(calendar_dataclass)
-        eventlist.append(event.make_event())
+        schedule_no = schedule_no + 1
+        eventlist.append(event.make_event(schedule_no))
     eventlist.sort(key=operator.attrgetter("end"))
     now = datetime.now()
     if getattr(eventlist[0], "end") > now:
@@ -300,7 +303,7 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
-    def make_event(self) -> AutomowerCalendarEvent:
+    def make_event(self, schedule_no) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
         daylist = self.make_daylist()
         next_wd_with_schedule = self.next_weekday_with_schedule()
@@ -320,6 +323,7 @@ class ConvertScheduleToCalendar:
                 "rrule": f"FREQ=WEEKLY;BYDAY={daylist}",
                 "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
                 "work_area_id": self.task.work_area_id,
+                "schedule_no": schedule_no,
             }
         )
 
