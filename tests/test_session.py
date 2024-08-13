@@ -1,7 +1,7 @@
 """Test automower session."""
 
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -83,11 +83,21 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
             }
         },
     )
+
     await automower_api.commands.set_cutting_height(MOWER_ID, 9)
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
         json={"data": {"type": "settings", "attributes": {"cuttingHeight": 9}}},
     )
+
+    await automower_api.commands.set_datetime(
+        MOWER_ID, datetime(2024, 8, 13, 12, 0, 0, 1234)
+    )
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/settings",
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1723543200}}},
+    )
+
     await automower_api.commands.set_headlight_mode(MOWER_ID, HeadlightModes.ALWAYS_OFF)
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",

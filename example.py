@@ -100,23 +100,15 @@ async def main() -> None:
                 automower_api.data[_mower_id].planner.next_start, mower_tz
             ),
         )
-        await asyncio.sleep(5)
+        # Uncomment one or more lines above to send this command to all the mowers
+        # await automower_api.commands.set_datetime(_mower_id, datetime.datetime.now())
         # await automower_api.commands.park_until_next_schedule(_mower_id)
-        # Uncomment the line above to let all your mowers park until next schedule.
-        await asyncio.sleep(5)
         # await automower_api.commands.park_until_further_notice(_mower_id)
-        # Uncomment the line above to let all your mowers park until further notice.
-        await asyncio.sleep(5)
         # await automower_api.commands.resume_schedule(_mower_id)
-        # Uncomment the line above to let all your mowers resume their schedule.
-        await asyncio.sleep(5)
         # await automower_api.commands.pause_mowing(_mower_id)
-        # Uncomment the line above to let all your mowers pause.
-        await asyncio.sleep(5)
         # await automower_api.commands.start_in_workarea(
         #     _mower_id, 0, datetime.timedelta(minutes=30)
         # )
-        # Uncomment the lines above to start your mower in workarea 0 for 30min.
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
@@ -144,7 +136,7 @@ async def _client_listen(
     try:
         await automower_client.auth.websocket_connect()
         await automower_client.start_listening()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
     while True:
@@ -162,7 +154,7 @@ async def _send_messages(
     """Listen with the client."""
     try:
         await automower_client.send_empty_message()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
 

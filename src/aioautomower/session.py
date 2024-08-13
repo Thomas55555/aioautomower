@@ -146,6 +146,20 @@ class _MowerCommands:
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
+    async def set_datetime(self, mower_id: str, current_time: datetime.datetime):
+        """Set the datetime of the mower.
+
+        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours from UTC time.
+        """
+        body = {
+            "data": {
+                "type": "settings",
+                "attributes": {"dateTime": int(current_time.timestamp())},
+            }
+        }
+        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
+        await self.auth.post_json(url, json=body)
+
     async def set_cutting_height_workarea(
         self, mower_id: str, cutting_height: int, work_area_id: int
     ):
