@@ -89,6 +89,8 @@ def create_recurrence(
 ) -> Iterable[SortableItem[Timespan, ProgramEvent]]:
     """Create a timeline using a recurrence rule."""
     # These weekday or day of month refinemens ared used in specific scenarios
+    print("RRULE_WEEKDAY[day_of_week]", days_of_week)
+
     byweekday = [RRULE_WEEKDAY[day_of_week] for day_of_week in days_of_week]
 
     ruleset = rrule.rruleset()
@@ -111,6 +113,7 @@ def create_recurrence(
             dtstart=dtstart,
             cache=True,
         )
+        print("rule", rule)
     ruleset.rrule(rule)
 
     def adapter(

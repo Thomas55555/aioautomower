@@ -11,14 +11,14 @@ from ical.event import Event  # noqa: F401
 from ical.iter import (
     MergedIterable,
     SortableItem,
-    SortableItemTimeline,
 )
 from ical.timespan import Timespan
 from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.types import SerializationStrategy
 
-from .const import ERRORCODES
+from .const import ERRORCODES, DayOfWeek, ProgramFrequency
+from .timeline import ProgramTimeline, create_recurrence
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -40,6 +40,16 @@ WEEKDAYS_TO_RFC5545 = {
     "friday": "FR",
     "saturday": "SA",
     "sunday": "SU",
+}
+
+WEEKDAYS_TO_ICAL = {
+    "sunday": DayOfWeek.SUNDAY,
+    "monday": DayOfWeek.MONDAY,
+    "tuesday": DayOfWeek.TUESDAY,
+    "wednesday": DayOfWeek.WEDNESDAY,
+    "thursday": DayOfWeek.THURSDAY,
+    "friday": DayOfWeek.FRIDAY,
+    "saturday": DayOfWeek.SATURDAY,
 }
 
 
@@ -227,6 +237,7 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     """
 
     start: datetime
+    duration: str
     end: datetime
     rrule: Recur = field(
         metadata=field_options(serialization_strategy=RecurSerializationStrategy())
@@ -235,14 +246,11 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     schedule_no: int
     work_area_id: int | None
     work_area_name: str | None = field(init=False, default=None)
+    day_set: set | None
 
     def __post_init__(self):
         """Initialize work_area_name to None for later external setting."""
         self.work_area_name = None
-
-
-class ProgramTimeline(SortableItemTimeline[AutomowerCalendarEvent]):
-    """A timeline of events in an irrigation program."""
 
 
 def husqvarna_schedule_to_calendar(
@@ -309,9 +317,21 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
+    def make_dayset(self) -> str:
+        """Generate a RFC5545 daylist from a task."""
+        day_set = set()
+        for task_field in fields(self.task):
+            field_name = task_field.name
+            field_value = getattr(self.task, field_name)
+            if field_value is True:
+                day_set.add(WEEKDAYS_TO_ICAL.get(field_name))
+            print("day_set", day_set)
+        return day_set
+
     def make_event(self, schedule_no) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
         daylist = self.make_daylist()
+        dayset = self.make_dayset()
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
@@ -321,6 +341,7 @@ class ConvertScheduleToCalendar:
                 "start": (
                     begin_of_day_with_schedule + timedelta(minutes=self.task.start)
                 ).isoformat(),
+                "duration": timedelta(minutes=self.task.duration),
                 "end": (
                     begin_of_day_with_schedule
                     + timedelta(minutes=self.task.start)
@@ -330,6 +351,7 @@ class ConvertScheduleToCalendar:
                 "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
                 "work_area_id": self.task.work_area_id,
                 "schedule_no": schedule_no,
+                "day_set": dayset,
             }
         )
 
@@ -362,7 +384,17 @@ class Tasks(DataClassDictMixin):
         for task_dict in self.events:
             calendar_dataclass = Calendar.from_dict(task_dict)
             event = ConvertScheduleToCalendar(calendar_dataclass)
-            iters.append(event.make_event(schedule_no))
+            test = event.make_event(schedule_no)
+
+            iters.append(
+                create_recurrence(
+                    program_id=test.schedule_no,
+                    frequency=ProgramFrequency.WEEKLY,
+                    dtstart=test.start,
+                    duration=test.duration,
+                    days_of_week=test.day_set,
+                )
+            )
 
         print("iters", iters)
 
