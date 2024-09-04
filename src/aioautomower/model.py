@@ -1,13 +1,19 @@
 """Models for Husqvarna Automower data."""
 
 import logging
-import operator
+from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, tzinfo
 from enum import Enum, StrEnum
 from re import sub
 
 from ical.event import Event  # noqa: F401
+from ical.iter import (
+    MergedIterable,
+    SortableItem,
+    SortableItemTimeline,
+)
+from ical.timespan import Timespan
 from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.types import SerializationStrategy
@@ -207,6 +213,11 @@ class Calendar(DataClassDictMixin):
 
 
 @dataclass
+class Schedule(DataClassDictMixin):
+    """Details about program schedules."""
+
+
+@dataclass
 class AutomowerCalendarEvent(DataClassDictMixin):
     """Information about the calendar tasks.
 
@@ -230,9 +241,13 @@ class AutomowerCalendarEvent(DataClassDictMixin):
         self.work_area_name = None
 
 
+class ProgramTimeline(SortableItemTimeline[AutomowerCalendarEvent]):
+    """A timeline of events in an irrigation program."""
+
+
 def husqvarna_schedule_to_calendar(
     task_list: list,
-) -> list[AutomowerCalendarEvent]:
+) -> ProgramTimeline:
     """Return a sorted list of calendar events.
 
     The currently active event which will end next is on top.
@@ -242,16 +257,6 @@ def husqvarna_schedule_to_calendar(
         return []
     eventlist = []
     schedule_no = 0
-    for task_dict in task_list:
-        calendar_dataclass = Calendar.from_dict(task_dict)
-        event = ConvertScheduleToCalendar(calendar_dataclass)
-        schedule_no = schedule_no + 1
-        eventlist.append(event.make_event(schedule_no))
-    eventlist.sort(key=operator.attrgetter("end"))
-    now = datetime.now()
-    if getattr(eventlist[0], "end") > now:
-        eventlist.sort(key=operator.attrgetter("start"))
-    return eventlist
 
 
 class ConvertScheduleToCalendar:
@@ -334,12 +339,41 @@ class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
     tasks: list[Calendar | None]
-    events: list[AutomowerCalendarEvent | None] = field(
+    events: list = field(
         metadata=field_options(
-            deserialize=husqvarna_schedule_to_calendar,
             alias="tasks",
         ),
     )
+
+    @property
+    def timeline(self) -> ProgramTimeline:
+        """Return a timeline of all programs."""
+        return self.timeline_tz(datetime.now().tzinfo)
+
+    def timeline_tz(self, tzinfo: tzinfo | None) -> ProgramTimeline:
+        """Return a timeline of all programs."""
+        if self.tasks is None:
+            return []
+        eventlist = []
+        schedule_no = 0
+        iters: list[Iterable[SortableItem[Timespan, AutomowerCalendarEvent]]] = []
+        now = datetime.now(tzinfo)
+
+        for task_dict in self.events:
+            calendar_dataclass = Calendar.from_dict(task_dict)
+            event = ConvertScheduleToCalendar(calendar_dataclass)
+            iters.append(event.make_event(schedule_no))
+
+        print("iters", iters)
+
+        return ProgramTimeline(MergedIterable(iters))
+
+    # events: ProgramTimeline = field(
+    #     metadata=field_options(
+    #         deserialize=timeline_tz,
+    #         alias="tasks",
+    #     ),
+    # )
 
 
 @dataclass
@@ -555,13 +589,13 @@ class MowerAttributes(DataClassDictMixin):
                     self.mower.work_area_name = work_area.name
             for task in self.calendar.tasks:
                 task.work_area_name = self.work_areas.get(task.work_area_id)
-            for event in self.calendar.events:
-                event.work_area_name = self.work_area_dict.get(event.work_area_id)
+            # for event in self.calendar.events:
+            #     event.work_area_name = self.work_area_dict.get(event.work_area_id)
         if not self.capabilities.work_areas:
             for task in self.calendar.tasks:
                 task.work_area_name = ""
-                for event in self.calendar.events:
-                    event.work_area_name = task.work_area_name
+                # for event in self.calendar.events:
+                #     event.work_area_name = task.work_area_name
 
 
 @dataclass

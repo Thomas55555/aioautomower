@@ -100,8 +100,15 @@ async def main() -> None:
                 automower_api.data[_mower_id].planner.next_start, mower_tz
             ),
         )
+        cursor = (
+            automower_api.data[_mower_id]
+            .calendar.timeline_tz(None)
+            .active_after(datetime.datetime.now())
+        )
+        program_event = next(cursor, None)
+        print("program_event", program_event)
         # Uncomment one or more lines above to send this command to all the mowers
-        # await automower_api.commands.set_datetime(_mower_id, datetime.datetime.now())
+        # await automower_api.commands.set_datetime(_mower_id, datetime.datetime.now())t
         # await automower_api.commands.park_until_next_schedule(_mower_id)
         # await automower_api.commands.park_until_further_notice(_mower_id)
         # await automower_api.commands.resume_schedule(_mower_id)
@@ -109,6 +116,7 @@ async def main() -> None:
         # await automower_api.commands.start_in_workarea(
         #     _mower_id, 0, datetime.timedelta(minutes=30)
         # )
+
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
