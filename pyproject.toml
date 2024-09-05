@@ -39,6 +39,7 @@ aiohttp = "^3.9.3"
 mashumaro = "^3.12"
 PyJWT = "^2.8.0"
 ical = ">=8.0.1"
+python-dateutil = "^2.9.0.post0"
 
 [tool.poetry.group.dev.dependencies]
 codespell = "2.3.0"

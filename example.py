@@ -100,13 +100,9 @@ async def main() -> None:
                 automower_api.data[_mower_id].planner.next_start, mower_tz
             ),
         )
-        # cursor = (
-        #     automower_api.data[_mower_id]
-        #     .calendar.timeline
-        #     .overlapping((datetime.datetime.today()-datetime.timedelta(days=-7)),(datetime.datetime.today()-datetime.timedelta(days=7)))
-        # )
-        cursor = automower_api.data[_mower_id].calendar.timeline.active_after(
-            datetime.datetime.now()
+        cursor = automower_api.data[_mower_id].calendar.timeline.overlapping(
+            datetime.datetime(year=2024, month=9, day=15),
+            datetime.datetime(year=2024, month=9, day=30),
         )
         print("cursor", cursor)
         print("program_event1", next(cursor, None))
@@ -114,6 +110,15 @@ async def main() -> None:
         print("program_event3", next(cursor, None))
         print("program_event4", next(cursor, None))
         print("program_event5", next(cursor, None))
+        cursor2 = automower_api.data[_mower_id].calendar.timeline.active_after(
+            datetime.datetime.now()
+        )
+        print("cursor2", next(cursor2, None))
+        print("program_event1", next(cursor2, None))
+        print("program_event2", next(cursor2, None))
+        print("program_event3", next(cursor2, None))
+        print("program_event4", next(cursor2, None))
+        print("program_event5", next(cursor2, None))
         # Uncomment one or more lines above to send this command to all the mowers
         # await automower_api.commands.set_datetime(_mower_id, datetime.datetime.now())t
         # await automower_api.commands.park_until_next_schedule(_mower_id)
