@@ -1894,6 +1894,17 @@ shellingham = ">=1.3.0"
 typing-extensions = ">=3.7.4.3"
 
 [[package]]
+name = "types-python-dateutil"
+version = "2.9.0.20240821"
+description = "Typing stubs for python-dateutil"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-python-dateutil-2.9.0.20240821.tar.gz", hash = "sha256:9649d1dcb6fef1046fb18bebe9ea2aa0028b160918518c34589a46045f6ebd98"},
+    {file = "types_python_dateutil-2.9.0.20240821-py3-none-any.whl", hash = "sha256:f5889fcb4e63ed4aaa379b44f93c32593d50b9a94c9a60a0c854d8cc3511cd57"},
+]
+
+[[package]]
 name = "types-pyyaml"
 version = "6.0.12.20240808"
 description = "Typing stubs for PyYAML"
@@ -2089,4 +2100,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "d81366186f1e015973b0ce8dd71b69262659e1cfcce059f128f334e24b62adb7"
+content-hash = "17f57adef95542d0e3f2589dfb9e14543dace65b6eb04cce7a0bc23fb39b3be6"
