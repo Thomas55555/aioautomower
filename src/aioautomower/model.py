@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
-from datetime import UTC, datetime, timedelta, tzinfo
+from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
@@ -18,7 +18,7 @@ from mashumaro import DataClassDictMixin, field_options
 from mashumaro.types import SerializationStrategy
 
 from .const import ERRORCODES, DayOfWeek, ProgramFrequency
-from .timeline import ProgramTimeline, create_recurrence
+from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -237,7 +237,7 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     """
 
     start: datetime
-    duration: str
+    duration: int
     end: datetime
     rrule: Recur = field(
         metadata=field_options(serialization_strategy=RecurSerializationStrategy())
@@ -246,25 +246,11 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     schedule_no: int
     work_area_id: int | None
     work_area_name: str | None = field(init=False, default=None)
-    day_set: set | None
+    day_set: set
 
     def __post_init__(self):
         """Initialize work_area_name to None for later external setting."""
         self.work_area_name = None
-
-
-def husqvarna_schedule_to_calendar(
-    task_list: list,
-) -> ProgramTimeline:
-    """Return a sorted list of calendar events.
-
-    The currently active event which will end next is on top.
-    If there is no active event, the next event is on top.
-    """
-    if task_list == []:
-        return []
-    eventlist = []
-    schedule_no = 0
 
 
 class ConvertScheduleToCalendar:
@@ -317,7 +303,7 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
-    def make_dayset(self) -> str:
+    def make_dayset(self) -> set[DayOfWeek | None]:
         """Generate a RFC5545 daylist from a task."""
         day_set = set()
         for task_field in fields(self.task):
@@ -325,7 +311,6 @@ class ConvertScheduleToCalendar:
             field_value = getattr(self.task, field_name)
             if field_value is True:
                 day_set.add(WEEKDAYS_TO_ICAL.get(field_name))
-            print("day_set", day_set)
         return day_set
 
     def make_event(self, schedule_no) -> AutomowerCalendarEvent:
@@ -370,16 +355,14 @@ class Tasks(DataClassDictMixin):
     @property
     def timeline(self) -> ProgramTimeline:
         """Return a timeline of all programs."""
-        return self.timeline_tz(datetime.now().tzinfo)
+        return self.timeline_tz()
 
-    def timeline_tz(self, tzinfo: tzinfo | None) -> ProgramTimeline:
+    def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all programs."""
         if self.tasks is None:
             return []
-        eventlist = []
         schedule_no = 0
-        iters: list[Iterable[SortableItem[Timespan, AutomowerCalendarEvent]]] = []
-        now = datetime.now(tzinfo)
+        iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
         for task_dict in self.events:
             calendar_dataclass = Calendar.from_dict(task_dict)
@@ -391,12 +374,10 @@ class Tasks(DataClassDictMixin):
                     program_id=test.schedule_no,
                     frequency=ProgramFrequency.WEEKLY,
                     dtstart=test.start,
-                    duration=test.duration,
+                    duration=timedelta(minutes=test.duration),
                     days_of_week=test.day_set,
                 )
             )
-
-        print("iters", iters)
 
         return ProgramTimeline(MergedIterable(iters))
 

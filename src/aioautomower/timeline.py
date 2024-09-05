@@ -22,7 +22,7 @@ from ical.timespan import Timespan
 
 from .const import DayOfWeek, ProgramFrequency
 
-__all__ = ["ProgramTimeline", "ProgramEvent", "ProgramId"]
+__all__ = ["ProgramTimeline", "ProgramEvent"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,28 +38,10 @@ RRULE_WEEKDAY = {
 
 
 @dataclass
-class ProgramId:
-    """An instance of a program event or zone."""
-
-    program: int
-    zone: int | None = None
-
-    @property
-    def name(self) -> str:
-        """Name of the program."""
-        letter = chr(ord("A") + self.program)
-        name = f"PGM {letter}"
-        zone_name = ""
-        if self.zone:
-            zone_name = f": Zone {self.zone}"
-        return f"{name}{zone_name}"
-
-
-@dataclass
 class ProgramEvent:
     """An instance of a program event."""
 
-    program_id: ProgramId
+    program_id: int
     start: datetime.datetime
     end: datetime.datetime
     rule: rrule.rrule | None = None
@@ -73,7 +55,7 @@ class ProgramEvent:
         parts = str(self.rule).split("\n")
         if len(parts) != 2:
             return None
-        return parts[1].lstrip("RRULE:")
+        return parts[1].lstrip("RRULE:")  # noqa: B005
 
 
 class ProgramTimeline(SortableItemTimeline[ProgramEvent]):
@@ -81,7 +63,7 @@ class ProgramTimeline(SortableItemTimeline[ProgramEvent]):
 
 
 def create_recurrence(
-    program_id: ProgramId,
+    program_id: int,
     frequency: ProgramFrequency,
     dtstart: datetime.datetime,
     duration: datetime.timedelta,
@@ -89,7 +71,6 @@ def create_recurrence(
 ) -> Iterable[SortableItem[Timespan, ProgramEvent]]:
     """Create a timeline using a recurrence rule."""
     # These weekday or day of month refinemens ared used in specific scenarios
-    print("RRULE_WEEKDAY[day_of_week]", days_of_week)
 
     byweekday = [RRULE_WEEKDAY[day_of_week] for day_of_week in days_of_week]
 
@@ -113,14 +94,13 @@ def create_recurrence(
             dtstart=dtstart,
             cache=True,
         )
-        print("rule", rule)
     ruleset.rrule(rule)
 
     def adapter(
         dtstart: datetime.datetime | datetime.date,
     ) -> SortableItem[Timespan, ProgramEvent]:
         if not isinstance(dtstart, datetime.datetime):
-            raise ValueError("Expected datetime, got date")
+            raise TypeError("Expected datetime, got date")
         dtend = dtstart + duration
 
         def build() -> ProgramEvent:
