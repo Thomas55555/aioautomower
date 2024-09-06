@@ -330,10 +330,15 @@ class Tasks(DataClassDictMixin):
             event = ConvertScheduleToCalendar(task).make_event()
             number = self.generate_schedule_no(task)
 
+            if len(event.day_set) == 7:
+                freq = ProgramFrequency.DAILY
+            else:
+                freq = ProgramFrequency.WEEKLY
+
             iters.append(
                 create_recurrence(
                     schedule_name=self.make_name_string(task.work_area_name, number),
-                    frequency=ProgramFrequency.WEEKLY,
+                    frequency=freq,
                     dtstart=event.start,
                     duration=event.duration,
                     days_of_week=event.day_set,

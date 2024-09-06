@@ -7,13 +7,13 @@
         {
           "start": 720,
           "duration": 300,
-          "monday": false,
-          "tuesday": false,
+          "monday": true,
+          "tuesday": true,
           "wednesday": true,
-          "thursday": false,
-          "friday": false,
-          "saturday": false,
-          "sunday": false
+          "thursday": true,
+          "friday": true,
+          "saturday": true,
+          "sunday": true
         }
       ]
     }
