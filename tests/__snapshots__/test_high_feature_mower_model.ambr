@@ -6,32 +6,6 @@
 # ---
 # name: test_mower_snapshot[calendar]
   dict({
-    'events': list([
-      dict({
-        'duration': 300,
-        'friday': True,
-        'monday': True,
-        'saturday': False,
-        'start': 1140,
-        'sunday': False,
-        'thursday': False,
-        'tuesday': False,
-        'wednesday': True,
-        'workAreaId': 123456,
-      }),
-      dict({
-        'duration': 480,
-        'friday': False,
-        'monday': False,
-        'saturday': True,
-        'start': 0,
-        'sunday': False,
-        'thursday': True,
-        'tuesday': True,
-        'wednesday': False,
-        'workAreaId': 0,
-      }),
-    ]),
     'tasks': list([
       dict({
         'duration': 300,
@@ -44,10 +18,7 @@
         'tuesday': False,
         'wednesday': True,
         'work_area_id': 123456,
-        'work_area_name': dict({
-          'cutting_height': 50,
-          'name': 'Front lawn',
-        }),
+        'work_area_name': 'Front lawn',
       }),
       dict({
         'duration': 480,
@@ -60,10 +31,7 @@
         'tuesday': True,
         'wednesday': False,
         'work_area_id': 0,
-        'work_area_name': dict({
-          'cutting_height': 50,
-          'name': 'my_lawn',
-        }),
+        'work_area_name': 'my_lawn',
       }),
     ]),
   })

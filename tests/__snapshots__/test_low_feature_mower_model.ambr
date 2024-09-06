@@ -6,19 +6,6 @@
 # ---
 # name: test_mower_snapshot[calendar]
   dict({
-    'events': list([
-      dict({
-        'duration': 49,
-        'friday': False,
-        'monday': True,
-        'saturday': False,
-        'start': 120,
-        'sunday': False,
-        'thursday': False,
-        'tuesday': False,
-        'wednesday': False,
-      }),
-    ]),
     'tasks': list([
       dict({
         'duration': 49,
@@ -31,7 +18,7 @@
         'tuesday': False,
         'wednesday': False,
         'work_area_id': None,
-        'work_area_name': '',
+        'work_area_name': None,
       }),
     ]),
   })

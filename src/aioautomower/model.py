@@ -228,7 +228,7 @@ class Schedule(DataClassDictMixin):
 
 
 @dataclass
-class AutomowerCalendarEvent(DataClassDictMixin):
+class AutomowerCalendarEvent:
     """Information about the calendar tasks.
 
     An Automower can have several tasks. If the mower supports
@@ -237,20 +237,9 @@ class AutomowerCalendarEvent(DataClassDictMixin):
     """
 
     start: datetime
-    duration: int
-    end: datetime
-    rrule: Recur = field(
-        metadata=field_options(serialization_strategy=RecurSerializationStrategy())
-    )
+    duration: timedelta
     uid: str
-    schedule_no: int
-    work_area_id: int | None
-    work_area_name: str | None = field(init=False, default=None)
     day_set: set
-
-    def __post_init__(self):
-        """Initialize work_area_name to None for later external setting."""
-        self.work_area_name = None
 
 
 class ConvertScheduleToCalendar:
@@ -321,23 +310,11 @@ class ConvertScheduleToCalendar:
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        return AutomowerCalendarEvent.from_dict(
-            {
-                "start": (
-                    begin_of_day_with_schedule + timedelta(minutes=self.task.start)
-                ).isoformat(),
-                "duration": timedelta(minutes=self.task.duration),
-                "end": (
-                    begin_of_day_with_schedule
-                    + timedelta(minutes=self.task.start)
-                    + timedelta(minutes=self.task.duration)
-                ).isoformat(),
-                "rrule": f"FREQ=WEEKLY;BYDAY={daylist}",
-                "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
-                "work_area_id": self.task.work_area_id,
-                "schedule_no": schedule_no,
-                "day_set": dayset,
-            }
+        return AutomowerCalendarEvent(
+            start=begin_of_day_with_schedule + timedelta(minutes=self.task.start),
+            duration=timedelta(minutes=self.task.duration),
+            uid=f"{self.task.start}_{self.task.duration}_{daylist}",
+            day_set=dayset,
         )
 
 
@@ -345,48 +322,61 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar | None]
-    events: list = field(
-        metadata=field_options(
-            alias="tasks",
-        ),
-    )
+    tasks: list[Calendar] | None
+
+    def make_name_string(self, work_area_name, number) -> str:
+        """Return a list of names extracted from each work area dictionary."""
+        if work_area_name is not None:
+            return f"{work_area_name} schedule {number}"
+        return f"Schedule {number}"
 
     @property
-    def timeline(self) -> ProgramTimeline:
+    def timeline(self) -> ProgramTimeline | None:
         """Return a timeline of all programs."""
         return self.timeline_tz()
 
-    def timeline_tz(self) -> ProgramTimeline:
+    def timeline_tz(self) -> ProgramTimeline | None:
         """Return a timeline of all programs."""
         if self.tasks is None:
-            return []
-        schedule_no = 0
+            return None
+        self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
+        for task in self.tasks:
+            if task.work_area_id is not None:
+                self.schedule_no[task.work_area_id] = 0
+            if task.work_area_id is None:
+                self.schedule_no["-1"] = 0
+
         iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
-        for task_dict in self.events:
-            calendar_dataclass = Calendar.from_dict(task_dict)
-            event = ConvertScheduleToCalendar(calendar_dataclass)
-            test = event.make_event(schedule_no)
+        for task in self.tasks:
+            event = ConvertScheduleToCalendar(task)
+            test = event.make_event(self.schedule_no)
+            number = self.generate_schedule_no(task)
 
             iters.append(
                 create_recurrence(
-                    program_id=test.schedule_no,
+                    program_id=self.make_name_string(task.work_area_name, number),
                     frequency=ProgramFrequency.WEEKLY,
                     dtstart=test.start,
-                    duration=timedelta(minutes=test.duration),
+                    duration=test.duration,
                     days_of_week=test.day_set,
                 )
             )
 
         return ProgramTimeline(MergedIterable(iters))
 
-    # events: ProgramTimeline = field(
-    #     metadata=field_options(
-    #         deserialize=timeline_tz,
-    #         alias="tasks",
-    #     ),
-    # )
+    def generate_schedule_no(self, task: Calendar | None) -> str | None:
+        """Return a list of names extracted from each work area dictionary."""
+        if task is not None:
+            if task.work_area_id is not None:
+                if task.work_area_id is not None:
+                    self.schedule_no[task.work_area_id] = (
+                        self.schedule_no[task.work_area_id] + 1
+                    )
+                    return self.schedule_no[task.work_area_id]
+            self.schedule_no["-1"] = self.schedule_no["-1"] + 1
+            return self.schedule_no["-1"]
+        return None
 
 
 @dataclass
@@ -601,14 +591,10 @@ class MowerAttributes(DataClassDictMixin):
                 if work_area:
                     self.mower.work_area_name = work_area.name
             for task in self.calendar.tasks:
-                task.work_area_name = self.work_areas.get(task.work_area_id)
-            # for event in self.calendar.events:
-            #     event.work_area_name = self.work_area_dict.get(event.work_area_id)
+                task.work_area_name = self.work_area_dict.get(task.work_area_id)
         if not self.capabilities.work_areas:
             for task in self.calendar.tasks:
-                task.work_area_name = ""
-                # for event in self.calendar.events:
-                #     event.work_area_name = task.work_area_name
+                task.work_area_name = None
 
 
 @dataclass

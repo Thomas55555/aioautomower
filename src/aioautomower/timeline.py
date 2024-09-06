@@ -41,7 +41,7 @@ RRULE_WEEKDAY = {
 class ProgramEvent:
     """An instance of a program event."""
 
-    program_id: int
+    program_id: str
     start: datetime.datetime
     end: datetime.datetime
     rule: rrule.rrule | None = None
@@ -63,31 +63,26 @@ class ProgramTimeline(SortableItemTimeline[ProgramEvent]):
 
 
 def create_recurrence(
-    program_id: int,
+    program_id: str,
     frequency: ProgramFrequency,
     dtstart: datetime.datetime,
     duration: datetime.timedelta,
     days_of_week: set[DayOfWeek],
 ) -> Iterable[SortableItem[Timespan, ProgramEvent]]:
     """Create a timeline using a recurrence rule."""
-    # These weekday or day of month refinemens ared used in specific scenarios
 
     byweekday = [RRULE_WEEKDAY[day_of_week] for day_of_week in days_of_week]
-
     ruleset = rrule.rruleset()
-    # Rain delay excludes upcoming days from the schedule
-
     rule: rrule.rrule
     if frequency == ProgramFrequency.DAILY:
-        # Create a RRULE that is FREQ=DAILY with an `interval` between dates
+        # Create a RRULE that is FREQ=DAILY
         rule = rrule.rrule(
             freq=rrule.DAILY,
             dtstart=dtstart,
             cache=True,
         )
     elif frequency == ProgramFrequency.WEEKLY:
-        # Create a RRULE that is FREQ=WEEKLY with every `days_of_week` as the
-        # instances within the week.
+        # Create a RRULE that is FREQ=WEEKLY
         rule = rrule.rrule(
             freq=rrule.WEEKLY,
             byweekday=byweekday,
