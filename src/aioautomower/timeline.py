@@ -1,7 +1,8 @@
 """A timeline is a set of events on a calendar.
 
 This timeline is used to iterate over program runtime events, managing
-the logic for interpreting recurring events for the Rain Bird controller.
+the logic for interpreting recurring events for the Husqvarna Automower
+calendar. Only upcoming events will be shown.
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ RRULE_WEEKDAY = {
 class ProgramEvent:
     """An instance of a program event."""
 
-    program_id: str
+    schedule_name: str
     start: datetime.datetime
     end: datetime.datetime
     rule: rrule.rrule | None = None
@@ -63,7 +64,7 @@ class ProgramTimeline(SortableItemTimeline[ProgramEvent]):
 
 
 def create_recurrence(
-    program_id: str,
+    schedule_name: str,
     frequency: ProgramFrequency,
     dtstart: datetime.datetime,
     duration: datetime.timedelta,
@@ -99,7 +100,7 @@ def create_recurrence(
         dtend = dtstart + duration
 
         def build() -> ProgramEvent:
-            return ProgramEvent(program_id, dtstart, dtend, rule)
+            return ProgramEvent(schedule_name, dtstart, dtend, rule)
 
         return LazySortableItem(Timespan.of(dtstart, dtend), build)
 

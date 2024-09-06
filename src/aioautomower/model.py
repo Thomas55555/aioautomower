@@ -223,17 +223,10 @@ class Calendar(DataClassDictMixin):
 
 
 @dataclass
-class Schedule(DataClassDictMixin):
-    """Details about program schedules."""
-
-
-@dataclass
 class AutomowerCalendarEvent:
     """Information about the calendar tasks.
 
-    An Automower can have several tasks. If the mower supports
-    work areas the property workAreaId is required to connect
-    the task to an work area.
+    Internal class for creating recurrence.
     """
 
     start: datetime
@@ -278,22 +271,8 @@ class ConvertScheduleToCalendar:
                     return self.now + timedelta(days)
         return self.now
 
-    def make_daylist(self) -> str:
-        """Generate a RFC5545 daylist from a task."""
-        day_list = ""
-        for task_field in fields(self.task):
-            field_name = task_field.name
-            field_value = getattr(self.task, field_name)
-            if field_value is True:
-                today_rfc = WEEKDAYS_TO_RFC5545[field_name]
-                if day_list == "":
-                    day_list = today_rfc
-                else:
-                    day_list += "," + str(today_rfc)
-        return day_list
-
     def make_dayset(self) -> set[DayOfWeek | None]:
-        """Generate a RFC5545 daylist from a task."""
+        """Generate a set of relevant days from a task."""
         day_set = set()
         for task_field in fields(self.task):
             field_name = task_field.name
@@ -302,9 +281,8 @@ class ConvertScheduleToCalendar:
                 day_set.add(WEEKDAYS_TO_ICAL.get(field_name))
         return day_set
 
-    def make_event(self, schedule_no) -> AutomowerCalendarEvent:
+    def make_event(self) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
-        daylist = self.make_daylist()
         dayset = self.make_dayset()
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
@@ -313,7 +291,7 @@ class ConvertScheduleToCalendar:
         return AutomowerCalendarEvent(
             start=begin_of_day_with_schedule + timedelta(minutes=self.task.start),
             duration=timedelta(minutes=self.task.duration),
-            uid=f"{self.task.start}_{self.task.duration}_{daylist}",
+            uid=f"{self.task.start}_{self.task.duration}_{dayset}",
             day_set=dayset,
         )
 
@@ -325,18 +303,18 @@ class Tasks(DataClassDictMixin):
     tasks: list[Calendar] | None
 
     def make_name_string(self, work_area_name, number) -> str:
-        """Return a list of names extracted from each work area dictionary."""
+        """Return a string for the calendar summary."""
         if work_area_name is not None:
             return f"{work_area_name} schedule {number}"
         return f"Schedule {number}"
 
     @property
     def timeline(self) -> ProgramTimeline | None:
-        """Return a timeline of all programs."""
+        """Return a timeline of all schedules."""
         return self.timeline_tz()
 
     def timeline_tz(self) -> ProgramTimeline | None:
-        """Return a timeline of all programs."""
+        """Return a timeline of all schedules."""
         if self.tasks is None:
             return None
         self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
@@ -349,24 +327,23 @@ class Tasks(DataClassDictMixin):
         iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
         for task in self.tasks:
-            event = ConvertScheduleToCalendar(task)
-            test = event.make_event(self.schedule_no)
+            event = ConvertScheduleToCalendar(task).make_event()
             number = self.generate_schedule_no(task)
 
             iters.append(
                 create_recurrence(
-                    program_id=self.make_name_string(task.work_area_name, number),
+                    schedule_name=self.make_name_string(task.work_area_name, number),
                     frequency=ProgramFrequency.WEEKLY,
-                    dtstart=test.start,
-                    duration=test.duration,
-                    days_of_week=test.day_set,
+                    dtstart=event.start,
+                    duration=event.duration,
+                    days_of_week=event.day_set,
                 )
             )
 
         return ProgramTimeline(MergedIterable(iters))
 
     def generate_schedule_no(self, task: Calendar | None) -> str | None:
-        """Return a list of names extracted from each work area dictionary."""
+        """Return a schedule number."""
         if task is not None:
             if task.work_area_id is not None:
                 if task.work_area_id is not None:

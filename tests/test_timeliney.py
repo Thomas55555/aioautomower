@@ -33,7 +33,7 @@ async def test_timeline(
         assert overlapping is not None
     assert overlapping.start == FakeDatetime(2024, 5, 4, 0, 0)
     assert overlapping.end == FakeDatetime(2024, 5, 4, 8, 0)
-    assert overlapping.program_id == "my_lawn schedule 1"
+    assert overlapping.schedule_name == "my_lawn schedule 1"
 
     cursor = mower_timeline.active_after(datetime.now())
     active_after = next(cursor, None)
@@ -41,7 +41,7 @@ async def test_timeline(
         assert active_after is not None
     assert active_after.start == FakeDatetime(2024, 5, 6, 19, 0)
     assert active_after.end == FakeDatetime(2024, 5, 7, 0, 0)
-    assert active_after.program_id == "Front lawn schedule 1"
+    assert active_after.schedule_name == "Front lawn schedule 1"
 
     await automower_api.close()
     if TYPE_CHECKING:
