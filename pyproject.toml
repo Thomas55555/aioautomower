@@ -63,6 +63,7 @@ types-pyyaml = "^6.0.12.20240311"
 [tool.pytest.ini_options]
 addopts = "--cov"
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 
 [tool.ruff]
 fix = true
