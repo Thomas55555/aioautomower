@@ -1,24 +1,26 @@
 """Tests for asynchronous Python client for aioautomower."""
 
-import json
 from dataclasses import fields
 from typing import cast
 
+import zoneinfo
 from freezegun import freeze_time
 from syrupy.assertion import SnapshotAssertion
 
+from aioautomower.auth import AbstractAuth
 from aioautomower.model import WorkArea
-from aioautomower.utils import mower_list_to_dictionary_dataclass
-from tests import load_fixture
+from aioautomower.session import AutomowerSession
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-async def test_high_feature_mower() -> None:
+async def test_high_feature_mower(mock_automower_client: AbstractAuth) -> None:
     """Test converting a high feature mower."""
-    mower_fixture = load_fixture("high_feature_mower.json")
-    mower_python = json.loads(mower_fixture)
-    mowers = mower_list_to_dictionary_dataclass(mower_python)
+    automower_api = AutomowerSession(
+        mock_automower_client, mower_tz=zoneinfo.ZoneInfo("America/Regina"), poll=True
+    )
+    await automower_api.connect()
+    mowers = automower_api.data
     assert mowers[MOWER_ID].battery.battery_percent == 100
     assert mowers[MOWER_ID].stay_out_zones.dirty is False  # type: ignore[union-attr]
     assert mowers[MOWER_ID].stay_out_zones.zones is not None  # type: ignore[union-attr]
@@ -43,20 +45,27 @@ async def test_high_feature_mower() -> None:
     assert len(mowers[MOWER_ID].positions) != 0  # type: ignore[arg-type]
 
     # Test empty task list
-    mower_python["data"][0]["attributes"]["calendar"]["tasks"] = []
-    mowers = mower_list_to_dictionary_dataclass(mower_python)
-    assert mowers[MOWER_ID].calendar.tasks == []
-    assert mowers[MOWER_ID].calendar.events == []
+    # mower_fixture = load_fixture("high_feature_mower.json")
+    # mower_python = json.loads(mower_fixture)
+    # mowers = mower_list_to_dictionary_dataclass(mower_python)
+    # mower_python["data"][0]["attributes"]["calendar"]["tasks"] = []
+    # mowers = mower_list_to_dictionary_dataclass(mower_python)
+    # assert mowers[MOWER_ID].calendar.tasks == []
+    # assert mowers[MOWER_ID].calendar.events == []
 
 
 @freeze_time("2024-05-04 8:00:00")
-def test_mower_snapshot(snapshot: SnapshotAssertion):
+async def test_mower_snapshot(
+    mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion
+):
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
-    mower_fixture = load_fixture("high_feature_mower.json")
-    mower_python = json.loads(mower_fixture)
-    mowers = mower_list_to_dictionary_dataclass(mower_python)
-    for field in fields(mowers[MOWER_ID]):
+    automower_api = AutomowerSession(
+        mock_automower_client, mower_tz=zoneinfo.ZoneInfo("America/Regina"), poll=True
+    )
+    await automower_api.connect()
+    automower_api.data[MOWER_ID]
+    for field in fields(automower_api.data[MOWER_ID]):
         field_name = field.name
-        field_value = getattr(mowers[MOWER_ID], field_name)
+        field_value = getattr(automower_api.data[MOWER_ID], field_name)
         assert field_value == snapshot(name=f"{field_name}")

@@ -6,7 +6,9 @@ from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
+from typing import Any
 
+import zoneinfo
 from ical.event import Event  # noqa: F401
 from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
@@ -70,6 +72,18 @@ def generate_work_area_dict(workarea_list) -> dict[int, str]:
         _WorkAreas.from_dict(area).work_area_id: _WorkAreas.from_dict(area).name
         for area in workarea_list
     }
+
+
+def naive_to_aware(
+    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert a naive datetime to a UTC datetime.
+
+    Requiring the mower's current time zone.
+    """
+    if datetime_naive is None:
+        return None
+    return datetime_naive.replace(tzinfo=time_zone).astimezone(time_zone)
 
 
 @dataclass
@@ -370,6 +384,15 @@ class Planner(DataClassDictMixin):
     )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
+    next_start_datetime_aware: datetime | None = None
+    mower_tz: Any | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.mower_tz = None
+        self.next_start_datetime_aware = naive_to_aware(
+            self.next_start_datetime_naive, self.mower_tz
+        )
 
 
 @dataclass
@@ -578,6 +601,12 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
+    mower_tz: zoneinfo.ZoneInfo
+
+    def __post_init__(self):
+        """Set the name after init."""
+        for ent, _ in enumerate(self.data):
+            self.data[ent].attributes.planner.mower_tz = self.mower_tz
 
 
 class HeadlightModes(StrEnum):

@@ -63,5 +63,6 @@
         "statistics": {}
       }
     }
-  ]
+  ],
+  "mower_tz": "Europe/Berlin"
 }

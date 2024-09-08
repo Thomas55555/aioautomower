@@ -24,7 +24,6 @@ from aioautomower.utils import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
 # Fill out the secrets in secrets.yaml, you can find an example
 # _secrets.yaml file, which has to be renamed after filling out the secrets.
 
@@ -75,8 +74,10 @@ class AsyncTokenAuth(AbstractAuth):
 async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
     websession = ClientSession()
-    mower_tz = zoneinfo.ZoneInfo("Europe/Berlin")
-    automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
+    tz_info = zoneinfo.ZoneInfo("Africa/Abidjan")
+    automower_api = AutomowerSession(
+        AsyncTokenAuth(websession), mower_tz=tz_info, poll=True
+    )
     await asyncio.sleep(1)
     await automower_api.connect()
     api_task = asyncio.create_task(_client_listen(automower_api))
@@ -91,13 +92,13 @@ async def main() -> None:
             "next start:",
             naive_to_aware(
                 automower_api.data[_mower_id].planner.next_start_datetime_naive,
-                mower_tz,
+                tz_info,
             ),
         )
         print(
             "from timestamp",
             convert_timestamp_to_datetime_utc(
-                automower_api.data[_mower_id].planner.next_start, mower_tz
+                automower_api.data[_mower_id].planner.next_start, tz_info
             ),
         )
         # Uncomment one or more lines above to send this command to all the mowers
