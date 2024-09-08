@@ -14,7 +14,7 @@
         'start': FakeDatetime(2024, 5, 13, 2, 0),
         'uid': '120_49_MO',
         'work_area_id': None,
-        'work_area_name': '',
+        'work_area_name': None,
       }),
     ]),
     'tasks': list([

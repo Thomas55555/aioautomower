@@ -14,7 +14,7 @@
         'start': FakeDatetime(2024, 5, 4, 0, 0),
         'uid': '0_480_TU,TH,SA',
         'work_area_id': 0,
-        'work_area_name': 'my_lawn',
+        'work_area_name': None,
       }),
       dict({
         'end': FakeDatetime(2024, 5, 7, 0, 0),
@@ -23,7 +23,7 @@
         'start': FakeDatetime(2024, 5, 6, 19, 0),
         'uid': '1140_300_MO,WE,FR',
         'work_area_id': 123456,
-        'work_area_name': 'Front lawn',
+        'work_area_name': None,
       }),
     ]),
     'tasks': list([
@@ -51,7 +51,7 @@
         'tuesday': True,
         'wednesday': False,
         'work_area_id': 0,
-        'work_area_name': 'my_lawn',
+        'work_area_name': None,
       }),
     ]),
   })
@@ -89,7 +89,6 @@
 # name: test_mower_snapshot[planner]
   dict({
     'mower_tz': 'Europe/Berlin',
-    'next_start_datetime': FakeDatetime(2023, 6, 5, 17, 0, tzinfo=datetime.timezone.utc),
     'next_start': 1685991600000,
     'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
