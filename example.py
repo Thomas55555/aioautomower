@@ -17,6 +17,8 @@ from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
     async_get_access_token,
+    convert_timestamp_to_datetime_utc,
+    naive_to_aware,
     structure_token,
 )
 
@@ -86,23 +88,28 @@ async def main() -> None:
     automower_api.register_pong_callback(pong_callback)
     # pylint: disable=unused-variable
     for _mower_id in automower_api.data:
-        await asyncio.sleep(5)
+        print(
+            "next start:",
+            naive_to_aware(
+                automower_api.data[_mower_id].planner.next_start_datetime_naive,
+                mower_tz,
+            ),
+        )
+        print(
+            "from timestamp",
+            convert_timestamp_to_datetime_utc(
+                automower_api.data[_mower_id].planner.next_start, mower_tz
+            ),
+        )
+        # Uncomment one or more lines above to send this command to all the mowers
+        # await automower_api.commands.set_datetime(_mower_id, datetime.datetime.now())
         # await automower_api.commands.park_until_next_schedule(_mower_id)
-        # Uncomment the line above to let all your mowers park until next schedule.
-        await asyncio.sleep(5)
         # await automower_api.commands.park_until_further_notice(_mower_id)
-        # Uncomment the line above to let all your mowers park until further notice.
-        await asyncio.sleep(5)
         # await automower_api.commands.resume_schedule(_mower_id)
-        # Uncomment the line above to let all your mowers resume their schedule.
-        await asyncio.sleep(5)
         # await automower_api.commands.pause_mowing(_mower_id)
-        # Uncomment the line above to let all your mowers pause.
-        await asyncio.sleep(5)
         # await automower_api.commands.start_in_workarea(
         #     _mower_id, 0, datetime.timedelta(minutes=30)
         # )
-        # Uncomment the lines above to start your mower in workarea 0 for 30min.
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
@@ -130,7 +137,7 @@ async def _client_listen(
     try:
         await automower_client.auth.websocket_connect()
         await automower_client.start_listening()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
     while True:
@@ -148,7 +155,7 @@ async def _send_messages(
     """Listen with the client."""
     try:
         await automower_client.send_empty_message()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
 

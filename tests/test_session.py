@@ -1,7 +1,7 @@
 """Test automower session."""
 
 import json
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -83,11 +83,21 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
             }
         },
     )
+
     await automower_api.commands.set_cutting_height(MOWER_ID, 9)
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
         json={"data": {"type": "settings", "attributes": {"cuttingHeight": 9}}},
     )
+
+    await automower_api.commands.set_datetime(
+        MOWER_ID, datetime(2024, 8, 13, 12, 0, 0, 1234)
+    )
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/settings",
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1723543200}}},
+    )
+
     await automower_api.commands.set_headlight_mode(MOWER_ID, HeadlightModes.ALWAYS_OFF)
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
@@ -150,7 +160,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     # Test empty tasks. doesn't delete the tasks
     calendar = automower_api.data[MOWER_ID].calendar.tasks
     msg = WSMessage(WSMsgType.TEXT, load_fixture("settings_event.json"), None)
-    automower_api._handle_text_message(msg)  # pylint: disable=protected-access
+    automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
     assert automower_api.data[MOWER_ID].settings.headlight.mode == "EVENING_AND_NIGHT"
 
@@ -158,7 +168,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     msg = WSMessage(
         WSMsgType.TEXT, load_fixture("settings_event_with_tasks.json"), None
     )
-    automower_api._handle_text_message(msg)  # pylint: disable=protected-access
+    automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=720,
@@ -171,19 +181,20 @@ async def test_update_data(mock_automower_client: AbstractAuth):
             saturday=False,
             sunday=False,
             work_area_id=None,
+            work_area_name=None,
         )
     ]
 
     # Test new positions arrive
     msg = WSMessage(WSMsgType.TEXT, load_fixture("positions_event.json"), None)
-    automower_api._handle_text_message(msg)  # pylint: disable=protected-access
-    assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore
-    assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore[index]
+    assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore[index]
 
     # Test NoDataAvailableException is risen, if there is no data
-    automower_api._data = None  # pylint: disable=protected-access
+    automower_api._data = None  # noqa: SLF001
     with pytest.raises(NoDataAvailableException):
-        automower_api._handle_text_message(msg)  # pylint: disable=protected-access
+        automower_api._handle_text_message(msg)  # noqa: SLF001
 
     await automower_api.close()
     if TYPE_CHECKING:

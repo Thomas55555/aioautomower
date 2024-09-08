@@ -13,10 +13,11 @@
           "batteryPercent": 100
         },
         "capabilities": {
+          "canConfirmError": true,
           "headlights": true,
-          "workAreas": true,
           "position": true,
-          "stayOutZones": true
+          "stayOutZones": true,
+          "workAreas": true
         },
         "mower": {
           "mode": "MAIN_AREA",

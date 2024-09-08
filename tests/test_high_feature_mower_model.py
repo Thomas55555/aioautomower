@@ -20,16 +20,16 @@ async def test_high_feature_mower() -> None:
     mower_python = json.loads(mower_fixture)
     mowers = mower_list_to_dictionary_dataclass(mower_python)
     assert mowers[MOWER_ID].battery.battery_percent == 100
-    assert mowers[MOWER_ID].stay_out_zones.dirty is False  # type: ignore
-    assert mowers[MOWER_ID].stay_out_zones.zones is not None  # type: ignore
+    assert mowers[MOWER_ID].stay_out_zones.dirty is False  # type: ignore[union-attr]
+    assert mowers[MOWER_ID].stay_out_zones.zones is not None  # type: ignore[union-attr]
     assert (
-        mowers[MOWER_ID]  # type: ignore
+        mowers[MOWER_ID]  # type: ignore[union-attr]
         .stay_out_zones.zones["81C6EEA2-D139-4FEA-B134-F22A6B3EA403"]
         .name
         == "Springflowers"
     )
     assert (
-        mowers[MOWER_ID]  # type: ignore
+        mowers[MOWER_ID]  # type: ignore[union-attr]
         .stay_out_zones.zones["81C6EEA2-D139-4FEA-B134-F22A6B3EA403"]
         .enabled
         is True
@@ -40,7 +40,13 @@ async def test_high_feature_mower() -> None:
     assert workarea[123456].name == "Front lawn"
     assert workarea[123456].cutting_height == 50
     assert mowers[MOWER_ID].statistics.cutting_blade_usage_time == 1234
-    assert len(mowers[MOWER_ID].positions) != 0  # type: ignore
+    assert len(mowers[MOWER_ID].positions) != 0  # type: ignore[arg-type]
+
+    # Test empty task list
+    mower_python["data"][0]["attributes"]["calendar"]["tasks"] = []
+    mowers = mower_list_to_dictionary_dataclass(mower_python)
+    assert mowers[MOWER_ID].calendar.tasks == []
+    assert mowers[MOWER_ID].calendar.events == []
 
 
 @freeze_time("2024-05-04 8:00:00")

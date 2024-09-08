@@ -18,7 +18,7 @@ def snapshot_assertion(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     return snapshot.use_extension(AutomowerSnapshotExtension)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_automower_client() -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
     with patch(
@@ -32,7 +32,7 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
         yield client
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
     with patch(

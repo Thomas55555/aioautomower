@@ -2,12 +2,13 @@
 
 import logging
 import time
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import jwt
+import zoneinfo
 
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
 from .exceptions import ApiException
@@ -111,3 +112,33 @@ def error_key_dict() -> dict[str, str]:
 def timedelta_to_minutes(delta: timedelta) -> int:
     """Convert a timedelta to minutes."""
     return int(delta.total_seconds() / 60)
+
+
+def convert_timestamp_to_datetime_utc(
+    timestamp: int, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert the timestamp to an aware datetime object.
+
+    The Python datetime library expects timestamps to be anchored in UTC,
+    however, the automower timestamps are anchored in local time. So we convert
+    the timestamp to a datetime and replace the timezone with the local time.
+    After that we convert the timezone to UTC.
+    """
+    if timestamp == 0:
+        return None
+    local_datetime_naive = datetime.fromtimestamp(timestamp / 1000, tz=UTC).replace(
+        tzinfo=time_zone
+    )
+    return local_datetime_naive.astimezone(UTC)
+
+
+def naive_to_aware(
+    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert a naive datetime to a UTC datetime.
+
+    Requiring the mower's current time zone.
+    """
+    if datetime_naive is None:
+        return None
+    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)

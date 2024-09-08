@@ -27,7 +27,7 @@ jobs:
         run: pipx install poetry
       - name: 🏗 Set up Python ${{ matrix.python }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python }}
           cache: "poetry"
@@ -40,10 +40,11 @@ jobs:
       - name: 🚀 Run pytest
         run: poetry run pytest --cov src tests
       - name: ⬆️ Upload coverage artifact
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-${{ matrix.python }}
           path: .coverage
+          include-hidden-files: true
 
   coverage:
     runs-on: ubuntu-latest
@@ -59,7 +60,7 @@ jobs:
         run: pipx install poetry
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "poetry"

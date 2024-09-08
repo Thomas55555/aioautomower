@@ -37,7 +37,7 @@ class AutomowerSnapshotSerializer(AmberDataSerializer):
     ) -> str:
         """Pre-process data before serializing."""
         serializable_data = data
-        if is_dataclass(data):
+        if is_dataclass(type(data)):
             serializable_data = asdict(data)
 
         return super()._serialize(
