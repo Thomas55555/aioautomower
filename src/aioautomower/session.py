@@ -433,7 +433,7 @@ class AutomowerSession:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         self._data = mower_list
-        self._data["mower_tz"] = self.mower_tz
+        self._data["mower_tz"] = str(self.mower_tz)
         self.data = mower_list_to_dictionary_dataclass(self._data)
         return self.data
 

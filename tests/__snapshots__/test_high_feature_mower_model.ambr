@@ -94,8 +94,9 @@
 # ---
 # name: test_mower_snapshot[planner]
   dict({
-    'mower_tz': 'Europe/Berlin',
+    'mower_tz': zoneinfo.ZoneInfo(key='America/Regina'),
     'next_start': 1685991600000,
+    'next_start_datetime_aware': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=tzlocal()),
     'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
       'action': 'NOT_ACTIVE',
