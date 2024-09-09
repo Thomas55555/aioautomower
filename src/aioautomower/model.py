@@ -474,6 +474,19 @@ class WorkArea(DataClassDictMixin):
         ),
     )
     cutting_height: int = field(metadata=field_options(alias="cuttingHeight"))
+    enabled: bool = field(default=False)
+    progress: int | None = field(default=None)
+    last_time_completed_naive: datetime | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (
+                None
+                if x == 0
+                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
+            ),
+            alias="lastTimeCompleted",
+        ),
+        default=None,
+    )
 
 
 @dataclass
@@ -506,11 +519,7 @@ class MowerAttributes(DataClassDictMixin):
     work_areas: dict[int, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
-                area["workAreaId"]: WorkArea(
-                    name=get_work_area_name(area["name"]),
-                    cutting_height=area["cuttingHeight"],
-                )
-                for area in workarea_list
+                area["workAreaId"]: WorkArea.from_dict(area) for area in workarea_list
             },
             alias="workAreas",
         ),

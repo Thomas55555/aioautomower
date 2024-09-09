@@ -40,7 +40,10 @@
         'work_area_id': 123456,
         'work_area_name': dict({
           'cutting_height': 50,
+          'enabled': True,
+          'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 44, 9, 269000),
           'name': 'Front lawn',
+          'progress': 40,
         }),
       }),
       dict({
@@ -55,8 +58,11 @@
         'wednesday': False,
         'work_area_id': 0,
         'work_area_name': dict({
-          'cutting_height': 50,
+          'cutting_height': 10,
+          'enabled': True,
+          'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 43, 59, 269000),
           'name': 'my_lawn',
+          'progress': 20,
         }),
       }),
     ]),
@@ -220,12 +226,18 @@
 # name: test_mower_snapshot[work_areas]
   dict({
     0: dict({
-      'cutting_height': 50,
+      'cutting_height': 10,
+      'enabled': True,
+      'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 43, 59, 269000),
       'name': 'my_lawn',
+      'progress': 20,
     }),
     123456: dict({
       'cutting_height': 50,
+      'enabled': True,
+      'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 44, 9, 269000),
       'name': 'Front lawn',
+      'progress': 40,
     }),
   })
 # ---
