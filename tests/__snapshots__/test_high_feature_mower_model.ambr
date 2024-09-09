@@ -59,7 +59,7 @@
         'work_area_id': 0,
         'work_area_name': dict({
           'cutting_height': 10,
-          'enabled': True,
+          'enabled': False,
           'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 43, 59, 269000),
           'name': 'my_lawn',
           'progress': 20,
@@ -227,7 +227,7 @@
   dict({
     0: dict({
       'cutting_height': 10,
-      'enabled': True,
+      'enabled': False,
       'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 43, 59, 269000),
       'name': 'my_lawn',
       'progress': 20,

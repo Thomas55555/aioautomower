@@ -170,12 +170,45 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             }
         },
     )
+
     await automower_api.commands.set_cutting_height_workarea(MOWER_ID, 9, 0)
     assert mocked_method.call_count == 2
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/workAreas/0",
         json={
             "data": {"type": "workArea", "id": 0, "attributes": {"cuttingHeight": 9}}
+        },
+    )
+
+    await automower_api.commands.workarea_settings(MOWER_ID, 0, 9)
+    assert mocked_method.call_count == 3
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/workAreas/0",
+        json={
+            "data": {
+                "type": "workArea",
+                "id": 0,
+                "attributes": {
+                    "cuttingHeight": 9,
+                    "enable": False,
+                },
+            }
+        },
+    )
+
+    await automower_api.commands.workarea_settings(MOWER_ID, 0, enabled=True)
+    assert mocked_method.call_count == 4
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/workAreas/0",
+        json={
+            "data": {
+                "type": "workArea",
+                "id": 0,
+                "attributes": {
+                    "cuttingHeight": 10,
+                    "enable": True,
+                },
+            }
         },
     )
 

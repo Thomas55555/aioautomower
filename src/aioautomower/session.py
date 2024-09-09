@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Any, Iterable, Literal, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping
 
 from aiohttp import WSMessage, WSMsgType
 
@@ -170,6 +170,7 @@ class _MowerCommands:
         self, mower_id: str, cutting_height: int, work_area_id: int
     ):
         """Set the cutting height for a specific work area."""
+        _LOGGER.warning("This function is deprecated use workarea_settings instead.")
         if not self.data[mower_id].capabilities.work_areas:
             raise FeatureNotSupportedException(
                 "This mower does not support this command."
@@ -190,15 +191,30 @@ class _MowerCommands:
         self,
         mower_id: str,
         work_area_id: int,
-        cutting_height: int | None,
-        enabled: bool | None,
+        cutting_height: int | None = None,
+        enabled: bool | None = None,
     ):
         """Set the stettings for for a specific work area."""
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
+        if not self.data[mower_id].work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
+        current_data = self.data[mower_id].work_areas
+        if TYPE_CHECKING:
+            assert current_data is not None
         body = {
             "data": {
                 "type": "workArea",
                 "id": work_area_id,
-                "attributes": {"cuttingHeight": cutting_height, "enable": enabled},
+                "attributes": {
+                    "cuttingHeight": cutting_height
+                    or current_data[work_area_id].cutting_height,
+                    "enable": enabled or current_data[work_area_id].enabled,
+                },
             }
         }
         url = AutomowerEndpoint.work_area_cutting_height.format(

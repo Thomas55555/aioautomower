@@ -81,7 +81,7 @@
             "workAreaId": 0,
             "name": "",
             "cuttingHeight": 10,
-            "enabled": true,
+            "enabled": false,
             "progress": 20,
             "lastTimeCompleted": 1723439269
           }
