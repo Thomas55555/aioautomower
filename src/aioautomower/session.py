@@ -114,6 +114,10 @@ class _MowerCommands:
         tdelta: datetime.timedelta,
     ):
         """Start the mower in a work area for a period of minutes."""
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "StartInWorkArea",
@@ -166,6 +170,10 @@ class _MowerCommands:
         self, mower_id: str, cutting_height: int, work_area_id: int
     ):
         """Set the cutting height for a specific work area."""
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "workArea",
@@ -189,7 +197,7 @@ class _MowerCommands:
         ],
     ):
         """Send headlight mode to the mower."""
-        if not self.data[mower_id].capabilities.work_areas:
+        if not self.data[mower_id].capabilities.headlights:
             raise FeatureNotSupportedException(
                 "This mower does not support this command."
             )
@@ -221,6 +229,10 @@ class _MowerCommands:
         self, mower_id: str, stay_out_zone_id: str, switch: bool
     ):
         """Enable or disable a stay out zone."""
+        if not self.data[mower_id].capabilities.stay_out_zones:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "stayOutZone",
@@ -235,6 +247,10 @@ class _MowerCommands:
 
     async def error_confirm(self, mower_id: str):
         """Confirm non-fatal mower error."""
+        if not self.data[mower_id].capabilities.can_confirm_error:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)

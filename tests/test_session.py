@@ -126,7 +126,26 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         await automower_api.commands.set_headlight_mode(
             "1234", HeadlightModes.ALWAYS_OFF
         )
-
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.set_cutting_height_workarea("1234", 50, 0)
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.error_confirm("1234")
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.start_in_workarea("1234", 0, timedelta(minutes=10))
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.switch_stay_out_zone("1234", "vallhala", True)
     mocked_method.reset_mock()
     await automower_api.close()
     if TYPE_CHECKING:
