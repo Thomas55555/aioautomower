@@ -464,6 +464,7 @@ class AutomowerSession:
                 for attrib, value in new_attributes.items():
                     mower["attributes"][attrib] = value
         self.data = mower_list_to_dictionary_dataclass(self._data)
+        self.commands = _MowerCommands(self.auth, self.data)
         self._schedule_data_callbacks()
 
     async def _rest_task(self) -> None:
