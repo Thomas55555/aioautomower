@@ -203,17 +203,17 @@ class _MowerCommands:
             raise FeatureNotSupportedException(
                 "This mower does not support this command."
             )
-        current_data = self.data[mower_id].work_areas
+        current_mower = self.data[mower_id].work_areas
         if TYPE_CHECKING:
-            assert current_data is not None
+            assert current_mower is not None
+        current_work_area = current_mower[work_area_id]
         body = {
             "data": {
                 "type": "workArea",
                 "id": work_area_id,
                 "attributes": {
-                    "cuttingHeight": cutting_height
-                    or current_data[work_area_id].cutting_height,
-                    "enable": enabled or current_data[work_area_id].enabled,
+                    "cuttingHeight": cutting_height or current_work_area.cutting_height,
+                    "enable": enabled or current_work_area.enabled,
                 },
             }
         }
