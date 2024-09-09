@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Any, Iterable, Literal, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping
 
 from aiohttp import WSMessage, WSMsgType
 
@@ -170,6 +170,7 @@ class _MowerCommands:
         self, mower_id: str, cutting_height: int, work_area_id: int
     ):
         """Set the cutting height for a specific work area."""
+        _LOGGER.warning("This function is deprecated use workarea_settings instead.")
         if not self.data[mower_id].capabilities.work_areas:
             raise FeatureNotSupportedException(
                 "This mower does not support this command."
@@ -179,6 +180,37 @@ class _MowerCommands:
                 "type": "workArea",
                 "id": work_area_id,
                 "attributes": {"cuttingHeight": cutting_height},
+            }
+        }
+        url = AutomowerEndpoint.work_area_cutting_height.format(
+            mower_id=mower_id, work_area_id=work_area_id
+        )
+        await self.auth.patch_json(url, json=body)
+
+    async def workarea_settings(
+        self,
+        mower_id: str,
+        work_area_id: int,
+        cutting_height: int | None = None,
+        enabled: bool | None = None,
+    ):
+        """Set the stettings for for a specific work area."""
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
+        current_mower = self.data[mower_id].work_areas
+        if TYPE_CHECKING:
+            assert current_mower is not None
+        current_work_area = current_mower[work_area_id]
+        body = {
+            "data": {
+                "type": "workArea",
+                "id": work_area_id,
+                "attributes": {
+                    "cuttingHeight": cutting_height or current_work_area.cutting_height,
+                    "enable": enabled or current_work_area.enabled,
+                },
             }
         }
         url = AutomowerEndpoint.work_area_cutting_height.format(
