@@ -176,6 +176,26 @@ class _MowerCommands:
         )
         await self.auth.patch_json(url, json=body)
 
+    async def workarea_settings(
+        self,
+        mower_id: str,
+        work_area_id: int,
+        cutting_height: int | None,
+        enabled: bool | None,
+    ):
+        """Set the stettings for for a specific work area."""
+        body = {
+            "data": {
+                "type": "workArea",
+                "id": work_area_id,
+                "attributes": {"cuttingHeight": cutting_height, "enable": enabled},
+            }
+        }
+        url = AutomowerEndpoint.work_area_cutting_height.format(
+            mower_id=mower_id, work_area_id=work_area_id
+        )
+        await self.auth.patch_json(url, json=body)
+
     async def set_headlight_mode(
         self,
         mower_id: str,
