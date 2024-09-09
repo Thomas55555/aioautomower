@@ -199,10 +199,6 @@ class _MowerCommands:
             raise FeatureNotSupportedException(
                 "This mower does not support this command."
             )
-        if not self.data[mower_id].work_areas:
-            raise FeatureNotSupportedException(
-                "This mower does not support this command."
-            )
         current_mower = self.data[mower_id].work_areas
         if TYPE_CHECKING:
             assert current_mower is not None
