@@ -442,15 +442,6 @@ class Headlight(DataClassDictMixin):
 
 
 @dataclass
-class _Zones(DataClassDictMixin):
-    """DataClass for Zone values."""
-
-    id: str
-    name: str
-    enabled: bool
-
-
-@dataclass
 class Zone(DataClassDictMixin):
     """DataClass for Zone values."""
 
@@ -460,14 +451,14 @@ class Zone(DataClassDictMixin):
 
 @dataclass
 class StayOutZones(DataClassDictMixin):
-    """DataClass for StayOutZone values."""
+    """DataClass for StayOutZones values."""
 
     dirty: bool
     zones: dict[str, Zone] = field(
         metadata=field_options(
             deserialize=lambda zone_list: {
-                area.id: Zone(name=area.name, enabled=area.enabled)
-                for area in map(_Zones.from_dict, zone_list)
+                zone["id"]: Zone(name=zone["name"], enabled=zone["enabled"])
+                for zone in zone_list
             },
         ),
     )
