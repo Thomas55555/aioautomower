@@ -17,7 +17,7 @@ from .exceptions import (
     TimeoutException,
 )
 from .model import HeadlightModes, MowerAttributes
-from .utils import mower_list_to_dictionary_dataclass
+from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, duration_in_min: int):
+    async def park_for(self, mower_id: str, tdelta: datetime.timedelta):
         """Parks the mower for a period of minutes.
 
         The mower will drive to
@@ -101,7 +101,7 @@ class _MowerCommands:
         body = {
             "data": {
                 "type": "Park",
-                "attributes": {"duration": duration_in_min},
+                "attributes": {"duration": timedelta_to_minutes(tdelta)},
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
@@ -111,27 +111,27 @@ class _MowerCommands:
         self,
         mower_id: str,
         work_area_id: int,
-        duration_in_min: int | None = None,
+        tdelta: datetime.timedelta,
     ):
-        """Start the mower in a work area for a period of minutes.
-
-        If duration is skipped the mower will continue forever.
-        """
+        """Start the mower in a work area for a period of minutes."""
         body = {
             "data": {
                 "type": "StartInWorkArea",
-                "attributes": {"duration": duration_in_min, "workAreaId": work_area_id},
+                "attributes": {
+                    "duration": timedelta_to_minutes(tdelta),
+                    "workAreaId": work_area_id,
+                },
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def start_for(self, mower_id: str, duration_in_min: int):
+    async def start_for(self, mower_id: str, tdelta: datetime.timedelta):
         """Start the mower for a period of minutes."""
         body = {
             "data": {
                 "type": "Start",
-                "attributes": {"duration": duration_in_min},
+                "attributes": {"duration": timedelta_to_minutes(tdelta)},
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
@@ -143,6 +143,20 @@ class _MowerCommands:
             "data": {
                 "type": "settings",
                 "attributes": {"cuttingHeight": cutting_height},
+            }
+        }
+        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
+        await self.auth.post_json(url, json=body)
+
+    async def set_datetime(self, mower_id: str, current_time: datetime.datetime):
+        """Set the datetime of the mower.
+
+        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours from UTC time.
+        """
+        body = {
+            "data": {
+                "type": "settings",
+                "attributes": {"dateTime": int(current_time.timestamp())},
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)

@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any
 
@@ -18,6 +17,7 @@ from aiohttp import (
 
 from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from .exceptions import (
+    ApiBadRequestException,
     ApiException,
     ApiForbiddenException,
     ApiUnauthorizedException,
@@ -49,9 +49,7 @@ class AbstractAuth(ABC):
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
 
-    async def request(
-        self, method: str, url: str, **kwargs: Mapping[str, Any] | None
-    ) -> ClientResponse:
+    async def request(self, method: str, url: str, **kwargs: Any) -> ClientResponse:
         """Make a request."""
         headers = await self.headers()
         if not url.startswith(("http://", "https://")):
@@ -61,7 +59,7 @@ class AbstractAuth(ABC):
             _LOGGER.debug("request[post json]=%s", kwargs["json"])
         return await self._websession.request(method, url, **kwargs, headers=headers)
 
-    async def get(self, url: str, **kwargs: Mapping[str, Any]) -> ClientResponse:
+    async def get(self, url: str, **kwargs: Any) -> ClientResponse:
         """Make a get request."""
         try:
             resp = await self.request("get", url, **kwargs)
@@ -69,7 +67,7 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def get_json(self, url: str, **kwargs: Mapping[str, Any]) -> dict[str, Any]:
+    async def get_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
         """Make a get request and return json response."""
         resp = await self.get(url, **kwargs)
         try:
@@ -81,7 +79,7 @@ class AbstractAuth(ABC):
         _LOGGER.debug("response=%s", result)
         return result
 
-    async def post(self, url: str, **kwargs: Mapping[str, Any]) -> ClientResponse:
+    async def post(self, url: str, **kwargs: Any) -> ClientResponse:
         """Make a post request."""
         try:
             resp = await self.request("post", url, **kwargs)
@@ -89,7 +87,7 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def post_json(self, url: str, **kwargs: Mapping[str, Any]) -> dict[str, Any]:
+    async def post_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
         """Make a post request and return a json response."""
         resp = await self.post(url, **kwargs)
         try:
@@ -101,7 +99,7 @@ class AbstractAuth(ABC):
         _LOGGER.debug("response=%s", result)
         return result
 
-    async def patch(self, url: str, **kwargs: Mapping[str, Any]) -> ClientResponse:
+    async def patch(self, url: str, **kwargs: Any) -> ClientResponse:
         """Make a post request."""
         try:
             resp = await self.request("patch", url, **kwargs)
@@ -109,7 +107,7 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def patch_json(self, url: str, **kwargs: Mapping[str, Any]) -> dict[str, Any]:
+    async def patch_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
         """Make a post request and return a json response."""
         resp = await self.patch(url, **kwargs)
         try:
@@ -148,13 +146,17 @@ class AbstractAuth(ABC):
         try:
             resp.raise_for_status()
         except ClientResponseError as err:
-            if err.status == HTTPStatus.FORBIDDEN:
-                raise ApiForbiddenException(
-                    f"Forbidden response from API: {err}"
+            if err.status == HTTPStatus.BAD_REQUEST:
+                raise ApiBadRequestException(
+                    f"Unable to send request with API: {err}"
                 ) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise ApiUnauthorizedException(
                     f"Unable to authenticate with API: {err}"
+                ) from err
+            if err.status == HTTPStatus.FORBIDDEN:
+                raise ApiForbiddenException(
+                    f"Forbidden response from API: {err}"
                 ) from err
             detail.append(err.message)
             raise ApiException(": ".join(detail)) from err

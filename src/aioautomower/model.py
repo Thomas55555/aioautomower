@@ -7,7 +7,10 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
+from ical.event import Event  # noqa: F401
+from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
+from mashumaro.types import SerializationStrategy
 
 from .const import ERRORCODES
 
@@ -54,6 +57,25 @@ def snake_case(string: str | None) -> str:
     ).lower()
 
 
+def generate_work_area_list(workarea_list) -> list[str]:
+    """Return a list of names extracted from each work area dictionary."""
+    wa_names = [WorkArea.from_dict(area).name for area in workarea_list]
+    wa_names.append("no_work_area_active")
+    return wa_names
+
+
+def generate_work_area_dict(workarea_list) -> dict[int, str]:
+    """Return a dict of names extracted from each work area dictionary."""
+    return {
+        area["workAreaId"]: get_work_area_name(area["name"]) for area in workarea_list
+    }
+
+
+def get_work_area_name(name: str) -> str:
+    """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
+    return "my_lawn" if name == "" else name
+
+
 @dataclass
 class User(DataClassDictMixin):
     """The user details of the JWT."""
@@ -82,6 +104,18 @@ class JWT(DataClassDictMixin):
     sub: str
 
 
+class RecurSerializationStrategy(SerializationStrategy):
+    """SerializationStrategy for Recur object."""
+
+    def serialize(self, value: Recur) -> str:
+        """Serialize the a Recur object to a string."""
+        return Recur.as_rrule_str(value)
+
+    def deserialize(self, value: str) -> Recur:
+        """Deserialize a string to a Recur object."""
+        return Recur.from_rrule(value)
+
+
 @dataclass
 class System(DataClassDictMixin):
     """System information about a Automower."""
@@ -102,10 +136,11 @@ class Battery(DataClassDictMixin):
 class Capabilities(DataClassDictMixin):
     """Information about what capabilities the Automower has."""
 
+    can_confirm_error: bool = field(metadata=field_options(alias="canConfirmError"))
     headlights: bool
-    work_areas: bool = field(metadata=field_options(alias="workAreas"))
     position: bool
     stay_out_zones: bool = field(metadata=field_options(alias="stayOutZones"))
+    work_areas: bool = field(metadata=field_options(alias="workAreas"))
 
 
 @dataclass
@@ -122,15 +157,8 @@ class Mower(DataClassDictMixin):
             alias="errorCode",
         ),
     )
-    error_datetime: datetime | None = field(
+    error_timestamp: int = field(
         metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(UTC)
-            ),
             alias="errorCodeTimestamp",
         ),
     )
@@ -145,12 +173,17 @@ class Mower(DataClassDictMixin):
         ),
     )
     inactive_reason: str = field(metadata=field_options(alias="inactiveReason"))
-    is_error_confirmable: bool | None = field(
-        metadata=field_options(alias="isErrorConfirmable"), default=None
+    is_error_confirmable: bool = field(
+        metadata=field_options(alias="isErrorConfirmable"), default=False
     )
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
+    work_area_name: str | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.work_area_name = None
 
 
 @dataclass
@@ -174,6 +207,7 @@ class Calendar(DataClassDictMixin):
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
+    work_area_name: str | None = None
 
 
 @dataclass
@@ -187,21 +221,40 @@ class AutomowerCalendarEvent(DataClassDictMixin):
 
     start: datetime
     end: datetime
-    rrule: str
+    rrule: Recur = field(
+        metadata=field_options(serialization_strategy=RecurSerializationStrategy())
+    )
     uid: str
+    schedule_no: int
     work_area_id: int | None
+    work_area_name: str | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Initialize work_area_name to None for later external setting."""
+        self.work_area_name = None
 
 
 def husqvarna_schedule_to_calendar(
     task_list: list,
 ) -> list[AutomowerCalendarEvent]:
-    """Convert the schedule to an sorted list of calendar events."""
+    """Return a sorted list of calendar events.
+
+    The currently active event which will end next is on top.
+    If there is no active event, the next event is on top.
+    """
+    if task_list == []:
+        return []
     eventlist = []
+    schedule_no = 0
     for task_dict in task_list:
         calendar_dataclass = Calendar.from_dict(task_dict)
         event = ConvertScheduleToCalendar(calendar_dataclass)
-        eventlist.append(event.make_event())
-    eventlist.sort(key=operator.attrgetter("start"))
+        schedule_no = schedule_no + 1
+        eventlist.append(event.make_event(schedule_no))
+    eventlist.sort(key=operator.attrgetter("end"))
+    now = datetime.now()
+    if getattr(eventlist[0], "end") > now:
+        eventlist.sort(key=operator.attrgetter("start"))
     return eventlist
 
 
@@ -211,7 +264,7 @@ class ConvertScheduleToCalendar:
     def __init__(self, task: Calendar) -> None:
         """Initialize the schedule to calendar converter."""
         self.task = task
-        self.now = datetime.now().astimezone()
+        self.now = datetime.now()
         self.begin_of_current_day = self.now.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -255,25 +308,28 @@ class ConvertScheduleToCalendar:
                     day_list += "," + str(today_rfc)
         return day_list
 
-    def make_event(self) -> AutomowerCalendarEvent:
+    def make_event(self, schedule_no) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
         daylist = self.make_daylist()
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
-        ).astimezone()
-        return AutomowerCalendarEvent(
-            start=(
-                begin_of_day_with_schedule + timedelta(minutes=self.task.start)
-            ).astimezone(tz=UTC),
-            end=(
-                begin_of_day_with_schedule
-                + timedelta(minutes=self.task.start)
-                + timedelta(minutes=self.task.duration)
-            ).astimezone(tz=UTC),
-            rrule=f"FREQ=WEEKLY;BYDAY={daylist}",
-            uid=f"{self.task.start}_{self.task.duration}_{daylist}",
-            work_area_id=self.task.work_area_id,
+        )
+        return AutomowerCalendarEvent.from_dict(
+            {
+                "start": (
+                    begin_of_day_with_schedule + timedelta(minutes=self.task.start)
+                ).isoformat(),
+                "end": (
+                    begin_of_day_with_schedule
+                    + timedelta(minutes=self.task.start)
+                    + timedelta(minutes=self.task.duration)
+                ).isoformat(),
+                "rrule": f"FREQ=WEEKLY;BYDAY={daylist}",
+                "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
+                "work_area_id": self.task.work_area_id,
+                "schedule_no": schedule_no,
+            }
         )
 
 
@@ -281,8 +337,8 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar]
-    events: list[AutomowerCalendarEvent] = field(
+    tasks: list[Calendar | None]
+    events: list[AutomowerCalendarEvent | None] = field(
         metadata=field_options(
             deserialize=husqvarna_schedule_to_calendar,
             alias="tasks",
@@ -301,15 +357,8 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
-    next_start_datetime: datetime | None = field(
+    next_start: int = field(
         metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC)
-                .replace(tzinfo=None)
-                .astimezone(UTC)
-            ),
             alias="nextStartTimestamp",
         ),
     )
@@ -393,15 +442,6 @@ class Headlight(DataClassDictMixin):
 
 
 @dataclass
-class _Zones(DataClassDictMixin):
-    """DataClass for Zone values."""
-
-    id: str
-    name: str
-    enabled: bool
-
-
-@dataclass
 class Zone(DataClassDictMixin):
     """DataClass for Zone values."""
 
@@ -411,24 +451,23 @@ class Zone(DataClassDictMixin):
 
 @dataclass
 class StayOutZones(DataClassDictMixin):
-    """DataClass for StayOutZone values."""
+    """DataClass for StayOutZones values."""
 
     dirty: bool
     zones: dict[str, Zone] = field(
         metadata=field_options(
             deserialize=lambda zone_list: {
-                area.id: Zone(name=area.name, enabled=area.enabled)
-                for area in map(_Zones.from_dict, zone_list)
+                zone["id"]: Zone(name=zone["name"], enabled=zone["enabled"])
+                for zone in zone_list
             },
         ),
     )
 
 
 @dataclass
-class _WorkAreas(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
+class WorkArea(DataClassDictMixin):
+    """DataClass for WorkArea values."""
 
-    work_area_id: int = field(metadata=field_options(alias="workAreaId"))
     name: str = field(
         metadata=field_options(
             deserialize=lambda x: "my_lawn" if x == "" else x,
@@ -438,16 +477,8 @@ class _WorkAreas(DataClassDictMixin):
 
 
 @dataclass
-class WorkArea(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
-
-    name: str
-    cutting_height: int
-
-
-@dataclass
 class Settings(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
+    """DataClass for Settings values."""
 
     headlight: Headlight
     cutting_height: int | None = field(
@@ -475,15 +506,49 @@ class MowerAttributes(DataClassDictMixin):
     work_areas: dict[int, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
-                area.work_area_id: WorkArea(
-                    name=area.name, cutting_height=area.cutting_height
+                area["workAreaId"]: WorkArea(
+                    name=get_work_area_name(area["name"]),
+                    cutting_height=area["cuttingHeight"],
                 )
-                for area in map(_WorkAreas.from_dict, workarea_list)
+                for area in workarea_list
             },
             alias="workAreas",
         ),
         default=None,
     )
+    work_area_names: list[str] | None = field(
+        metadata=field_options(
+            deserialize=generate_work_area_list,
+            alias="workAreas",
+        ),
+        default=None,
+    )
+    work_area_dict: dict[int, str] | None = field(
+        metadata=field_options(
+            deserialize=generate_work_area_dict,
+            alias="workAreas",
+        ),
+        default=None,
+    )
+
+    def __post_init__(self):
+        """Set the name after init."""
+        if self.capabilities.work_areas:
+            if self.mower.work_area_id is None:
+                self.mower.work_area_name = "no_work_area_active"
+            if self.work_areas is not None:
+                work_area = self.work_areas.get(self.mower.work_area_id)
+                if work_area:
+                    self.mower.work_area_name = work_area.name
+            for task in self.calendar.tasks:
+                task.work_area_name = self.work_areas.get(task.work_area_id)
+            for event in self.calendar.events:
+                event.work_area_name = self.work_area_dict.get(event.work_area_id)
+        if not self.capabilities.work_areas:
+            for task in self.calendar.tasks:
+                task.work_area_name = ""
+                for event in self.calendar.events:
+                    event.work_area_name = task.work_area_name
 
 
 @dataclass

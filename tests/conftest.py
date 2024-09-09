@@ -5,11 +5,20 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from tests import load_fixture
 
+from .syrupy import AutomowerSnapshotExtension
 
-@pytest.fixture()
+
+@pytest.fixture(name="snapshot")
+def snapshot_assertion(snapshot: SnapshotAssertion) -> SnapshotAssertion:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return snapshot.use_extension(AutomowerSnapshotExtension)
+
+
+@pytest.fixture
 def mock_automower_client() -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
     with patch(
@@ -23,7 +32,7 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
         yield client
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
     with patch(
