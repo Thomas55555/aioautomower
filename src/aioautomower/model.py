@@ -59,7 +59,7 @@ def snake_case(string: str | None) -> str:
 
 def generate_work_area_list(workarea_list) -> list[str]:
     """Return a list of names extracted from each work area dictionary."""
-    wa_names = [_WorkAreas.from_dict(area).name for area in workarea_list]
+    wa_names = [WorkArea.from_dict(area).name for area in workarea_list]
     wa_names.append("no_work_area_active")
     return wa_names
 
@@ -67,9 +67,13 @@ def generate_work_area_list(workarea_list) -> list[str]:
 def generate_work_area_dict(workarea_list) -> dict[int, str]:
     """Return a dict of names extracted from each work area dictionary."""
     return {
-        _WorkAreas.from_dict(area).work_area_id: _WorkAreas.from_dict(area).name
-        for area in workarea_list
+        area["workAreaId"]: get_work_area_name(area["name"]) for area in workarea_list
     }
+
+
+def get_work_area_name(name: str) -> str:
+    """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
+    return "my_lawn" if name == "" else name
 
 
 @dataclass
@@ -470,10 +474,9 @@ class StayOutZones(DataClassDictMixin):
 
 
 @dataclass
-class _WorkAreas(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
+class WorkArea(DataClassDictMixin):
+    """DataClass for WorkArea values."""
 
-    work_area_id: int = field(metadata=field_options(alias="workAreaId"))
     name: str = field(
         metadata=field_options(
             deserialize=lambda x: "my_lawn" if x == "" else x,
@@ -483,16 +486,8 @@ class _WorkAreas(DataClassDictMixin):
 
 
 @dataclass
-class WorkArea(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
-
-    name: str
-    cutting_height: int
-
-
-@dataclass
 class Settings(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
+    """DataClass for Settings values."""
 
     headlight: Headlight
     cutting_height: int | None = field(
@@ -520,10 +515,11 @@ class MowerAttributes(DataClassDictMixin):
     work_areas: dict[int, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
-                area.work_area_id: WorkArea(
-                    name=area.name, cutting_height=area.cutting_height
+                area["workAreaId"]: WorkArea(
+                    name=get_work_area_name(area["name"]),
+                    cutting_height=area["cuttingHeight"],
                 )
-                for area in [_WorkAreas.from_dict(item) for item in workarea_list]
+                for area in workarea_list
             },
             alias="workAreas",
         ),
