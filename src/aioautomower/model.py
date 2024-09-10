@@ -1,18 +1,24 @@
 """Models for Husqvarna Automower data."""
 
 import logging
-import operator
+from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
 from ical.event import Event  # noqa: F401
+from ical.iter import (
+    MergedIterable,
+    SortableItem,
+)
+from ical.timespan import Timespan
 from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.types import SerializationStrategy
 
-from .const import ERRORCODES
+from .const import ERRORCODES, DayOfWeek, ProgramFrequency
+from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -26,14 +32,14 @@ WEEKDAYS = (
     "sunday",
 )
 
-WEEKDAYS_TO_RFC5545 = {
-    "monday": "MO",
-    "tuesday": "TU",
-    "wednesday": "WE",
-    "thursday": "TH",
-    "friday": "FR",
-    "saturday": "SA",
-    "sunday": "SU",
+WEEKDAYS_TO_ICAL = {
+    "sunday": DayOfWeek.SUNDAY,
+    "monday": DayOfWeek.MONDAY,
+    "tuesday": DayOfWeek.TUESDAY,
+    "wednesday": DayOfWeek.WEDNESDAY,
+    "thursday": DayOfWeek.THURSDAY,
+    "friday": DayOfWeek.FRIDAY,
+    "saturday": DayOfWeek.SATURDAY,
 }
 
 
@@ -211,51 +217,16 @@ class Calendar(DataClassDictMixin):
 
 
 @dataclass
-class AutomowerCalendarEvent(DataClassDictMixin):
+class AutomowerCalendarEvent:
     """Information about the calendar tasks.
 
-    An Automower can have several tasks. If the mower supports
-    work areas the property workAreaId is required to connect
-    the task to an work area.
+    Internal class for creating recurrence.
     """
 
     start: datetime
-    end: datetime
-    rrule: Recur = field(
-        metadata=field_options(serialization_strategy=RecurSerializationStrategy())
-    )
+    duration: timedelta
     uid: str
-    schedule_no: int
-    work_area_id: int | None
-    work_area_name: str | None = field(init=False, default=None)
-
-    def __post_init__(self):
-        """Initialize work_area_name to None for later external setting."""
-        self.work_area_name = None
-
-
-def husqvarna_schedule_to_calendar(
-    task_list: list,
-) -> list[AutomowerCalendarEvent]:
-    """Return a sorted list of calendar events.
-
-    The currently active event which will end next is on top.
-    If there is no active event, the next event is on top.
-    """
-    if task_list == []:
-        return []
-    eventlist = []
-    schedule_no = 0
-    for task_dict in task_list:
-        calendar_dataclass = Calendar.from_dict(task_dict)
-        event = ConvertScheduleToCalendar(calendar_dataclass)
-        schedule_no = schedule_no + 1
-        eventlist.append(event.make_event(schedule_no))
-    eventlist.sort(key=operator.attrgetter("end"))
-    now = datetime.now()
-    if getattr(eventlist[0], "end") > now:
-        eventlist.sort(key=operator.attrgetter("start"))
-    return eventlist
+    day_set: set
 
 
 class ConvertScheduleToCalendar:
@@ -294,42 +265,28 @@ class ConvertScheduleToCalendar:
                     return self.now + timedelta(days)
         return self.now
 
-    def make_daylist(self) -> str:
-        """Generate a RFC5545 daylist from a task."""
-        day_list = ""
+    def make_dayset(self) -> set[DayOfWeek | None]:
+        """Generate a set of relevant days from a task."""
+        day_set = set()
         for task_field in fields(self.task):
             field_name = task_field.name
             field_value = getattr(self.task, field_name)
             if field_value is True:
-                today_rfc = WEEKDAYS_TO_RFC5545[field_name]
-                if day_list == "":
-                    day_list = today_rfc
-                else:
-                    day_list += "," + str(today_rfc)
-        return day_list
+                day_set.add(WEEKDAYS_TO_ICAL.get(field_name))
+        return day_set
 
-    def make_event(self, schedule_no) -> AutomowerCalendarEvent:
+    def make_event(self) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
-        daylist = self.make_daylist()
+        dayset = self.make_dayset()
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        return AutomowerCalendarEvent.from_dict(
-            {
-                "start": (
-                    begin_of_day_with_schedule + timedelta(minutes=self.task.start)
-                ).isoformat(),
-                "end": (
-                    begin_of_day_with_schedule
-                    + timedelta(minutes=self.task.start)
-                    + timedelta(minutes=self.task.duration)
-                ).isoformat(),
-                "rrule": f"FREQ=WEEKLY;BYDAY={daylist}",
-                "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
-                "work_area_id": self.task.work_area_id,
-                "schedule_no": schedule_no,
-            }
+        return AutomowerCalendarEvent(
+            start=begin_of_day_with_schedule + timedelta(minutes=self.task.start),
+            duration=timedelta(minutes=self.task.duration),
+            uid=f"{self.task.start}_{self.task.duration}_{dayset}",
+            day_set=dayset,
         )
 
 
@@ -337,13 +294,65 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar | None]
-    events: list[AutomowerCalendarEvent | None] = field(
-        metadata=field_options(
-            deserialize=husqvarna_schedule_to_calendar,
-            alias="tasks",
-        ),
-    )
+    tasks: list[Calendar] | None
+
+    def make_name_string(self, work_area_name, number) -> str:
+        """Return a string for the calendar summary."""
+        if work_area_name is not None:
+            return f"{work_area_name} schedule {number}"
+        return f"Schedule {number}"
+
+    @property
+    def timeline(self) -> ProgramTimeline | None:
+        """Return a timeline of all schedules."""
+        return self.timeline_tz()
+
+    def timeline_tz(self) -> ProgramTimeline | None:
+        """Return a timeline of all schedules."""
+        if self.tasks is None:
+            return None
+        self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
+        for task in self.tasks:
+            if task.work_area_id is not None:
+                self.schedule_no[task.work_area_id] = 0
+            if task.work_area_id is None:
+                self.schedule_no["-1"] = 0
+
+        iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
+
+        for task in self.tasks:
+            event = ConvertScheduleToCalendar(task).make_event()
+            number = self.generate_schedule_no(task)
+
+            if len(event.day_set) == 7:
+                freq = ProgramFrequency.DAILY
+            else:
+                freq = ProgramFrequency.WEEKLY
+
+            iters.append(
+                create_recurrence(
+                    schedule_name=self.make_name_string(task.work_area_name, number),
+                    frequency=freq,
+                    dtstart=event.start,
+                    duration=event.duration,
+                    days_of_week=event.day_set,
+                )
+            )
+
+        return ProgramTimeline(MergedIterable(iters))
+
+    def generate_schedule_no(self, task: Calendar | None) -> str | None:
+        """Return a schedule number."""
+        if task is not None:
+            if task.work_area_id is not None:
+                if task.work_area_id is not None:
+                    self.schedule_no[task.work_area_id] = (
+                        self.schedule_no[task.work_area_id] + 1
+                    )
+                    return self.schedule_no[task.work_area_id]
+            self.schedule_no["-1"] = self.schedule_no["-1"] + 1
+            return self.schedule_no["-1"]
+        return None
 
 
 @dataclass
@@ -550,14 +559,10 @@ class MowerAttributes(DataClassDictMixin):
                 if work_area:
                     self.mower.work_area_name = work_area.name
             for task in self.calendar.tasks:
-                task.work_area_name = self.work_areas.get(task.work_area_id)
-            for event in self.calendar.events:
-                event.work_area_name = self.work_area_dict.get(event.work_area_id)
+                task.work_area_name = self.work_area_dict.get(task.work_area_id)
         if not self.capabilities.work_areas:
             for task in self.calendar.tasks:
-                task.work_area_name = ""
-                for event in self.calendar.events:
-                    event.work_area_name = task.work_area_name
+                task.work_area_name = None
 
 
 @dataclass

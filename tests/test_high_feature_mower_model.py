@@ -46,7 +46,6 @@ async def test_high_feature_mower() -> None:
     mower_python["data"][0]["attributes"]["calendar"]["tasks"] = []
     mowers = mower_list_to_dictionary_dataclass(mower_python)
     assert mowers[MOWER_ID].calendar.tasks == []
-    assert mowers[MOWER_ID].calendar.events == []
 
 
 @freeze_time("2024-05-04 8:00:00")
