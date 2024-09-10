@@ -72,12 +72,18 @@
           {
             "workAreaId": 123456,
             "name": "Front lawn",
-            "cuttingHeight": 50
+            "cuttingHeight": 50,
+            "enabled": true,
+            "progress": 40,
+            "lastTimeCompleted": 1723449269
           },
           {
             "workAreaId": 0,
             "name": "",
-            "cuttingHeight": 50
+            "cuttingHeight": 10,
+            "enabled": false,
+            "progress": 20,
+            "lastTimeCompleted": 1723439269
           }
         ],
         "positions": [

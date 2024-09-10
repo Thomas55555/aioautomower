@@ -9,7 +9,10 @@ import pytest
 from aiohttp import WSMessage, WSMsgType
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.exceptions import NoDataAvailableException
+from aioautomower.exceptions import (
+    FeatureNotSupportedException,
+    NoDataAvailableException,
+)
 from aioautomower.model import Calendar, HeadlightModes
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
@@ -27,12 +30,12 @@ async def test_connect_disconnect(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_post_commands(mock_automower_client: AbstractAuth):
+async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     """Test automower session post commands."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
     await automower_api.connect()
     mocked_method = AsyncMock()
-    setattr(mock_automower_client, "post_json", mocked_method)
+    setattr(mock_automower_client_two_mowers, "post_json", mocked_method)
     await automower_api.commands.resume_schedule(MOWER_ID)
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/actions",
@@ -116,6 +119,32 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
     )
     await automower_api.commands.error_confirm(MOWER_ID)
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.set_headlight_mode(
+            "1234", HeadlightModes.ALWAYS_OFF
+        )
+
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.set_cutting_height_workarea("1234", 50, 0)
+
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.error_confirm("1234")
+
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.start_in_workarea("1234", 0, timedelta(minutes=10))
+
     mocked_method.reset_mock()
     await automower_api.close()
     if TYPE_CHECKING:
@@ -123,12 +152,12 @@ async def test_post_commands(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_patch_commands(mock_automower_client: AbstractAuth):
+async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
     """Test automower session patch commands."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
     await automower_api.connect()
     mocked_method = AsyncMock()
-    setattr(mock_automower_client, "patch_json", mocked_method)
+    setattr(mock_automower_client_two_mowers, "patch_json", mocked_method)
     await automower_api.commands.switch_stay_out_zone(MOWER_ID, "fake", True)
     assert mocked_method.call_count == 1
     mocked_method.assert_called_with(
@@ -141,6 +170,7 @@ async def test_patch_commands(mock_automower_client: AbstractAuth):
             }
         },
     )
+
     await automower_api.commands.set_cutting_height_workarea(MOWER_ID, 9, 0)
     assert mocked_method.call_count == 2
     mocked_method.assert_called_with(
@@ -149,7 +179,50 @@ async def test_patch_commands(mock_automower_client: AbstractAuth):
             "data": {"type": "workArea", "id": 0, "attributes": {"cuttingHeight": 9}}
         },
     )
+
+    await automower_api.commands.workarea_settings(MOWER_ID, 0, 9)
+    assert mocked_method.call_count == 3
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/workAreas/0",
+        json={
+            "data": {
+                "type": "workArea",
+                "id": 0,
+                "attributes": {
+                    "cuttingHeight": 9,
+                    "enable": False,
+                },
+            }
+        },
+    )
+
+    await automower_api.commands.workarea_settings(MOWER_ID, 0, enabled=True)
+    assert mocked_method.call_count == 4
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/workAreas/0",
+        json={
+            "data": {
+                "type": "workArea",
+                "id": 0,
+                "attributes": {
+                    "cuttingHeight": 10,
+                    "enable": True,
+                },
+            }
+        },
+    )
+
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.switch_stay_out_zone("1234", "vallhala", True)
+
+    mocked_method.reset_mock()
     await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
 
 
 async def test_update_data(mock_automower_client: AbstractAuth):

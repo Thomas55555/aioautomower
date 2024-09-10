@@ -5,13 +5,17 @@ import contextlib
 import datetime
 import logging
 from dataclasses import dataclass
-from typing import Any, Iterable, Literal, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping
 
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE
-from .exceptions import NoDataAvailableException, TimeoutException
+from .exceptions import (
+    FeatureNotSupportedException,
+    NoDataAvailableException,
+    TimeoutException,
+)
 from .model import HeadlightModes, MowerAttributes
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
@@ -52,15 +56,13 @@ class AutomowerEndpoint:
 class _MowerCommands:
     """Sending commands."""
 
-    def __init__(
-        self,
-        auth: AbstractAuth,
-    ):
+    def __init__(self, auth: AbstractAuth, data: dict[str, MowerAttributes]):
         """Send all commands to the API.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
         """
         self.auth = auth
+        self.data = data
 
     async def resume_schedule(self, mower_id: str):
         """Resume schedule.
@@ -112,6 +114,10 @@ class _MowerCommands:
         tdelta: datetime.timedelta,
     ):
         """Start the mower in a work area for a period of minutes."""
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "StartInWorkArea",
@@ -164,11 +170,47 @@ class _MowerCommands:
         self, mower_id: str, cutting_height: int, work_area_id: int
     ):
         """Set the cutting height for a specific work area."""
+        _LOGGER.warning("This function is deprecated use workarea_settings instead.")
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "workArea",
                 "id": work_area_id,
                 "attributes": {"cuttingHeight": cutting_height},
+            }
+        }
+        url = AutomowerEndpoint.work_area_cutting_height.format(
+            mower_id=mower_id, work_area_id=work_area_id
+        )
+        await self.auth.patch_json(url, json=body)
+
+    async def workarea_settings(
+        self,
+        mower_id: str,
+        work_area_id: int,
+        cutting_height: int | None = None,
+        enabled: bool | None = None,
+    ):
+        """Set the stettings for for a specific work area."""
+        if not self.data[mower_id].capabilities.work_areas:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
+        current_mower = self.data[mower_id].work_areas
+        if TYPE_CHECKING:
+            assert current_mower is not None
+        current_work_area = current_mower[work_area_id]
+        body = {
+            "data": {
+                "type": "workArea",
+                "id": work_area_id,
+                "attributes": {
+                    "cuttingHeight": cutting_height or current_work_area.cutting_height,
+                    "enable": enabled or current_work_area.enabled,
+                },
             }
         }
         url = AutomowerEndpoint.work_area_cutting_height.format(
@@ -187,6 +229,10 @@ class _MowerCommands:
         ],
     ):
         """Send headlight mode to the mower."""
+        if not self.data[mower_id].capabilities.headlights:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "settings",
@@ -215,6 +261,10 @@ class _MowerCommands:
         self, mower_id: str, stay_out_zone_id: str, switch: bool
     ):
         """Enable or disable a stay out zone."""
+        if not self.data[mower_id].capabilities.stay_out_zones:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {
             "data": {
                 "type": "stayOutZone",
@@ -229,6 +279,10 @@ class _MowerCommands:
 
     async def error_confirm(self, mower_id: str):
         """Confirm non-fatal mower error."""
+        if not self.data[mower_id].capabilities.can_confirm_error:
+            raise FeatureNotSupportedException(
+                "This mower does not support this command."
+            )
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
@@ -253,10 +307,10 @@ class AutomowerSession:
         """
         self._data: dict[str, Iterable[Any]] | None = {}
         self.auth = auth
-        self.commands = _MowerCommands(self.auth)
+        self.data: dict[str, MowerAttributes] = {}
+        self.commands = _MowerCommands(self.auth, self.data)
         self.pong_cbs: list = []
         self.data_update_cbs: list = []
-        self.data: dict[str, MowerAttributes] = {}
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
@@ -426,6 +480,7 @@ class AutomowerSession:
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data)
+        self.commands = _MowerCommands(self.auth, self.data)
         return self.data
 
     def _update_data(self, new_data) -> None:
@@ -441,6 +496,7 @@ class AutomowerSession:
                 for attrib, value in new_attributes.items():
                     mower["attributes"][attrib] = value
         self.data = mower_list_to_dictionary_dataclass(self._data)
+        self.commands = _MowerCommands(self.auth, self.data)
         self._schedule_data_callbacks()
 
     async def _rest_task(self) -> None:
