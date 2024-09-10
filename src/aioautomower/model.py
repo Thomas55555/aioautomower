@@ -32,16 +32,6 @@ WEEKDAYS = (
     "sunday",
 )
 
-WEEKDAYS_TO_RFC5545 = {
-    "monday": "MO",
-    "tuesday": "TU",
-    "wednesday": "WE",
-    "thursday": "TH",
-    "friday": "FR",
-    "saturday": "SA",
-    "sunday": "SU",
-}
-
 WEEKDAYS_TO_ICAL = {
     "sunday": DayOfWeek.SUNDAY,
     "monday": DayOfWeek.MONDAY,
