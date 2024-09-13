@@ -758,13 +758,13 @@ files = [
 
 [[package]]
 name = "ical"
-version = "8.1.1"
+version = "8.2.0"
 description = "Python iCalendar implementation (rfc 2445)"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "ical-8.1.1-py3-none-any.whl", hash = "sha256:e76d51ee5810e28d6abccbbde8f8e90f8c4540277c376ee8997aa847dcd22bab"},
-    {file = "ical-8.1.1.tar.gz", hash = "sha256:645755f4b33f221915f0ed32f659ab0766ca4bc9252fe85b9e22801d45d60cb9"},
+    {file = "ical-8.2.0-py3-none-any.whl", hash = "sha256:f35d7b80dc88f437dca94d19ae3f7cd99b3cc1118a44779a58481697240aa11d"},
+    {file = "ical-8.2.0.tar.gz", hash = "sha256:fb65ab62a0dc38fb8fb1a1fce3912ea505873c352b51d5206e3e1253b8416cb8"},
 ]
 
 [package.dependencies]
