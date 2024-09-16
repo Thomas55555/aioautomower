@@ -466,8 +466,7 @@ class StayOutZones(DataClassDictMixin):
     zones: dict[str, Zone] = field(
         metadata=field_options(
             deserialize=lambda zone_list: {
-                zone["id"]: Zone(name=zone["name"], enabled=zone["enabled"])
-                for zone in zone_list
+                zone["id"]: Zone.from_dict(zone) for zone in zone_list
             },
         ),
     )
