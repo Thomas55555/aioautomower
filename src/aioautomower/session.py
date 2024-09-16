@@ -155,7 +155,7 @@ class _MowerCommands:
     async def set_datetime(self, mower_id: str, current_time: datetime.datetime):
         """Set the datetime of the mower.
 
-        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours from UTC time.
+        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in the local time of the mower.
         """
         body = {
             "data": {
