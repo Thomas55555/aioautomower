@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 import pytest
+import zoneinfo
 from aiohttp import WSMessage, WSMsgType
 
 from aioautomower.auth import AbstractAuth
@@ -93,8 +94,22 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         json={"data": {"type": "settings", "attributes": {"cuttingHeight": 9}}},
     )
 
+    # Test set_datetime with an aware datetime object
     await automower_api.commands.set_datetime(
-        MOWER_ID, datetime(2024, 8, 13, 12, 0, 0, 1234)
+        MOWER_ID,
+        datetime(
+            2024, 8, 13, 12, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        ),
+    )
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/settings",
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1723543200}}},
+    )
+
+    # Test set_datetime with a naive datetime object
+    await automower_api.commands.set_datetime(
+        MOWER_ID,
+        datetime(2024, 8, 13, 12),
     )
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
