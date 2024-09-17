@@ -8,7 +8,7 @@
   dict({
     'tasks': list([
       dict({
-        'duration': 49,
+        'duration': datetime.timedelta(seconds=2940),
         'friday': False,
         'monday': True,
         'saturday': False,

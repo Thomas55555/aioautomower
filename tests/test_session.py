@@ -260,7 +260,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=time(hour=12),
-            duration=300,
+            duration=timedelta(minutes=300),
             monday=True,
             tuesday=True,
             wednesday=True,

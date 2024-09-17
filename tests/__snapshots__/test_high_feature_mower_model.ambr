@@ -8,7 +8,7 @@
   dict({
     'tasks': list([
       dict({
-        'duration': 300,
+        'duration': datetime.timedelta(seconds=18000),
         'friday': True,
         'monday': True,
         'saturday': False,
@@ -21,7 +21,7 @@
         'work_area_name': 'Front lawn',
       }),
       dict({
-        'duration': 480,
+        'duration': datetime.timedelta(seconds=28800),
         'friday': False,
         'monday': False,
         'saturday': True,

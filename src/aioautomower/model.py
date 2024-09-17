@@ -136,6 +136,18 @@ class TimeSerializationStrategy(SerializationStrategy):
         return time(hour=hour, minute=minute)
 
 
+class DurationSerializationStrategy(SerializationStrategy):
+    """SerializationStrategy for timedelta object."""
+
+    def serialize(self, value: timedelta) -> int:
+        """Serialize a timedelta object to an integer representing total minutes."""
+        return int(value.total_seconds() * 60)
+
+    def deserialize(self, value: int) -> timedelta:
+        """Deserialize an integer representing total minutes to a timedelta object."""
+        return timedelta(minutes=value)
+
+
 @dataclass
 class System(DataClassDictMixin):
     """System information about a Automower."""
@@ -218,8 +230,9 @@ class Calendar(DataClassDictMixin):
     start: time = field(
         metadata=field_options(serialization_strategy=TimeSerializationStrategy())
     )
-
-    duration: int
+    duration: timedelta = field(
+        metadata=field_options(serialization_strategy=DurationSerializationStrategy())
+    )
     monday: bool
     tuesday: bool
     wednesday: bool
@@ -276,7 +289,7 @@ class ConvertScheduleToCalendar:
                         + timedelta(
                             hours=self.task.start.hour, minutes=self.task.start.minute
                         )
-                        + timedelta(minutes=self.task.duration)
+                        + self.task.duration
                     )
                     if self.begin_of_current_day == time_to_check_begin_of_day:
                         if end_task < self.now:
@@ -304,7 +317,7 @@ class ConvertScheduleToCalendar:
         return AutomowerCalendarEvent(
             start=begin_of_day_with_schedule
             + timedelta(hours=self.task.start.hour, minutes=self.task.start.minute),
-            duration=timedelta(minutes=self.task.duration),
+            duration=self.task.duration,
             uid=f"{self.task.start}_{self.task.duration}_{dayset}",
             day_set=dayset,
         )
