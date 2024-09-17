@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
@@ -122,6 +122,20 @@ class RecurSerializationStrategy(SerializationStrategy):
         return Recur.from_rrule(value)
 
 
+class TimeSerializationStrategy(SerializationStrategy):
+    """SerializationStrategy for Recur object."""
+
+    def serialize(self, value: time) -> int:
+        """Serialize a time object to an integer representing minutes."""
+        return value.hour * 60 + value.minute
+
+    def deserialize(self, value: int) -> time:
+        """Deserialize an integer to a time object."""
+        hour = int(value / 60)
+        minute = value - 60 * hour
+        return time(hour=hour, minute=minute)
+
+
 @dataclass
 class System(DataClassDictMixin):
     """System information about a Automower."""
@@ -201,7 +215,10 @@ class Calendar(DataClassDictMixin):
     the task to an work area.
     """
 
-    start: int
+    start: time = field(
+        metadata=field_options(serialization_strategy=TimeSerializationStrategy())
+    )
+
     duration: int
     monday: bool
     tuesday: bool
@@ -256,7 +273,9 @@ class ConvertScheduleToCalendar:
                 if field_value is True and field_name is day_to_check_as_string:
                     end_task = (
                         time_to_check_begin_of_day
-                        + timedelta(minutes=self.task.start)
+                        + timedelta(
+                            hours=self.task.start.hour, minutes=self.task.start.minute
+                        )
                         + timedelta(minutes=self.task.duration)
                     )
                     if self.begin_of_current_day == time_to_check_begin_of_day:
@@ -283,7 +302,8 @@ class ConvertScheduleToCalendar:
             hour=0, minute=0, second=0, microsecond=0
         )
         return AutomowerCalendarEvent(
-            start=begin_of_day_with_schedule + timedelta(minutes=self.task.start),
+            start=begin_of_day_with_schedule
+            + timedelta(hours=self.task.start.hour, minutes=self.task.start.minute),
             duration=timedelta(minutes=self.task.duration),
             uid=f"{self.task.start}_{self.task.duration}_{dayset}",
             day_set=dayset,

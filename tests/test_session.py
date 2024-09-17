@@ -1,7 +1,7 @@
 """Test automower session."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -259,7 +259,7 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
-            start=720,
+            start=time(hour=12),
             duration=300,
             monday=True,
             tuesday=True,

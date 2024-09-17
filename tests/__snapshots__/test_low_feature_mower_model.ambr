@@ -12,7 +12,7 @@
         'friday': False,
         'monday': True,
         'saturday': False,
-        'start': 120,
+        'start': datetime.time(2, 0),
         'sunday': False,
         'thursday': False,
         'tuesday': False,
