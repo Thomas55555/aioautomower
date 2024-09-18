@@ -18,7 +18,6 @@
         'tuesday': False,
         'wednesday': False,
         'work_area_id': None,
-        'work_area_name': None,
       }),
     ]),
   })

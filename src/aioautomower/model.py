@@ -64,15 +64,17 @@ def snake_case(string: str | None) -> str:
     ).lower()
 
 
-def generate_work_area_list(workarea_list) -> list[str]:
+def generate_work_area_names_list(workarea_list: list) -> list[str]:
     """Return a list of names extracted from each work area dictionary."""
     wa_names = [WorkArea.from_dict(area).name for area in workarea_list]
     wa_names.append("no_work_area_active")
     return wa_names
 
 
-def generate_work_area_dict(workarea_list) -> dict[int, str]:
+def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None:
     """Return a dict of names extracted from each work area dictionary."""
+    if workarea_list is None:
+        return None
     return {
         area["workAreaId"]: get_work_area_name(area["name"]) for area in workarea_list
     }
@@ -81,6 +83,13 @@ def generate_work_area_dict(workarea_list) -> dict[int, str]:
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
+
+
+def make_name_string(work_area_name: str | None, number: int) -> str:
+    """Return a string for the calendar summary."""
+    if work_area_name is not None:
+        return f"{work_area_name} schedule {number}"
+    return f"Schedule {number}"
 
 
 @dataclass
@@ -244,7 +253,6 @@ class Calendar(DataClassDictMixin):
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
-    work_area_name: str | None = None
 
     class Config(BaseConfig):
         """BaseConfig for Calendar."""
@@ -335,12 +343,6 @@ class Tasks(DataClassDictMixin):
 
     tasks: list[Calendar] | None
 
-    def make_name_string(self, work_area_name, number) -> str:
-        """Return a string for the calendar summary."""
-        if work_area_name is not None:
-            return f"{work_area_name} schedule {number}"
-        return f"Schedule {number}"
-
     @property
     def timeline(self) -> ProgramTimeline | None:
         """Return a timeline of all schedules."""
@@ -370,7 +372,8 @@ class Tasks(DataClassDictMixin):
 
             iters.append(
                 create_recurrence(
-                    schedule_name=self.make_name_string(task.work_area_name, number),
+                    schedule_no=number,
+                    work_area_id=task.work_area_id,
                     frequency=freq,
                     dtstart=event.start,
                     duration=event.duration,
@@ -380,7 +383,7 @@ class Tasks(DataClassDictMixin):
 
         return ProgramTimeline(MergedIterable(iters))
 
-    def generate_schedule_no(self, task: Calendar | None) -> str | None:
+    def generate_schedule_no(self, task: Calendar) -> int:
         """Return a schedule number."""
         if task is not None:
             if task.work_area_id is not None:
@@ -574,7 +577,7 @@ class MowerAttributes(DataClassDictMixin):
     )
     work_area_names: list[str] | None = field(
         metadata=field_options(
-            deserialize=generate_work_area_list,
+            deserialize=generate_work_area_names_list,
             alias="workAreas",
         ),
         default=None,

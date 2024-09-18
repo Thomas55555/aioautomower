@@ -18,7 +18,6 @@
         'tuesday': False,
         'wednesday': True,
         'work_area_id': 123456,
-        'work_area_name': 'Front lawn',
       }),
       dict({
         'duration': datetime.timedelta(seconds=28800),
@@ -31,7 +30,6 @@
         'tuesday': True,
         'wednesday': False,
         'work_area_id': 0,
-        'work_area_name': 'my_lawn',
       }),
     ]),
   })

@@ -42,7 +42,8 @@ RRULE_WEEKDAY = {
 class ProgramEvent:
     """An instance of a program event."""
 
-    schedule_name: str
+    schedule_no: int
+    work_area_id: int | None
     start: datetime.datetime
     end: datetime.datetime
     rule: rrule.rrule | None = None
@@ -64,7 +65,8 @@ class ProgramTimeline(SortableItemTimeline[ProgramEvent]):
 
 
 def create_recurrence(
-    schedule_name: str,
+    schedule_no: int,
+    work_area_id: int | None,
     frequency: ProgramFrequency,
     dtstart: datetime.datetime,
     duration: datetime.timedelta,
@@ -100,7 +102,7 @@ def create_recurrence(
         dtend = dtstart + duration
 
         def build() -> ProgramEvent:
-            return ProgramEvent(schedule_name, dtstart, dtend, rule)
+            return ProgramEvent(schedule_no, work_area_id, dtstart, dtend, rule)
 
         return LazySortableItem(Timespan.of(dtstart, dtend), build)
 
