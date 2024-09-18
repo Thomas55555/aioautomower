@@ -14,7 +14,7 @@ from aioautomower.exceptions import (
     FeatureNotSupportedException,
     NoDataAvailableException,
 )
-from aioautomower.model import Calendar, HeadlightModes
+from aioautomower.model import Calendar, HeadlightModes, Tasks
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
@@ -126,11 +126,12 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
             }
         },
     )
-    task_list = json.loads(load_fixture("task_list.json"))
-    await automower_api.commands.set_calendar(MOWER_ID, task_list)
+    tasks_dict: dict = json.loads(load_fixture("tasks.json"))
+    tasks = Tasks.from_dict(tasks_dict)
+    await automower_api.commands.set_calendar(MOWER_ID, tasks)
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/calendar",
-        json={"data": {"type": "calendar", "attributes": {"tasks": task_list}}},
+        json={"data": {"type": "calendar", "attributes": tasks_dict}},
     )
     await automower_api.commands.error_confirm(MOWER_ID)
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
@@ -269,7 +270,6 @@ async def test_update_data(mock_automower_client: AbstractAuth):
             saturday=True,
             sunday=True,
             work_area_id=None,
-            work_area_name=None,
         )
     ]
 

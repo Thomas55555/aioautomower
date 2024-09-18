@@ -16,7 +16,7 @@ from .exceptions import (
     NoDataAvailableException,
     TimeoutException,
 )
-from .model import HeadlightModes, MowerAttributes
+from .model import HeadlightModes, MowerAttributes, Tasks
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
@@ -245,13 +245,14 @@ class _MowerCommands:
     async def set_calendar(
         self,
         mower_id: str,
-        task_list: list[str],
+        tasks: Tasks,
     ):
         """Send calendar task to the mower."""
+
         body = {
             "data": {
                 "type": "calendar",
-                "attributes": {"tasks": task_list},
+                "attributes": tasks.to_dict(),
             }
         }
         url = AutomowerEndpoint.calendar.format(mower_id=mower_id)

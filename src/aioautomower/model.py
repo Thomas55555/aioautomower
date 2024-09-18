@@ -15,6 +15,7 @@ from ical.iter import (
 from ical.timespan import Timespan
 from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
+from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
 
 from .const import ERRORCODES, DayOfWeek, ProgramFrequency
@@ -141,7 +142,7 @@ class DurationSerializationStrategy(SerializationStrategy):
 
     def serialize(self, value: timedelta) -> int:
         """Serialize a timedelta object to an integer representing total minutes."""
-        return int(value.total_seconds() * 60)
+        return int(value.total_seconds() // 60)  # Convert total seconds to minutes
 
     def deserialize(self, value: int) -> timedelta:
         """Deserialize an integer representing total minutes to a timedelta object."""
@@ -244,6 +245,11 @@ class Calendar(DataClassDictMixin):
         metadata=field_options(alias="workAreaId"), default=None
     )
     work_area_name: str | None = None
+
+    class Config(BaseConfig):
+        """BaseConfig for Calendar."""
+
+        serialize_by_alias = True
 
 
 @dataclass
