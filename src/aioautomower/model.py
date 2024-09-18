@@ -7,13 +7,11 @@ from datetime import UTC, datetime, time, timedelta
 from enum import Enum, StrEnum
 from re import sub
 
-from ical.event import Event  # noqa: F401
 from ical.iter import (
     MergedIterable,
     SortableItem,
 )
 from ical.timespan import Timespan
-from ical.types.recur import Recur
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
@@ -120,18 +118,6 @@ class JWT(DataClassDictMixin):
     sub: str
 
 
-class RecurSerializationStrategy(SerializationStrategy):
-    """SerializationStrategy for Recur object."""
-
-    def serialize(self, value: Recur) -> str:
-        """Serialize the a Recur object to a string."""
-        return Recur.as_rrule_str(value)
-
-    def deserialize(self, value: str) -> Recur:
-        """Deserialize a string to a Recur object."""
-        return Recur.from_rrule(value)
-
-
 class TimeSerializationStrategy(SerializationStrategy):
     """SerializationStrategy for Recur object."""
 
@@ -195,15 +181,11 @@ class Mower(DataClassDictMixin):
     error_code: int = field(metadata=field_options(alias="errorCode"))
     error_key: str | None = field(
         metadata=field_options(
-            deserialize=lambda x: (None if x == 0 else snake_case(ERRORCODES.get(x))),
+            deserialize=lambda x: None if x == 0 else snake_case(ERRORCODES.get(x)),
             alias="errorCode",
-        ),
+        )
     )
-    error_timestamp: int = field(
-        metadata=field_options(
-            alias="errorCodeTimestamp",
-        ),
-    )
+    error_timestamp: int = field(metadata=field_options(alias="errorCodeTimestamp"))
     error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
@@ -312,14 +294,10 @@ class ConvertScheduleToCalendar:
         return self.now
 
     def make_dayset(self) -> set[DayOfWeek | None]:
-        """Generate a set of relevant days from a task."""
-        day_set = set()
-        for task_field in fields(self.task):
-            field_name = task_field.name
-            field_value = getattr(self.task, field_name)
-            if field_value is True:
-                day_set.add(WEEKDAYS_TO_ICAL.get(field_name))
-        return day_set
+        """Generate a set of days from a task."""
+        return {
+            WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+        }
 
     def make_event(self) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
