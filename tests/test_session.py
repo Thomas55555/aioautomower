@@ -1,7 +1,7 @@
 """Test automower session."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
@@ -13,12 +13,14 @@ from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
     FeatureNotSupportedException,
     NoDataAvailableException,
+    WorkAreasDifferentException,
 )
-from aioautomower.model import Calendar, HeadlightModes
+from aioautomower.model import Calendar, HeadlightModes, Tasks
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
+MOWER_ID_LOW_FEATURE = "1234"
 
 
 async def test_connect_disconnect(mock_automower_client: AbstractAuth):
@@ -126,12 +128,69 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
             }
         },
     )
-    task_list = json.loads(load_fixture("task_list.json"))
-    await automower_api.commands.set_calendar(MOWER_ID, task_list)
+
+    # Test calendar with selfmade object
+    calendar = [
+        Calendar(
+            time(8, 0),
+            timedelta(hours=14),
+            True,
+            True,
+            True,
+            True,
+            True,
+            True,
+            True,
+            123456,
+        )
+    ]
+    tasks = Tasks(tasks=calendar)
+    await automower_api.commands.set_calendar(MOWER_ID, tasks)
+    tasks_test_dict = tasks.to_dict()
+    for task in tasks_test_dict["tasks"]:
+        assert task["workAreaId"] == 123456
+        wa_id = task["workAreaId"]
     mocked_method.assert_called_with(
-        f"mowers/{MOWER_ID}/calendar",
-        json={"data": {"type": "calendar", "attributes": {"tasks": task_list}}},
+        f"mowers/{MOWER_ID}/workAreas/{wa_id}/calendar",
+        json={"data": {"type": "calendar", "attributes": tasks_test_dict}},
     )
+
+    # Test calendar with workareas
+    tasks_dict: dict = json.loads(load_fixture("tasks.json"))
+    tasks = Tasks.from_dict(tasks_dict)
+    await automower_api.commands.set_calendar(MOWER_ID, tasks)
+    for task in tasks_dict["tasks"]:
+        assert task["workAreaId"] == 123456
+        wa_id = task["workAreaId"]
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/workAreas/{wa_id}/calendar",
+        json={"data": {"type": "calendar", "attributes": tasks_dict}},
+    )
+
+    # Test calendar with different work areas in one command.
+    tasks_dict["tasks"][0]["workAreaId"] = 6789
+    tasks = Tasks.from_dict(tasks_dict)
+    with pytest.raises(
+        WorkAreasDifferentException,
+        match="Only identical work areas are allowed in one command.",
+    ):
+        await automower_api.commands.set_calendar(MOWER_ID, tasks)
+
+    # Test calendar without workareas
+    tasks_dict_without_work_areas: dict = json.loads(
+        load_fixture("tasks_without_work_area.json")
+    )
+    tasks_without_work_areas = Tasks.from_dict(tasks_dict_without_work_areas)
+    await automower_api.commands.set_calendar(
+        MOWER_ID_LOW_FEATURE, tasks_without_work_areas
+    )
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID_LOW_FEATURE}/calendar",
+        json={
+            "data": {"type": "calendar", "attributes": tasks_dict_without_work_areas}
+        },
+    )
+
     await automower_api.commands.error_confirm(MOWER_ID)
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
     with pytest.raises(
@@ -259,8 +318,8 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
-            start=720,
-            duration=300,
+            start=time(hour=12),
+            duration=timedelta(minutes=300),
             monday=True,
             tuesday=True,
             wednesday=True,
@@ -269,7 +328,6 @@ async def test_update_data(mock_automower_client: AbstractAuth):
             saturday=True,
             sunday=True,
             work_area_id=None,
-            work_area_name=None,
         )
     ]
 

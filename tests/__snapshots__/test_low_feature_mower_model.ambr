@@ -8,17 +8,16 @@
   dict({
     'tasks': list([
       dict({
-        'duration': 49,
+        'duration': datetime.timedelta(seconds=2940),
         'friday': False,
         'monday': True,
         'saturday': False,
-        'start': 120,
+        'start': datetime.time(2, 0),
         'sunday': False,
         'thursday': False,
         'tuesday': False,
         'wednesday': False,
         'work_area_id': None,
-        'work_area_name': None,
       }),
     ]),
   })
