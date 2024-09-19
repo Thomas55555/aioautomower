@@ -15,6 +15,7 @@ from .exceptions import (
     FeatureNotSupportedException,
     NoDataAvailableException,
     TimeoutException,
+    WorkAreasDifferentException,
 )
 from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
@@ -259,8 +260,15 @@ class _MowerCommands:
             await self.auth.post_json(url, json=body)
         if self.data[mower_id].capabilities.work_areas:
             task_list: list[Calendar] = getattr(tasks, "tasks")
+            first_work_area_id = None
             for task in task_list:
                 work_area_id = getattr(task, "work_area_id")
+                if first_work_area_id is None:
+                    first_work_area_id = work_area_id
+                elif work_area_id != first_work_area_id:
+                    raise WorkAreasDifferentException(
+                        "Only identical work areas are allowed in one command."
+                    )
             body = {
                 "data": {
                     "type": "calendar",

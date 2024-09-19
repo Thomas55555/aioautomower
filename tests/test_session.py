@@ -13,6 +13,7 @@ from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
     FeatureNotSupportedException,
     NoDataAvailableException,
+    WorkAreasDifferentException,
 )
 from aioautomower.model import Calendar, HeadlightModes, Tasks
 from aioautomower.session import AutomowerSession
@@ -139,6 +140,15 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         f"mowers/{MOWER_ID}/workAreas/{wa_id}/calendar",
         json={"data": {"type": "calendar", "attributes": tasks_dict}},
     )
+
+    # Test calendar with diefferent work areas in one command.
+    tasks_dict["tasks"][0]["workAreaId"] = 6789
+    tasks = Tasks.from_dict(tasks_dict)
+    with pytest.raises(
+        WorkAreasDifferentException,
+        match="Only identical work areas are allowed in one command.",
+    ):
+        await automower_api.commands.set_calendar(MOWER_ID, tasks)
 
     # Test calendar without workareas
     tasks_dict_without_work_areas: dict = json.loads(
