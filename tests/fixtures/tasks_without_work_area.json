@@ -9,8 +9,7 @@
       "thursday": false,
       "friday": true,
       "saturday": false,
-      "sunday": false,
-      "workAreaId": 123456
+      "sunday": false
     },
     {
       "start": 0,
@@ -21,8 +20,7 @@
       "thursday": true,
       "friday": false,
       "saturday": true,
-      "sunday": false,
-      "workAreaId": 123456
+      "sunday": false
     }
   ]
 }

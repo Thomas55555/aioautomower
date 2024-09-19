@@ -240,6 +240,7 @@ class Calendar(DataClassDictMixin):
         """BaseConfig for Calendar."""
 
         serialize_by_alias = True
+        omit_none = True
 
 
 @dataclass

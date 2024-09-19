@@ -16,7 +16,7 @@ from .exceptions import (
     NoDataAvailableException,
     TimeoutException,
 )
-from .model import HeadlightModes, MowerAttributes, Tasks
+from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
@@ -248,15 +248,29 @@ class _MowerCommands:
         tasks: Tasks,
     ):
         """Send calendar task to the mower."""
-
-        body = {
-            "data": {
-                "type": "calendar",
-                "attributes": tasks.to_dict(),
+        if not self.data[mower_id].capabilities.work_areas:
+            body = {
+                "data": {
+                    "type": "calendar",
+                    "attributes": tasks.to_dict(),
+                }
             }
-        }
-        url = AutomowerEndpoint.calendar.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+            url = AutomowerEndpoint.calendar.format(mower_id=mower_id)
+            await self.auth.post_json(url, json=body)
+        if self.data[mower_id].capabilities.work_areas:
+            task_list: list[Calendar] = getattr(tasks, "tasks")
+            for task in task_list:
+                work_area_id = getattr(task, "work_area_id")
+            body = {
+                "data": {
+                    "type": "calendar",
+                    "attributes": tasks.to_dict(),
+                }
+            }
+            url = AutomowerEndpoint.work_area_calendar.format(
+                mower_id=mower_id, work_area_id=work_area_id
+            )
+            await self.auth.post_json(url, json=body)
 
     async def switch_stay_out_zone(
         self, mower_id: str, stay_out_zone_id: str, switch: bool

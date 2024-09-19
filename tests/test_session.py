@@ -19,6 +19,7 @@ from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
+MOWER_ID_LOW_FEATURE = "1234"
 
 
 async def test_connect_disconnect(mock_automower_client: AbstractAuth):
@@ -126,13 +127,34 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
             }
         },
     )
+
+    # Test calendar with workareas
     tasks_dict: dict = json.loads(load_fixture("tasks.json"))
     tasks = Tasks.from_dict(tasks_dict)
     await automower_api.commands.set_calendar(MOWER_ID, tasks)
+    for task in tasks_dict["tasks"]:
+        assert task["workAreaId"] == 123456
+        wa_id = task["workAreaId"]
     mocked_method.assert_called_with(
-        f"mowers/{MOWER_ID}/calendar",
+        f"mowers/{MOWER_ID}/workAreas/{wa_id}/calendar",
         json={"data": {"type": "calendar", "attributes": tasks_dict}},
     )
+
+    # Test calendar without workareas
+    tasks_dict_without_work_areas: dict = json.loads(
+        load_fixture("tasks_without_work_area.json")
+    )
+    tasks_without_work_areas = Tasks.from_dict(tasks_dict_without_work_areas)
+    await automower_api.commands.set_calendar(
+        MOWER_ID_LOW_FEATURE, tasks_without_work_areas
+    )
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID_LOW_FEATURE}/calendar",
+        json={
+            "data": {"type": "calendar", "attributes": tasks_dict_without_work_areas}
+        },
+    )
+
     await automower_api.commands.error_confirm(MOWER_ID)
     mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
     with pytest.raises(
