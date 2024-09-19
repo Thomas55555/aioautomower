@@ -129,6 +129,32 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         },
     )
 
+    # Test calendar with selfmade object
+    calendar = [
+        Calendar(
+            time(8, 0),
+            timedelta(hours=14),
+            True,
+            True,
+            True,
+            True,
+            True,
+            True,
+            True,
+            123456,
+        )
+    ]
+    tasks = Tasks(tasks=calendar)
+    await automower_api.commands.set_calendar(MOWER_ID, tasks)
+    tasks_test_dict = tasks.to_dict()
+    for task in tasks_test_dict["tasks"]:
+        assert task["workAreaId"] == 123456
+        wa_id = task["workAreaId"]
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/workAreas/{wa_id}/calendar",
+        json={"data": {"type": "calendar", "attributes": tasks_test_dict}},
+    )
+
     # Test calendar with workareas
     tasks_dict: dict = json.loads(load_fixture("tasks.json"))
     tasks = Tasks.from_dict(tasks_dict)
@@ -141,7 +167,7 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         json={"data": {"type": "calendar", "attributes": tasks_dict}},
     )
 
-    # Test calendar with diefferent work areas in one command.
+    # Test calendar with different work areas in one command.
     tasks_dict["tasks"][0]["workAreaId"] = 6789
     tasks = Tasks.from_dict(tasks_dict)
     with pytest.raises(
