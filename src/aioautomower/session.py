@@ -449,6 +449,31 @@ class AutomowerSession:
                 return formated_msg
         return copy_msg_dict
 
+    def filter_work_area_id(self, msg_dict: dict) -> dict:
+        """Filter empty work_area_id."""
+        copy_msg_dict = dict(msg_dict)
+        current_data = self._data
+        new_attributes = copy_msg_dict["attributes"]
+        if current_data is None:
+            raise NoDataAvailableException
+        dater_iter = current_data["data"]
+        for _, current_data_mower in enumerate(dater_iter):
+            if current_data_mower["id"] == copy_msg_dict["id"]:
+                if (
+                    current_data_mower["attributes"]["capabilities"]["workAreas"]
+                    is True
+                ):
+                    current_attributes = current_data_mower["attributes"]
+                    formated_msg = {
+                        "id": current_data_mower["id"],
+                        "type": "status-event",
+                        "attributes": new_attributes,
+                    }
+                    formated_msg["attributes"]["mower"]["workAreaId"] = (
+                        current_attributes["mower"]["workAreaId"]
+                    )
+        return copy_msg_dict
+
     def _handle_text_message(self, msg: WSMessage) -> None:
         """Process a text message to data."""
         if not msg.data:
@@ -462,6 +487,9 @@ class AutomowerSession:
                     if msg_dict["type"] == "settings-event":
                         copy = dict(msg_dict)
                         msg_dict = self.add_settigs_tree(copy)
+                    if msg_dict["type"] == "status-event":
+                        copy = dict(msg_dict)
+                        msg_dict = self.filter_work_area_id(copy)
                     _LOGGER.debug("Got %s, data: %s", msg_dict["type"], msg_dict)
                     self._update_data(msg_dict)
                 else:
