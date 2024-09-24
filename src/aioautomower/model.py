@@ -578,11 +578,6 @@ class MowerAttributes(DataClassDictMixin):
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name
-            for task in self.calendar.tasks:
-                task.work_area_name = self.work_area_dict.get(task.work_area_id)
-        if not self.capabilities.work_areas:
-            for task in self.calendar.tasks:
-                task.work_area_name = None
 
 
 @dataclass
