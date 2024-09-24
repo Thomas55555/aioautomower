@@ -87,8 +87,6 @@ async def test_daily_schedule(
     automower_api._handle_text_message(msg)  # noqa: SLF001
 
     mower_timeline = automower_api.data["1234"].calendar.timeline
-    if TYPE_CHECKING:
-        assert mower_timeline is not None
     cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))
     active_after = next(cursor, None)
     if TYPE_CHECKING:
@@ -112,3 +110,14 @@ async def test_daily_schedule(
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
+
+
+@freeze_time("2024-05-04 8:00:00")
+async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
+    """Test automower session patch commands."""
+    automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
+    await automower_api.connect()
+    mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
+    cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))
+    active_after = next(cursor, None)
+    assert active_after is None

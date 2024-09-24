@@ -320,17 +320,15 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar] | None
+    tasks: list[Calendar]
 
     @property
-    def timeline(self) -> ProgramTimeline | None:
+    def timeline(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
         return self.timeline_tz()
 
-    def timeline_tz(self) -> ProgramTimeline | None:
+    def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
-        if self.tasks is None:
-            return None
         self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
         for task in self.tasks:
             if task.work_area_id is not None:
@@ -539,7 +537,7 @@ class MowerAttributes(DataClassDictMixin):
     calendar: Tasks
     planner: Planner
     metadata: Metadata
-    positions: list[Positions] | None
+    positions: list[Positions]
     settings: Settings
     statistics: Statistics
     stay_out_zones: StayOutZones | None = field(
