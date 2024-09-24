@@ -337,6 +337,10 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore[index]
     assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore[index]
 
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("status_event.json"), None)
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].mower.work_area_id == 123456
+
     # Test NoDataAvailableException is risen, if there is no data
     automower_api._data = None  # noqa: SLF001
     with pytest.raises(NoDataAvailableException):
