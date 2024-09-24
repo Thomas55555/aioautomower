@@ -320,7 +320,7 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar] | None
+    tasks: list[Calendar]
 
     @property
     def timeline(self) -> ProgramTimeline | None:
@@ -539,7 +539,7 @@ class MowerAttributes(DataClassDictMixin):
     calendar: Tasks
     planner: Planner
     metadata: Metadata
-    positions: list[Positions] | None
+    positions: list[Positions]
     settings: Settings
     statistics: Statistics
     stay_out_zones: StayOutZones | None = field(
