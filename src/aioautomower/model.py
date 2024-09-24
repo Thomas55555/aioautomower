@@ -323,14 +323,12 @@ class Tasks(DataClassDictMixin):
     tasks: list[Calendar]
 
     @property
-    def timeline(self) -> ProgramTimeline | None:
+    def timeline(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
         return self.timeline_tz()
 
-    def timeline_tz(self) -> ProgramTimeline | None:
+    def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
-        if self.tasks is None:
-            return None
         self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
         for task in self.tasks:
             if task.work_area_id is not None:

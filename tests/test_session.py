@@ -346,3 +346,10 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
+
+
+async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
+    """Test automower empty task."""
+    automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
+    await automower_api.connect()
+    assert automower_api.data[MOWER_ID].calendar.tasks == []
