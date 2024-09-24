@@ -65,6 +65,7 @@ class ProgramTimeline(SortableItemTimeline[ProgramEvent]):
 
 
 def create_recurrence(
+    *,
     schedule_no: int,
     work_area_id: int | None,
     frequency: ProgramFrequency,
