@@ -194,14 +194,14 @@
     0: dict({
       'cutting_height': 10,
       'enabled': False,
-      'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 43, 59, 269000),
+      'last_time_completed_naive': FakeDatetime(2024, 8, 12, 5, 7, 49),
       'name': 'my_lawn',
       'progress': 20,
     }),
     123456: dict({
       'cutting_height': 50,
       'enabled': True,
-      'last_time_completed_naive': FakeDatetime(1970, 1, 20, 22, 44, 9, 269000),
+      'last_time_completed_naive': FakeDatetime(2024, 8, 12, 7, 54, 29),
       'name': 'Front lawn',
       'progress': 40,
     }),
