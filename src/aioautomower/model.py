@@ -508,7 +508,7 @@ class WorkArea(DataClassDictMixin):
             deserialize=lambda x: (
                 None
                 if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
+                else datetime.fromtimestamp(x, tz=UTC).replace(tzinfo=None)
             ),
             alias="lastTimeCompleted",
         ),
