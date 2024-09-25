@@ -180,11 +180,13 @@
   dict({
     0: 'my_lawn',
     123456: 'Front lawn',
+    654321: 'Back lawn',
   })
 # ---
 # name: test_mower_snapshot[work_area_names]
   list([
     'Front lawn',
+    'Back lawn',
     'my_lawn',
     'no_work_area_active',
   ])
@@ -204,6 +206,13 @@
       'last_time_completed_naive': FakeDatetime(2024, 8, 12, 7, 54, 29),
       'name': 'Front lawn',
       'progress': 40,
+    }),
+    654321: dict({
+      'cutting_height': 25,
+      'enabled': True,
+      'last_time_completed_naive': None,
+      'name': 'Back lawn',
+      'progress': None,
     }),
   })
 # ---
