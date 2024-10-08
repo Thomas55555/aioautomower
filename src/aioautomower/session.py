@@ -161,7 +161,11 @@ class _MowerCommands:
         body = {
             "data": {
                 "type": "settings",
-                "attributes": {"dateTime": int(current_time.timestamp())},
+                "attributes": {
+                    "dateTime": int(
+                        current_time.replace(tzinfo=datetime.UTC).timestamp()
+                    )
+                },
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
