@@ -124,7 +124,7 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         json={
             "data": {
                 "type": "settings",
-                "attributes": {"headlight": {"mode": HeadlightModes.ALWAYS_OFF}},
+                "attributes": {"headlight": {"mode": "ALWAYS_OFF"}},
             }
         },
     )
@@ -309,7 +309,10 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     msg = WSMessage(WSMsgType.TEXT, load_fixture("settings_event.json"), None)
     automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == calendar
-    assert automower_api.data[MOWER_ID].settings.headlight.mode == "EVENING_AND_NIGHT"
+    assert (
+        automower_api.data[MOWER_ID].settings.headlight.mode
+        == HeadlightModes.EVENING_AND_NIGHT
+    )
 
     # Test new tasks arrive
     msg = WSMessage(

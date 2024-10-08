@@ -175,9 +175,9 @@ class Capabilities(DataClassDictMixin):
 class Mower(DataClassDictMixin):
     """Information about the mowers current status."""
 
-    mode: str
-    activity: str
-    state: str
+    mode: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
+    activity: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
+    state: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
     error_code: int = field(metadata=field_options(alias="errorCode"))
     error_key: str | None = field(
         metadata=field_options(
@@ -196,7 +196,9 @@ class Mower(DataClassDictMixin):
             alias="errorCodeTimestamp",
         ),
     )
-    inactive_reason: str = field(metadata=field_options(alias="inactiveReason"))
+    inactive_reason: str = field(
+        metadata=field_options(deserialize=lambda x: x.lower(), alias="inactiveReason"),
+    )
     is_error_confirmable: bool = field(
         metadata=field_options(alias="isErrorConfirmable"), default=False
     )
@@ -378,7 +380,7 @@ class Tasks(DataClassDictMixin):
 class Override(DataClassDictMixin):
     """DataClass for Override values."""
 
-    action: str
+    action: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
 
 
 @dataclass
@@ -466,7 +468,9 @@ class Statistics(DataClassDictMixin):
 class Headlight(DataClassDictMixin):
     """DataClass for Headlight values."""
 
-    mode: str | None
+    mode: str | None = field(
+        metadata=field_options(deserialize=lambda x: x.lower()), default=None
+    )
 
 
 @dataclass
@@ -597,73 +601,73 @@ class MowerList(DataClassDictMixin):
 class HeadlightModes(StrEnum):
     """Headlight modes of a lawn mower."""
 
-    ALWAYS_ON = "ALWAYS_ON"
-    ALWAYS_OFF = "ALWAYS_OFF"
-    EVENING_ONLY = "EVENING_ONLY"
-    EVENING_AND_NIGHT = "EVENING_AND_NIGHT"
+    ALWAYS_ON = "always_on"
+    ALWAYS_OFF = "always_off"
+    EVENING_ONLY = "evening_only"
+    EVENING_AND_NIGHT = "evening_and_night"
 
 
 class MowerStates(StrEnum):
     """Mower states of a lawn mower."""
 
-    FATAL_ERROR = "FATAL_ERROR"
-    ERROR = "ERROR"
-    ERROR_AT_POWER_UP = "ERROR_AT_POWER_UP"
-    NOT_APPLICABLE = "NOT_APPLICABLE"
-    UNKNOWN = "UNKNOWN"
-    STOPPED = "STOPPED"
-    OFF = "OFF"
-    PAUSED = "PAUSED"
-    IN_OPERATION = "IN_OPERATION"
-    WAIT_UPDATING = "WAIT_UPDATING"
-    WAIT_POWER_UP = "WAIT_POWER_UP"
-    RESTRICTED = "RESTRICTED"
+    FATAL_ERROR = "fatal_error"
+    ERROR = "error"
+    ERROR_AT_POWER_UP = "error_at_power_up"
+    NOT_APPLICABLE = "not_applicable"
+    UNKNOWN = "unknown"
+    STOPPED = "stopped"
+    OFF = "off"
+    PAUSED = "paused"
+    IN_OPERATION = "in_operation"
+    WAIT_UPDATING = "wait_updating"
+    WAIT_POWER_UP = "wait_power_up"
+    RESTRICTED = "restricted"
 
 
 class MowerActivities(StrEnum):
     """Mower activities of a lawn mower."""
 
-    UNKNOWN = "UNKNOWN"
-    NOT_APPLICABLE = "NOT_APPLICABLE"
-    MOWING = "MOWING"
-    GOING_HOME = "GOING_HOME"
-    CHARGING = "CHARGING"
-    LEAVING = "LEAVING"
-    PARKED_IN_CS = "PARKED_IN_CS"
-    STOPPED_IN_GARDEN = "STOPPED_IN_GARDEN"
+    UNKNOWN = "unknown"
+    NOT_APPLICABLE = "not_applicable"
+    MOWING = "mowing"
+    GOING_HOME = "going_home"
+    CHARGING = "charging"
+    LEAVING = "leaving"
+    PARKED_IN_CS = "parked_in_cs"
+    STOPPED_IN_GARDEN = "stopped_in_garden"
 
 
 class MowerModes(StrEnum):
     """Mower activities of a lawn mower."""
 
-    MAIN_AREA = "MAIN_AREA"
-    DEMO = "DEMO"
-    SECONDARY_AREA = "SECONDARY_AREA"
-    HOME = "HOME"
-    UNKNOWN = "UNKNOWN"
+    MAIN_AREA = "main_area"
+    DEMO = "demo"
+    SECONDARY_AREA = "secondary_area"
+    HOME = "home"
+    UNKNOWN = "unknown"
 
 
 class RestrictedReasons(StrEnum):
     """Restricted reasons in the planner of lawn mower."""
 
-    NONE = "NONE"
-    WEEK_SCHEDULE = "WEEK_SCHEDULE"
-    PARK_OVERRIDE = "PARK_OVERRIDE"
-    SENSOR = "SENSOR"
-    DAILY_LIMIT = "DAILY_LIMIT"
-    FOTA = "FOTA"
-    FROST = "FROST"
-    ALL_WORK_AREAS_COMPLETED = "ALL_WORK_AREAS_COMPLETED"
-    EXTERNAL = "EXTERNAL"
-    NOT_APPLICABLE = "NOT_APPLICABLE"
+    NONE = "none"
+    WEEK_SCHEDULE = "week_schedule"
+    PARK_OVERRIDE = "park_override"
+    SENSOR = "sensor"
+    DAILY_LIMIT = "daily_limit"
+    FOTA = "fota"
+    FROST = "frost"
+    ALL_WORK_AREAS_COMPLETED = "all_work_areas_completed"
+    EXTERNAL = "external"
+    NOT_APPLICABLE = "not_applicable"
 
 
 class Actions(StrEnum):
     """Actions in the planner of lawn mower."""
 
-    NOT_ACTIVE = "NOT_ACTIVE"
-    FORCE_PARK = "FORCE_PARK"
-    FORCE_MOW = "FORCE_MOW"
+    NOT_ACTIVE = "not_active"
+    FORCE_PARK = "force_park"
+    FORCE_MOW = "force_mow"
 
 
 class ExternalReasons(Enum):
@@ -682,6 +686,6 @@ class ExternalReasons(Enum):
 class InactiveReasons(Enum):
     """Inactive reasons why the mower is not working."""
 
-    NONE = "NONE"
-    PLANNING = "PLANNING"
-    SEARCHING_FOR_SATELLITES = "SEARCHING_FOR_SATELLITES"
+    NONE = "none"
+    PLANNING = "planing"
+    SEARCHING_FOR_SATELLITES = "searching_for_satellites"
