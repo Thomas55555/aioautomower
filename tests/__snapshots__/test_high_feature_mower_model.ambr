@@ -51,15 +51,15 @@
 # ---
 # name: test_mower_snapshot[mower]
   dict({
-    'activity': 'PARKED_IN_CS',
+    'activity': 'parked_in_cs',
     'error_code': 0,
     'error_datetime_naive': None,
     'error_key': None,
     'error_timestamp': 0,
-    'inactive_reason': 'NONE',
+    'inactive_reason': 'none',
     'is_error_confirmable': False,
-    'mode': 'MAIN_AREA',
-    'state': 'RESTRICTED',
+    'mode': 'main_area',
+    'state': 'restricted',
     'work_area_id': 123456,
     'work_area_name': 'Front lawn',
   })
@@ -69,7 +69,7 @@
     'next_start': 1685991600000,
     'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
-      'action': 'NOT_ACTIVE',
+      'action': 'not_active',
     }),
     'restricted_reason': 'WEEK_SCHEDULE',
   })
@@ -138,7 +138,7 @@
   dict({
     'cutting_height': 4,
     'headlight': dict({
-      'mode': 'EVENING_ONLY',
+      'mode': 'evening_only',
     }),
   })
 # ---
