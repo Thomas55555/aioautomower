@@ -19,7 +19,9 @@ async def test_low_feature_mower() -> None:
     mowers = mower_list_to_dictionary_dataclass(mower_python)
     assert mowers[MOWER_ID].settings.headlight.mode is None
     assert mowers[MOWER_ID].settings.cutting_height is None
-    assert len(mowers[MOWER_ID].positions) == 0  # type: ignore[arg-type]
+    assert len(mowers[MOWER_ID].positions) == 0
+    assert isinstance(mowers[MOWER_ID].positions, list)
+    assert isinstance(mowers[MOWER_ID].calendar.tasks, list)
 
 
 @freeze_time("2024-05-06 02:50:00")

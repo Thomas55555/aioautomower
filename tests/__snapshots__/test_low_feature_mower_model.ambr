@@ -6,30 +6,18 @@
 # ---
 # name: test_mower_snapshot[calendar]
   dict({
-    'events': list([
-      dict({
-        'end': FakeDatetime(2024, 5, 13, 2, 49),
-        'rrule': Recur(freq=<Frequency.WEEKLY: 'WEEKLY'>, until=None, count=None, interval=1, by_weekday=[WeekdayValue(weekday=<Weekday.MONDAY: 'MO'>, occurrence=None)], by_month_day=[], by_month=[], by_setpos=[]),
-        'schedule_no': 1,
-        'start': FakeDatetime(2024, 5, 13, 2, 0),
-        'uid': '120_49_MO',
-        'work_area_id': None,
-        'work_area_name': '',
-      }),
-    ]),
     'tasks': list([
       dict({
-        'duration': 49,
+        'duration': datetime.timedelta(seconds=2940),
         'friday': False,
         'monday': True,
         'saturday': False,
-        'start': 120,
+        'start': datetime.time(2, 0),
         'sunday': False,
         'thursday': False,
         'tuesday': False,
         'wednesday': False,
         'work_area_id': None,
-        'work_area_name': '',
       }),
     ]),
   })

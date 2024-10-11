@@ -30,32 +30,7 @@
           "isErrorConfirmable": false
         },
         "calendar": {
-          "tasks": [
-            {
-              "start": 1140,
-              "duration": 300,
-              "monday": true,
-              "tuesday": false,
-              "wednesday": true,
-              "thursday": false,
-              "friday": true,
-              "saturday": false,
-              "sunday": false,
-              "workAreaId": 123456
-            },
-            {
-              "start": 0,
-              "duration": 480,
-              "monday": false,
-              "tuesday": true,
-              "wednesday": false,
-              "thursday": true,
-              "friday": false,
-              "saturday": true,
-              "sunday": false,
-              "workAreaId": 0
-            }
-          ]
+          "tasks": []
         },
         "planner": {
           "nextStartTimestamp": 1685991600000,
@@ -76,12 +51,6 @@
             "enabled": true,
             "progress": 40,
             "lastTimeCompleted": 1723449269
-          },
-          {
-            "workAreaId": 654321,
-            "name": "Back lawn",
-            "cuttingHeight": 25,
-            "enabled": true
           },
           {
             "workAreaId": 0,

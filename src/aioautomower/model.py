@@ -1,9 +1,9 @@
 """Models for Husqvarna Automower data."""
 
 import logging
-import operator
+from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from enum import Enum, StrEnum
 from re import sub
 from typing import Any
@@ -11,10 +11,17 @@ from typing import Any
 import zoneinfo
 from ical.event import Event  # noqa: F401
 from ical.types.recur import Recur
+from ical.iter import (
+    MergedIterable,
+    SortableItem,
+)
+from ical.timespan import Timespan
 from mashumaro import DataClassDictMixin, field_options
+from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
 
-from .const import ERRORCODES
+from .const import ERRORCODES, DayOfWeek, ProgramFrequency
+from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -28,14 +35,14 @@ WEEKDAYS = (
     "sunday",
 )
 
-WEEKDAYS_TO_RFC5545 = {
-    "monday": "MO",
-    "tuesday": "TU",
-    "wednesday": "WE",
-    "thursday": "TH",
-    "friday": "FR",
-    "saturday": "SA",
-    "sunday": "SU",
+WEEKDAYS_TO_ICAL = {
+    "sunday": DayOfWeek.SUNDAY,
+    "monday": DayOfWeek.MONDAY,
+    "tuesday": DayOfWeek.TUESDAY,
+    "wednesday": DayOfWeek.WEDNESDAY,
+    "thursday": DayOfWeek.THURSDAY,
+    "friday": DayOfWeek.FRIDAY,
+    "saturday": DayOfWeek.SATURDAY,
 }
 
 
@@ -59,31 +66,32 @@ def snake_case(string: str | None) -> str:
     ).lower()
 
 
-def generate_work_area_list(workarea_list) -> list[str]:
+def generate_work_area_names_list(workarea_list: list) -> list[str]:
     """Return a list of names extracted from each work area dictionary."""
-    wa_names = [_WorkAreas.from_dict(area).name for area in workarea_list]
+    wa_names = [WorkArea.from_dict(area).name for area in workarea_list]
     wa_names.append("no_work_area_active")
     return wa_names
 
 
-def generate_work_area_dict(workarea_list) -> dict[int, str]:
+def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None:
     """Return a dict of names extracted from each work area dictionary."""
+    if workarea_list is None:
+        return None
     return {
-        _WorkAreas.from_dict(area).work_area_id: _WorkAreas.from_dict(area).name
-        for area in workarea_list
+        area["workAreaId"]: get_work_area_name(area["name"]) for area in workarea_list
     }
 
 
-def naive_to_aware(
-    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
-) -> datetime | None:
-    """Convert a naive datetime to a UTC datetime.
+def get_work_area_name(name: str) -> str:
+    """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
+    return "my_lawn" if name == "" else name
 
-    Requiring the mower's current time zone.
-    """
-    if datetime_naive is None:
-        return None
-    return datetime_naive.replace(tzinfo=time_zone).astimezone(time_zone)
+
+def make_name_string(work_area_name: str | None, number: int) -> str:
+    """Return a string for the calendar summary."""
+    if work_area_name is not None:
+        return f"{work_area_name} schedule {number}"
+    return f"Schedule {number}"
 
 
 @dataclass
@@ -114,16 +122,30 @@ class JWT(DataClassDictMixin):
     sub: str
 
 
-class RecurSerializationStrategy(SerializationStrategy):
+class TimeSerializationStrategy(SerializationStrategy):
     """SerializationStrategy for Recur object."""
 
-    def serialize(self, value: Recur) -> str:
-        """Serialize the a Recur object to a string."""
-        return Recur.as_rrule_str(value)
+    def serialize(self, value: time) -> int:
+        """Serialize a time object to an integer representing minutes."""
+        return value.hour * 60 + value.minute
 
-    def deserialize(self, value: str) -> Recur:
-        """Deserialize a string to a Recur object."""
-        return Recur.from_rrule(value)
+    def deserialize(self, value: int) -> time:
+        """Deserialize an integer to a time object."""
+        hour = int(value / 60)
+        minute = value - 60 * hour
+        return time(hour=hour, minute=minute)
+
+
+class DurationSerializationStrategy(SerializationStrategy):
+    """SerializationStrategy for timedelta object."""
+
+    def serialize(self, value: timedelta) -> int:
+        """Serialize a timedelta object to an integer representing total minutes."""
+        return int(value.total_seconds() // 60)  # Convert total seconds to minutes
+
+    def deserialize(self, value: int) -> timedelta:
+        """Deserialize an integer representing total minutes to a timedelta object."""
+        return timedelta(minutes=value)
 
 
 @dataclass
@@ -163,15 +185,11 @@ class Mower(DataClassDictMixin):
     error_code: int = field(metadata=field_options(alias="errorCode"))
     error_key: str | None = field(
         metadata=field_options(
-            deserialize=lambda x: (None if x == 0 else snake_case(ERRORCODES.get(x))),
+            deserialize=lambda x: None if x == 0 else snake_case(ERRORCODES.get(x)),
             alias="errorCode",
-        ),
+        )
     )
-    error_timestamp: int = field(
-        metadata=field_options(
-            alias="errorCodeTimestamp",
-        ),
-    )
+    error_timestamp: int = field(metadata=field_options(alias="errorCodeTimestamp"))
     error_datetime_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
@@ -205,8 +223,12 @@ class Calendar(DataClassDictMixin):
     the task to an work area.
     """
 
-    start: int
-    duration: int
+    start: time = field(
+        metadata=field_options(serialization_strategy=TimeSerializationStrategy())
+    )
+    duration: timedelta = field(
+        metadata=field_options(serialization_strategy=DurationSerializationStrategy())
+    )
     monday: bool
     tuesday: bool
     wednesday: bool
@@ -217,55 +239,25 @@ class Calendar(DataClassDictMixin):
     work_area_id: int | None = field(
         metadata=field_options(alias="workAreaId"), default=None
     )
-    work_area_name: str | None = None
+
+    class Config(BaseConfig):
+        """BaseConfig for Calendar."""
+
+        serialize_by_alias = True
+        omit_none = True
 
 
 @dataclass
-class AutomowerCalendarEvent(DataClassDictMixin):
+class AutomowerCalendarEvent:
     """Information about the calendar tasks.
 
-    An Automower can have several tasks. If the mower supports
-    work areas the property workAreaId is required to connect
-    the task to an work area.
+    Internal class for creating recurrence.
     """
 
     start: datetime
-    end: datetime
-    rrule: Recur = field(
-        metadata=field_options(serialization_strategy=RecurSerializationStrategy())
-    )
+    duration: timedelta
     uid: str
-    schedule_no: int
-    work_area_id: int | None
-    work_area_name: str | None = field(init=False, default=None)
-
-    def __post_init__(self):
-        """Initialize work_area_name to None for later external setting."""
-        self.work_area_name = None
-
-
-def husqvarna_schedule_to_calendar(
-    task_list: list,
-) -> list[AutomowerCalendarEvent]:
-    """Return a sorted list of calendar events.
-
-    The currently active event which will end next is on top.
-    If there is no active event, the next event is on top.
-    """
-    if task_list == []:
-        return []
-    eventlist = []
-    schedule_no = 0
-    for task_dict in task_list:
-        calendar_dataclass = Calendar.from_dict(task_dict)
-        event = ConvertScheduleToCalendar(calendar_dataclass)
-        schedule_no = schedule_no + 1
-        eventlist.append(event.make_event(schedule_no))
-    eventlist.sort(key=operator.attrgetter("end"))
-    now = datetime.now()
-    if getattr(eventlist[0], "end") > now:
-        eventlist.sort(key=operator.attrgetter("start"))
-    return eventlist
+    day_set: set
 
 
 class ConvertScheduleToCalendar:
@@ -295,8 +287,10 @@ class ConvertScheduleToCalendar:
                 if field_value is True and field_name is day_to_check_as_string:
                     end_task = (
                         time_to_check_begin_of_day
-                        + timedelta(minutes=self.task.start)
-                        + timedelta(minutes=self.task.duration)
+                        + timedelta(
+                            hours=self.task.start.hour, minutes=self.task.start.minute
+                        )
+                        + self.task.duration
                     )
                     if self.begin_of_current_day == time_to_check_begin_of_day:
                         if end_task < self.now:
@@ -304,42 +298,25 @@ class ConvertScheduleToCalendar:
                     return self.now + timedelta(days)
         return self.now
 
-    def make_daylist(self) -> str:
-        """Generate a RFC5545 daylist from a task."""
-        day_list = ""
-        for task_field in fields(self.task):
-            field_name = task_field.name
-            field_value = getattr(self.task, field_name)
-            if field_value is True:
-                today_rfc = WEEKDAYS_TO_RFC5545[field_name]
-                if day_list == "":
-                    day_list = today_rfc
-                else:
-                    day_list += "," + str(today_rfc)
-        return day_list
+    def make_dayset(self) -> set[DayOfWeek | None]:
+        """Generate a set of days from a task."""
+        return {
+            WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+        }
 
-    def make_event(self, schedule_no) -> AutomowerCalendarEvent:
+    def make_event(self) -> AutomowerCalendarEvent:
         """Generate a AutomowerCalendarEvent from a task."""
-        daylist = self.make_daylist()
+        dayset = self.make_dayset()
         next_wd_with_schedule = self.next_weekday_with_schedule()
         begin_of_day_with_schedule = next_wd_with_schedule.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        return AutomowerCalendarEvent.from_dict(
-            {
-                "start": (
-                    begin_of_day_with_schedule + timedelta(minutes=self.task.start)
-                ).isoformat(),
-                "end": (
-                    begin_of_day_with_schedule
-                    + timedelta(minutes=self.task.start)
-                    + timedelta(minutes=self.task.duration)
-                ).isoformat(),
-                "rrule": f"FREQ=WEEKLY;BYDAY={daylist}",
-                "uid": f"{self.task.start}_{self.task.duration}_{daylist}",
-                "work_area_id": self.task.work_area_id,
-                "schedule_no": schedule_no,
-            }
+        return AutomowerCalendarEvent(
+            start=begin_of_day_with_schedule
+            + timedelta(hours=self.task.start.hour, minutes=self.task.start.minute),
+            duration=self.task.duration,
+            uid=f"{self.task.start}_{self.task.duration}_{dayset}",
+            day_set=dayset,
         )
 
 
@@ -347,13 +324,58 @@ class ConvertScheduleToCalendar:
 class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
-    tasks: list[Calendar | None]
-    events: list[AutomowerCalendarEvent | None] = field(
-        metadata=field_options(
-            deserialize=husqvarna_schedule_to_calendar,
-            alias="tasks",
-        ),
-    )
+    tasks: list[Calendar]
+
+    @property
+    def timeline(self) -> ProgramTimeline:
+        """Return a timeline of all schedules."""
+        return self.timeline_tz()
+
+    def timeline_tz(self) -> ProgramTimeline:
+        """Return a timeline of all schedules."""
+        self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
+        for task in self.tasks:
+            if task.work_area_id is not None:
+                self.schedule_no[task.work_area_id] = 0
+            if task.work_area_id is None:
+                self.schedule_no["-1"] = 0
+
+        iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
+
+        for task in self.tasks:
+            event = ConvertScheduleToCalendar(task).make_event()
+            number = self.generate_schedule_no(task)
+
+            if len(event.day_set) == 7:
+                freq = ProgramFrequency.DAILY
+            else:
+                freq = ProgramFrequency.WEEKLY
+
+            iters.append(
+                create_recurrence(
+                    schedule_no=number,
+                    work_area_id=task.work_area_id,
+                    frequency=freq,
+                    dtstart=event.start,
+                    duration=event.duration,
+                    days_of_week=event.day_set,
+                )
+            )
+
+        return ProgramTimeline(MergedIterable(iters))
+
+    def generate_schedule_no(self, task: Calendar) -> int:
+        """Return a schedule number."""
+        if task is not None:
+            if task.work_area_id is not None:
+                if task.work_area_id is not None:
+                    self.schedule_no[task.work_area_id] = (
+                        self.schedule_no[task.work_area_id] + 1
+                    )
+                    return self.schedule_no[task.work_area_id]
+            self.schedule_no["-1"] = self.schedule_no["-1"] + 1
+            return self.schedule_no["-1"]
+        return None
 
 
 @dataclass
@@ -461,15 +483,6 @@ class Headlight(DataClassDictMixin):
 
 
 @dataclass
-class _Zones(DataClassDictMixin):
-    """DataClass for Zone values."""
-
-    id: str
-    name: str
-    enabled: bool
-
-
-@dataclass
 class Zone(DataClassDictMixin):
     """DataClass for Zone values."""
 
@@ -479,43 +492,46 @@ class Zone(DataClassDictMixin):
 
 @dataclass
 class StayOutZones(DataClassDictMixin):
-    """DataClass for StayOutZone values."""
+    """DataClass for StayOutZones values."""
 
     dirty: bool
     zones: dict[str, Zone] = field(
         metadata=field_options(
             deserialize=lambda zone_list: {
-                area.id: Zone(name=area.name, enabled=area.enabled)
-                for area in map(_Zones.from_dict, zone_list)
+                zone["id"]: Zone.from_dict(zone) for zone in zone_list
             },
         ),
     )
 
 
 @dataclass
-class _WorkAreas(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
+class WorkArea(DataClassDictMixin):
+    """DataClass for WorkArea values."""
 
-    work_area_id: int = field(metadata=field_options(alias="workAreaId"))
     name: str = field(
         metadata=field_options(
             deserialize=lambda x: "my_lawn" if x == "" else x,
         ),
     )
     cutting_height: int = field(metadata=field_options(alias="cuttingHeight"))
-
-
-@dataclass
-class WorkArea(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
-
-    name: str
-    cutting_height: int
+    enabled: bool = field(default=False)
+    progress: int | None = field(default=None)
+    last_time_completed_naive: datetime | None = field(
+        metadata=field_options(
+            deserialize=lambda x: (
+                None
+                if x == 0
+                else datetime.fromtimestamp(x, tz=UTC).replace(tzinfo=None)
+            ),
+            alias="lastTimeCompleted",
+        ),
+        default=None,
+    )
 
 
 @dataclass
 class Settings(DataClassDictMixin):
-    """DataClass for WorkAreas values."""
+    """DataClass for Settings values."""
 
     headlight: Headlight
     cutting_height: int | None = field(
@@ -534,7 +550,7 @@ class MowerAttributes(DataClassDictMixin):
     calendar: Tasks
     planner: Planner
     metadata: Metadata
-    positions: list[Positions] | None
+    positions: list[Positions]
     settings: Settings
     statistics: Statistics
     stay_out_zones: StayOutZones | None = field(
@@ -543,10 +559,7 @@ class MowerAttributes(DataClassDictMixin):
     work_areas: dict[int, WorkArea] | None = field(
         metadata=field_options(
             deserialize=lambda workarea_list: {
-                area.work_area_id: WorkArea(
-                    name=area.name, cutting_height=area.cutting_height
-                )
-                for area in [_WorkAreas.from_dict(item) for item in workarea_list]
+                area["workAreaId"]: WorkArea.from_dict(area) for area in workarea_list
             },
             alias="workAreas",
         ),
@@ -554,7 +567,7 @@ class MowerAttributes(DataClassDictMixin):
     )
     work_area_names: list[str] | None = field(
         metadata=field_options(
-            deserialize=generate_work_area_list,
+            deserialize=generate_work_area_names_list,
             alias="workAreas",
         ),
         default=None,
@@ -576,15 +589,6 @@ class MowerAttributes(DataClassDictMixin):
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name
-            for task in self.calendar.tasks:
-                task.work_area_name = self.work_areas.get(task.work_area_id)
-            for event in self.calendar.events:
-                event.work_area_name = self.work_area_dict.get(event.work_area_id)
-        if not self.capabilities.work_areas:
-            for task in self.calendar.tasks:
-                task.work_area_name = ""
-                for event in self.calendar.events:
-                    event.work_area_name = task.work_area_name
 
 
 @dataclass

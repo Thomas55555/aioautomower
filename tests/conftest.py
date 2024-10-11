@@ -33,6 +33,20 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_automower_client_without_tasks() -> Generator[AsyncMock, None, None]:
+    """Mock a Auth Automower client."""
+    with patch(
+        "aioautomower.auth.AbstractAuth",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.get_json.return_value = json.loads(
+            load_fixture("high_feature_mower_without_tasks.json")
+        )
+        yield client
+
+
+@pytest.fixture
 def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
     with patch(
