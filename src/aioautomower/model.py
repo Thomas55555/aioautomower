@@ -9,8 +9,6 @@ from re import sub
 from typing import Any
 
 import zoneinfo
-from ical.event import Event  # noqa: F401
-from ical.types.recur import Recur
 from ical.iter import (
     MergedIterable,
     SortableItem,
@@ -64,6 +62,18 @@ def snake_case(string: str | None) -> str:
             ),
         ).split()
     ).lower()
+
+
+def naive_to_aware(
+    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
+) -> datetime | None:
+    """Convert a naive datetime to a UTC datetime.
+
+    Requiring the mower's current time zone.
+    """
+    if datetime_naive is None:
+        return None
+    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)
 
 
 def generate_work_area_names_list(workarea_list: list) -> list[str]:

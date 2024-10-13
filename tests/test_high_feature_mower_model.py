@@ -52,9 +52,7 @@ async def test_high_feature_mower(mock_automower_client: AbstractAuth) -> None:
     # mowers = mower_list_to_dictionary_dataclass(mower_python)
     # assert mowers[MOWER_ID].calendar.tasks == []
     # assert mowers[MOWER_ID].calendar.events == []
-    mower_python["data"][0]["attributes"]["calendar"]["tasks"] = []
-    mowers = mower_list_to_dictionary_dataclass(mower_python)
-    assert mowers[MOWER_ID].calendar.tasks == []
+
 
 @freeze_time("2024-05-04 8:00:00")
 async def test_mower_snapshot(

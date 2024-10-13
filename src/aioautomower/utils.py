@@ -130,15 +130,3 @@ def convert_timestamp_to_datetime_utc(
         tzinfo=time_zone
     )
     return local_datetime_naive.astimezone(UTC)
-
-
-def naive_to_aware(
-    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
-) -> datetime | None:
-    """Convert a naive datetime to a UTC datetime.
-
-    Requiring the mower's current time zone.
-    """
-    if datetime_naive is None:
-        return None
-    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)
