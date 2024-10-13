@@ -7,6 +7,9 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping
 
+import tzlocal
+import zoneinfo
+import zoneinfo._zoneinfo
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
@@ -315,6 +318,9 @@ class _MowerCommands:
         await self.auth.post_json(url, json=body)
 
 
+tz_info = tzlocal.get_localzone()
+
+
 class AutomowerSession:
     """Automower API to communicate with an Automower.
 
@@ -325,6 +331,7 @@ class AutomowerSession:
     def __init__(
         self,
         auth: AbstractAuth,
+        mower_tz: zoneinfo.ZoneInfo = tz_info,
         poll: bool = False,
     ) -> None:
         """Create a session.
@@ -342,6 +349,7 @@ class AutomowerSession:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task | None = None
+        self.mower_tz = mower_tz
 
     def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
@@ -526,6 +534,7 @@ class AutomowerSession:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         self._data = mower_list
+        self._data["mower_tz"] = str(self.mower_tz)
         self.data = mower_list_to_dictionary_dataclass(self._data)
         self.commands = _MowerCommands(self.auth, self.data)
         return self.data
