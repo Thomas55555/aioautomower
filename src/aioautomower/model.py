@@ -21,7 +21,8 @@ from mashumaro.types import SerializationStrategy
 from .const import ERRORCODES, DayOfWeek, ProgramFrequency
 from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
-logging.basicConfig(level=logging.DEBUG)
+
+_LOGGER = logging.getLogger(__name__)
 
 WEEKDAYS = (
     "monday",
@@ -73,7 +74,7 @@ def naive_to_aware(
     """
     if datetime_naive is None:
         return None
-    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)
+    return datetime_naive.replace(tzinfo=time_zone)
 
 
 def generate_work_area_names_list(workarea_list: list) -> list[str]:
@@ -417,14 +418,6 @@ class Planner(DataClassDictMixin):
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
     next_start_datetime_aware: datetime | None = None
-    mower_tz: Any | None = field(init=False, default=None)
-
-    def __post_init__(self):
-        """Initialize work_area_name to None for later external setting."""
-        self.mower_tz = None
-        self.next_start_datetime_aware = naive_to_aware(
-            self.next_start_datetime_naive, self.mower_tz
-        )
 
 
 @dataclass
@@ -537,6 +530,7 @@ class WorkArea(DataClassDictMixin):
         ),
         default=None,
     )
+    last_time_completed_aware: datetime | None = None
 
 
 @dataclass
@@ -563,6 +557,7 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions]
     settings: Settings
     statistics: Statistics
+    mower_tz: zoneinfo.ZoneInfo
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
@@ -599,6 +594,16 @@ class MowerAttributes(DataClassDictMixin):
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name
+            for work_area_id in self.work_areas:
+                self.work_areas[
+                    work_area_id
+                ].last_time_completed_aware = naive_to_aware(
+                    self.work_areas[work_area_id].last_time_completed_naive,
+                    self.mower_tz,
+                )
+        self.planner.next_start_datetime_aware = naive_to_aware(
+            self.planner.next_start_datetime_naive, self.mower_tz
+        )
 
 
 @dataclass
@@ -615,12 +620,6 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
-    mower_tz: zoneinfo.ZoneInfo
-
-    def __post_init__(self):
-        """Set the name after init."""
-        for ent, _ in enumerate(self.data):
-            self.data[ent].attributes.planner.mower_tz = self.mower_tz
 
 
 class HeadlightModes(StrEnum):

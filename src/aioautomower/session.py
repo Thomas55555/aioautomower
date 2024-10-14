@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping
 
 import tzlocal
 import zoneinfo
-import zoneinfo._zoneinfo
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
@@ -350,6 +349,7 @@ class AutomowerSession:
         self.poll = poll
         self.rest_task: asyncio.Task | None = None
         self.mower_tz = mower_tz
+        _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
@@ -534,7 +534,11 @@ class AutomowerSession:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         self._data = mower_list
-        self._data["mower_tz"] = str(self.mower_tz)
+        # self._data["mower_tz"] = str(self.mower_tz)
+        _LOGGER.debug("self._data[data]: %s", self._data["data"])
+        for mower in self._data["data"]:
+            _LOGGER.debug("mower: %s", mower)
+            mower["attributes"]["mower_tz"] = str(self.mower_tz)
         self.data = mower_list_to_dictionary_dataclass(self._data)
         self.commands = _MowerCommands(self.auth, self.data)
         return self.data
