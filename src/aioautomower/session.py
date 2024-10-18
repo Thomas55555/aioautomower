@@ -156,11 +156,14 @@ class _MowerCommands:
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def set_datetime(self, mower_id: str, current_time: datetime.datetime):
+    async def set_datetime(
+        self, mower_id: str, current_time: datetime.datetime | None = None
+    ):
         """Set the datetime of the mower.
 
         Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in the local time of the mower.
         """
+        current_time = current_time or datetime.datetime.now()
         body = {
             "data": {
                 "type": "settings",
