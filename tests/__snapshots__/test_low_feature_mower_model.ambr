@@ -45,7 +45,7 @@
     'error_datetime_naive': FakeDatetime(2024, 10, 18, 16, 37, 49),
     'error_key': 'outside_working_area',
     'error_timestamp': 1729269469000,
-    'inactive_reason': 'NONE',
+    'inactive_reason': 'none',
     'is_error_confirmable': False,
     'mode': 'main_area',
     'state': 'restricted',
