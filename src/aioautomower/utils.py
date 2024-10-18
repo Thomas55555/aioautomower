@@ -5,7 +5,7 @@ import time
 from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping, cast
 from urllib.parse import quote_plus, urlencode
-
+import zoneinfo
 import aiohttp
 import jwt
 import zoneinfo
@@ -13,6 +13,7 @@ import zoneinfo
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
 from .exceptions import ApiException
 from .model import JWT, MowerAttributes, MowerList, snake_case
+from . import tz_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,9 +86,10 @@ async def async_invalidate_access_token(
 
 
 def mower_list_to_dictionary_dataclass(
-    mower_list: Mapping[Any, Any],
+    mower_list: Mapping[Any, Any], mower_tz: zoneinfo.ZoneInfo
 ) -> dict[str, MowerAttributes]:
     """Convert mower data to a dictionary DataClass."""
+    tz_util.set_mower_time_zone(mower_tz)
     mowers_list = MowerList.from_dict(mower_list)
     mowers_dict = {}
     for mower in mowers_list.data:
