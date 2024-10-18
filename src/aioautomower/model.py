@@ -439,7 +439,11 @@ class Planner(DataClassDictMixin):
         ),
     )
     override: Override
-    restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
+    restricted_reason: str = field(
+        metadata=field_options(
+            deserialize=lambda x: x.lower(), alias="restrictedReason"
+        )
+    )
 
 
 @dataclass

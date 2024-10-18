@@ -73,7 +73,7 @@
     'override': dict({
       'action': 'not_active',
     }),
-    'restricted_reason': 'WEEK_SCHEDULE',
+    'restricted_reason': 'week_schedule',
   })
 # ---
 # name: test_mower_snapshot[positions]
