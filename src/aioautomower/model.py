@@ -6,9 +6,7 @@ from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, time, timedelta
 from enum import Enum, StrEnum
 from re import sub
-from typing import Any
 
-import zoneinfo
 from ical.iter import (
     MergedIterable,
     SortableItem,
@@ -18,9 +16,9 @@ from mashumaro import DataClassDictMixin, field_options
 from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
 
+from . import tz_util
 from .const import ERRORCODES, DayOfWeek, ProgramFrequency
 from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,16 +63,25 @@ def snake_case(string: str | None) -> str:
     ).lower()
 
 
-def naive_to_aware(
-    datetime_naive: datetime | None, time_zone: zoneinfo.ZoneInfo
-) -> datetime | None:
-    """Convert a naive datetime to a UTC datetime.
+def convert_timestamp_to_aware_datetime(timestamp: int) -> datetime | None:
+    """Convert the timestamp to an aware datetime object.
 
-    Requiring the mower's current time zone.
+    The Python datetime library expects timestamps to be anchored in UTC,
+    however, the automower timestamps are anchored in local time. So we convert
+    the timestamp to a datetime and replace the timezone with the local time.
+    After that we convert the timezone to UTC.
     """
-    if datetime_naive is None:
+    if timestamp == 0:
         return None
-    return datetime_naive.replace(tzinfo=time_zone)
+    if timestamp > 32503680000:
+        # This will break on January 1th 3000. If mankind still exists there
+        # please fix it.
+        return datetime.fromtimestamp(timestamp / 1000, tz=UTC).replace(
+            tzinfo=tz_util.DEFAULT_TIME_ZONE
+        )
+    return datetime.fromtimestamp(timestamp, tz=UTC).replace(
+        tzinfo=tz_util.DEFAULT_TIME_ZONE
+    )
 
 
 def generate_work_area_names_list(workarea_list: list) -> list[str]:
@@ -199,6 +206,12 @@ class Mower(DataClassDictMixin):
             deserialize=lambda x: None if x == 0 else snake_case(ERRORCODES.get(x)),
             alias="errorCode",
         )
+    )
+    error_datetime: datetime | None = field(
+        metadata=field_options(
+            deserialize=convert_timestamp_to_aware_datetime,
+            alias="errorCodeTimestamp",
+        ),
     )
     error_timestamp: int = field(metadata=field_options(alias="errorCodeTimestamp"))
     error_datetime_naive: datetime | None = field(
@@ -400,6 +413,12 @@ class Override(DataClassDictMixin):
 class Planner(DataClassDictMixin):
     """DataClass for Planner values."""
 
+    next_start_datetime: datetime | None = field(
+        metadata=field_options(
+            deserialize=convert_timestamp_to_aware_datetime,
+            alias="nextStartTimestamp",
+        ),
+    )
     next_start: int = field(
         metadata=field_options(
             alias="nextStartTimestamp",
@@ -417,7 +436,6 @@ class Planner(DataClassDictMixin):
     )
     override: Override
     restricted_reason: str = field(metadata=field_options(alias="restrictedReason"))
-    next_start_datetime_aware: datetime | None = None
 
 
 @dataclass
@@ -519,6 +537,13 @@ class WorkArea(DataClassDictMixin):
     cutting_height: int = field(metadata=field_options(alias="cuttingHeight"))
     enabled: bool = field(default=False)
     progress: int | None = field(default=None)
+    last_time_completed: datetime | None = field(
+        metadata=field_options(
+            deserialize=convert_timestamp_to_aware_datetime,
+            alias="lastTimeCompleted",
+        ),
+        default=None,
+    )
     last_time_completed_naive: datetime | None = field(
         metadata=field_options(
             deserialize=lambda x: (
@@ -530,7 +555,6 @@ class WorkArea(DataClassDictMixin):
         ),
         default=None,
     )
-    last_time_completed_aware: datetime | None = None
 
 
 @dataclass
@@ -557,7 +581,6 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions]
     settings: Settings
     statistics: Statistics
-    mower_tz: zoneinfo.ZoneInfo
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )
@@ -594,16 +617,6 @@ class MowerAttributes(DataClassDictMixin):
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name
-            for work_area_id in self.work_areas:
-                self.work_areas[
-                    work_area_id
-                ].last_time_completed_aware = naive_to_aware(
-                    self.work_areas[work_area_id].last_time_completed_naive,
-                    self.mower_tz,
-                )
-        self.planner.next_start_datetime_aware = naive_to_aware(
-            self.planner.next_start_datetime_naive, self.mower_tz
-        )
 
 
 @dataclass

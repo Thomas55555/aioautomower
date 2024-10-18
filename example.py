@@ -18,7 +18,6 @@ from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
     async_get_access_token,
     convert_timestamp_to_datetime_utc,
-    naive_to_aware,
     structure_token,
 )
 
@@ -88,9 +87,9 @@ async def main() -> None:
     automower_api.register_pong_callback(pong_callback)
     # pylint: disable=unused-variable
     for _mower_id in automower_api.data:
-        print(
-            "next start:",
-            naive_to_aware(
+        (
+            print(
+                "next start:",
                 automower_api.data[_mower_id].planner.next_start_datetime_naive,
                 tz_info,
             ),

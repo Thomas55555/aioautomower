@@ -7,9 +7,8 @@ import pytest
 import zoneinfo
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.model import naive_to_aware
 from aioautomower.session import AutomowerSession
-from aioautomower.utils import convert_timestamp_to_datetime_utc
+from aioautomower.utils import convert_timestamp_to_datetime_utc, naive_to_aware
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 

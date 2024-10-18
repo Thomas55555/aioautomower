@@ -20,6 +20,7 @@ from .exceptions import (
     WorkAreasDifferentException,
 )
 from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
+from .tz_util import set_default_time_zone
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
@@ -350,6 +351,8 @@ class AutomowerSession:
         self.rest_task: asyncio.Task | None = None
         self.mower_tz = mower_tz
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
+
+        set_default_time_zone(mower_tz)
 
     def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
