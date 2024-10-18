@@ -77,10 +77,10 @@ def convert_timestamp_to_aware_datetime(timestamp: int) -> datetime | None:
         # This will break on January 1th 3000. If mankind still exists there
         # please fix it.
         return datetime.fromtimestamp(timestamp / 1000, tz=UTC).replace(
-            tzinfo=tz_util.DEFAULT_TIME_ZONE
+            tzinfo=tz_util.MOWER_TIME_ZONE
         )
     return datetime.fromtimestamp(timestamp, tz=UTC).replace(
-        tzinfo=tz_util.DEFAULT_TIME_ZONE
+        tzinfo=tz_util.MOWER_TIME_ZONE
     )
 
 
@@ -339,7 +339,7 @@ class ConvertScheduleToCalendar:
             start=(
                 begin_of_day_with_schedule
                 + timedelta(hours=self.task.start.hour, minutes=self.task.start.minute)
-            ).replace(tzinfo=tz_util.DEFAULT_TIME_ZONE),
+            ).replace(tzinfo=tz_util.MOWER_TIME_ZONE),
             duration=self.task.duration,
             uid=f"{self.task.start}_{self.task.duration}_{dayset}",
             day_set=dayset,
