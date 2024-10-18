@@ -355,8 +355,6 @@ class AutomowerSession:
         self.mower_tz = mower_tz
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
-        set_mower_time_zone(mower_tz)
-
     def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
         if callback not in self.data_update_cbs:
@@ -540,7 +538,7 @@ class AutomowerSession:
         """Get mower status via Rest."""
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         self._data = mower_list
-        self.data = mower_list_to_dictionary_dataclass(self._data)
+        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.commands = _MowerCommands(self.auth, self.data)
         return self.data
 
@@ -556,7 +554,7 @@ class AutomowerSession:
                 value: Mapping[Any, Any]
                 for attrib, value in new_attributes.items():
                     mower["attributes"][attrib] = value
-        self.data = mower_list_to_dictionary_dataclass(self._data)
+        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.commands = _MowerCommands(self.auth, self.data)
         self._schedule_data_callbacks()
 

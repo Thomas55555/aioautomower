@@ -41,7 +41,7 @@
   dict({
     'activity': 'parked_in_cs',
     'error_code': 1,
-    'error_datetime': FakeDatetime(2024, 10, 18, 16, 37, 49, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+    'error_datetime': FakeDatetime(2024, 10, 18, 16, 37, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'error_datetime_naive': FakeDatetime(2024, 10, 18, 16, 37, 49),
     'error_key': 'outside_working_area',
     'error_timestamp': 1729269469000,
@@ -56,7 +56,7 @@
 # name: test_mower_snapshot[planner]
   dict({
     'next_start': 1685991600000,
-    'next_start_datetime': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+    'next_start_datetime': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
       'action': 'not_active',
