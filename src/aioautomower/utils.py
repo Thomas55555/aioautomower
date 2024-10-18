@@ -141,4 +141,4 @@ def naive_to_aware(
     """
     if datetime_naive is None:
         return None
-    return datetime_naive.replace(tzinfo=time_zone).astimezone(UTC)
+    return datetime_naive.replace(tzinfo=time_zone)

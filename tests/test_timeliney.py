@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import zoneinfo
 from aiohttp import WSMessage, WSMsgType
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
@@ -34,8 +35,12 @@ async def test_timeline(
     overlapping = next(cursor, None)
     if TYPE_CHECKING:
         assert overlapping is not None
-    assert overlapping.start == FakeDatetime(2024, 5, 4, 0, 0)
-    assert overlapping.end == FakeDatetime(2024, 5, 4, 8, 0)
+    assert overlapping.start == FakeDatetime(
+        2024, 5, 4, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert overlapping.end == FakeDatetime(
+        2024, 5, 4, 8, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
     assert overlapping.schedule_no == 1
     assert overlapping.work_area_id == 0
     work_area_dict = automower_api.data[MOWER_ID].work_area_dict
@@ -52,8 +57,12 @@ async def test_timeline(
     active_after = next(cursor, None)
     if TYPE_CHECKING:
         assert active_after is not None
-    assert active_after.start == FakeDatetime(2024, 5, 6, 19, 0)
-    assert active_after.end == FakeDatetime(2024, 5, 7, 0, 0)
+    assert active_after.start == FakeDatetime(
+        2024, 5, 6, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert active_after.end == FakeDatetime(
+        2024, 5, 7, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
     assert active_after.schedule_no == 1
     assert active_after.work_area_id == 123456
     work_area_dict = automower_api.data[MOWER_ID].work_area_dict
@@ -91,8 +100,12 @@ async def test_daily_schedule(
     active_after = next(cursor, None)
     if TYPE_CHECKING:
         assert active_after is not None
-    assert active_after.start == FakeDatetime(2024, 5, 6, 2, 0)
-    assert active_after.end == FakeDatetime(2024, 5, 6, 2, 49)
+    assert active_after.start == FakeDatetime(
+        2024, 5, 6, 2, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert active_after.end == FakeDatetime(
+        2024, 5, 6, 2, 49, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
     assert active_after.schedule_no == 1
     assert automower_api.data["1234"].work_area_dict is None
     work_area_dict = automower_api.data["1234"].work_area_dict

@@ -24,8 +24,8 @@
           "activity": "PARKED_IN_CS",
           "inactiveReason": "NONE",
           "state": "RESTRICTED",
-          "errorCode": 0,
-          "errorCodeTimestamp": 0
+          "errorCode": 1,
+          "errorCodeTimestamp": 1729269469000
         },
         "calendar": {
           "tasks": [

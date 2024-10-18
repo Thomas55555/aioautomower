@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 import zoneinfo
 from aiohttp import WSMessage, WSMsgType
+from freezegun import freeze_time
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
@@ -33,6 +34,7 @@ async def test_connect_disconnect(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
+@freeze_time("2024-05-04 8:00:00")
 async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     """Test automower session post commands."""
     automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
@@ -99,33 +101,40 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     # Test set_datetime with an aware datetime object in TZ UTC
     await automower_api.commands.set_datetime(
         MOWER_ID,
-        datetime(2024, 8, 13, 12, 0, 0, 1234, tzinfo=UTC),
+        datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
     )
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
-        json={"data": {"type": "settings", "attributes": {"dateTime": 1723550400}}},
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
     )
 
     # Test set_datetime with an aware datetime object
     await automower_api.commands.set_datetime(
         MOWER_ID,
-        datetime(
-            2024, 8, 13, 12, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
-        ),
+        datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")),
     )
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
-        json={"data": {"type": "settings", "attributes": {"dateTime": 1723550400}}},
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
     )
 
     # Test set_datetime with a naive datetime object
     await automower_api.commands.set_datetime(
         MOWER_ID,
-        datetime(2024, 8, 13, 12),
+        datetime(2024, 5, 4, 8),
     )
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
-        json={"data": {"type": "settings", "attributes": {"dateTime": 1723550400}}},
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
+    )
+
+    # Test set_datetime without datetime object
+    await automower_api.commands.set_datetime(
+        MOWER_ID,
+    )
+    mocked_method.assert_called_with(
+        f"mowers/{MOWER_ID}/settings",
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
     )
 
     await automower_api.commands.set_headlight_mode(MOWER_ID, HeadlightModes.ALWAYS_OFF)
@@ -370,3 +379,30 @@ async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
     automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].calendar.tasks == []
+
+
+async def test_timzeone_default(mock_automower_client: AbstractAuth):
+    """Test setting system timezone automatically if not defined."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    await automower_api.close()
+
+    assert automower_api.mower_tz == zoneinfo.ZoneInfo(key="Europe/Berlin")
+
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_timzeone_overwrite(mock_automower_client: AbstractAuth):
+    """Test overwriting timezone."""
+    automower_api = AutomowerSession(
+        mock_automower_client, mower_tz=zoneinfo.ZoneInfo("Europe/Stockholm"), poll=True
+    )
+    await automower_api.connect()
+    await automower_api.close()
+
+    assert automower_api.mower_tz == zoneinfo.ZoneInfo(key="Europe/Stockholm")
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()

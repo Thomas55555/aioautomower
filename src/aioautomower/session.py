@@ -7,6 +7,8 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Iterable, Literal, Mapping
 
+import tzlocal
+import zoneinfo
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
@@ -18,6 +20,7 @@ from .exceptions import (
     WorkAreasDifferentException,
 )
 from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
+from .tz_util import set_mower_time_zone
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,11 +156,14 @@ class _MowerCommands:
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def set_datetime(self, mower_id: str, current_time: datetime.datetime):
+    async def set_datetime(
+        self, mower_id: str, current_time: datetime.datetime | None = None
+    ):
         """Set the datetime of the mower.
 
         Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in the local time of the mower.
         """
+        current_time = current_time or datetime.datetime.now()
         body = {
             "data": {
                 "type": "settings",
@@ -315,6 +321,9 @@ class _MowerCommands:
         await self.auth.post_json(url, json=body)
 
 
+tz_info = tzlocal.get_localzone()
+
+
 class AutomowerSession:
     """Automower API to communicate with an Automower.
 
@@ -325,6 +334,7 @@ class AutomowerSession:
     def __init__(
         self,
         auth: AbstractAuth,
+        mower_tz: zoneinfo.ZoneInfo = tz_info,
         poll: bool = False,
     ) -> None:
         """Create a session.
@@ -342,6 +352,10 @@ class AutomowerSession:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task | None = None
+        self.mower_tz = mower_tz
+        _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
+
+        set_mower_time_zone(mower_tz)
 
     def register_data_callback(self, callback) -> None:
         """Register a data update callback."""
