@@ -336,8 +336,10 @@ class ConvertScheduleToCalendar:
             hour=0, minute=0, second=0, microsecond=0
         )
         return AutomowerCalendarEvent(
-            start=begin_of_day_with_schedule
-            + timedelta(hours=self.task.start.hour, minutes=self.task.start.minute),
+            start=(
+                begin_of_day_with_schedule
+                + timedelta(hours=self.task.start.hour, minutes=self.task.start.minute)
+            ).replace(tzinfo=tz_util.DEFAULT_TIME_ZONE),
             duration=self.task.duration,
             uid=f"{self.task.start}_{self.task.duration}_{dayset}",
             day_set=dayset,
