@@ -247,7 +247,7 @@ class _MowerCommands:
         body = {
             "data": {
                 "type": "settings",
-                "attributes": {"headlight": {"mode": headlight_mode}},
+                "attributes": {"headlight": {"mode": headlight_mode.upper()}},
             }
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
