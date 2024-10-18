@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import zoneinfo
 from syrupy import SnapshotAssertion
 
 from tests import load_fixture
@@ -16,6 +17,12 @@ from .syrupy import AutomowerSnapshotExtension
 def snapshot_assertion(snapshot: SnapshotAssertion) -> SnapshotAssertion:
     """Return snapshot assertion fixture with the Automower extension."""
     return snapshot.use_extension(AutomowerSnapshotExtension)
+
+
+@pytest.fixture(name="mower_tz")
+def mower_tz() -> zoneinfo.ZoneInfo:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return zoneinfo.ZoneInfo("Europe/Berlin")
 
 
 @pytest.fixture

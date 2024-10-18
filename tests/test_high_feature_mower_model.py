@@ -3,7 +3,6 @@
 from dataclasses import fields
 from typing import cast
 
-import zoneinfo
 from freezegun import freeze_time
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,10 +13,12 @@ from aioautomower.session import AutomowerSession
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-async def test_high_feature_mower(mock_automower_client: AbstractAuth) -> None:
+async def test_high_feature_mower(
+    mock_automower_client: AbstractAuth, mower_tz
+) -> None:
     """Test converting a high feature mower."""
     automower_api = AutomowerSession(
-        mock_automower_client, mower_tz=zoneinfo.ZoneInfo("America/Regina"), poll=True
+        mock_automower_client, mower_tz=mower_tz, poll=True
     )
     await automower_api.connect()
     mowers = automower_api.data
@@ -47,12 +48,12 @@ async def test_high_feature_mower(mock_automower_client: AbstractAuth) -> None:
 
 @freeze_time("2024-05-04 8:00:00")
 async def test_mower_snapshot(
-    mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion
+    mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion, mower_tz
 ):
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
     automower_api = AutomowerSession(
-        mock_automower_client, mower_tz=zoneinfo.ZoneInfo("America/Regina"), poll=True
+        mock_automower_client, mower_tz=mower_tz, poll=True
     )
     await automower_api.connect()
     automower_api.data[MOWER_ID]
