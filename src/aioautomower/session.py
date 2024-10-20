@@ -20,7 +20,6 @@ from .exceptions import (
     WorkAreasDifferentException,
 )
 from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
-from .tz_util import set_mower_time_zone
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,13 +59,19 @@ class AutomowerEndpoint:
 class _MowerCommands:
     """Sending commands."""
 
-    def __init__(self, auth: AbstractAuth, data: dict[str, MowerAttributes]):
+    def __init__(
+        self,
+        auth: AbstractAuth,
+        data: dict[str, MowerAttributes],
+        mower_tz: zoneinfo.ZoneInfo,
+    ):
         """Send all commands to the API.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
         """
         self.auth = auth
         self.data = data
+        self.mower_tz = mower_tz
 
     async def resume_schedule(self, mower_id: str):
         """Resume schedule.
@@ -169,7 +174,9 @@ class _MowerCommands:
                 "type": "settings",
                 "attributes": {
                     "dateTime": int(
-                        current_time.replace(tzinfo=datetime.UTC).timestamp()
+                        current_time.astimezone(self.mower_tz)
+                        .replace(tzinfo=datetime.UTC)
+                        .timestamp()
                     )
                 },
             }
@@ -345,14 +352,14 @@ class AutomowerSession:
         self._data: dict[str, Iterable[Any]] | None = {}
         self.auth = auth
         self.data: dict[str, MowerAttributes] = {}
-        self.commands = _MowerCommands(self.auth, self.data)
+        self.mower_tz = mower_tz
+        self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         self.pong_cbs: list = []
         self.data_update_cbs: list = []
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task | None = None
-        self.mower_tz = mower_tz
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(self, callback) -> None:
@@ -539,7 +546,7 @@ class AutomowerSession:
         mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-        self.commands = _MowerCommands(self.auth, self.data)
+        self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
     def _update_data(self, new_data) -> None:
@@ -555,7 +562,7 @@ class AutomowerSession:
                 for attrib, value in new_attributes.items():
                     mower["attributes"][attrib] = value
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-        self.commands = _MowerCommands(self.auth, self.data)
+        self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         self._schedule_data_callbacks()
 
     async def _rest_task(self) -> None:

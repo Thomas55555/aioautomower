@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 import pytest
+import tzlocal
 import zoneinfo
 from aiohttp import WSMessage, WSMsgType
 from freezegun import freeze_time
@@ -105,7 +106,7 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     )
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/settings",
-        json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
+        json={"data": {"type": "settings", "attributes": {"dateTime": 1714816800}}},
     )
 
     # Test set_datetime with an aware datetime object
@@ -381,13 +382,12 @@ async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
     assert automower_api.data[MOWER_ID].calendar.tasks == []
 
 
-async def test_timzeone_default(mock_automower_client: AbstractAuth):
+async def test_timezone_default(mock_automower_client: AbstractAuth):
     """Test setting system timezone automatically if not defined."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     await automower_api.close()
-
-    assert automower_api.mower_tz == zoneinfo.ZoneInfo(key="Europe/Berlin")
+    assert automower_api.mower_tz == tzlocal.get_localzone()
 
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
