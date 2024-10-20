@@ -19,10 +19,12 @@ MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 @freeze_time("2024-05-04 8:00:00")
 async def test_timeline(
-    mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion
+    mock_automower_client: AbstractAuth,
+    snapshot: SnapshotAssertion,
+    mower_tz: zoneinfo.ZoneInfo,
 ):
     """Test automower timeline."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    automower_api = AutomowerSession(mock_automower_client, mower_tz, poll=True)
     await automower_api.connect()
 
     mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
@@ -84,10 +86,12 @@ async def test_timeline(
 
 @freeze_time("2024-05-04 8:00:00")
 async def test_daily_schedule(
-    mock_automower_client_two_mowers: AbstractAuth,
+    mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
 ):
     """Test automower timeline with low feature mower."""
-    automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
+    automower_api = AutomowerSession(
+        mock_automower_client_two_mowers, mower_tz, poll=True
+    )
     await automower_api.connect()
     # Test event of other mower doesn't overwrite the data
     msg = WSMessage(
