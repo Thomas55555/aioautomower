@@ -328,9 +328,6 @@ class _MowerCommands:
         await self.auth.post_json(url, json=body)
 
 
-tz_info = tzlocal.get_localzone()
-
-
 class AutomowerSession:
     """Automower API to communicate with an Automower.
 
@@ -341,7 +338,7 @@ class AutomowerSession:
     def __init__(
         self,
         auth: AbstractAuth,
-        mower_tz: zoneinfo.ZoneInfo = tz_info,
+        mower_tz: zoneinfo.ZoneInfo | None = None,
         poll: bool = False,
     ) -> None:
         """Create a session.
@@ -352,7 +349,7 @@ class AutomowerSession:
         self._data: dict[str, Iterable[Any]] | None = {}
         self.auth = auth
         self.data: dict[str, MowerAttributes] = {}
-        self.mower_tz = mower_tz
+        self.mower_tz = mower_tz or tzlocal.get_localzone()
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         self.pong_cbs: list = []
         self.data_update_cbs: list = []
