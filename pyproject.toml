@@ -261,8 +261,6 @@ ignore = [
 # possibly-used-before-assignment - too many errors / not necessarily issues
 # ---
 # Pylint CodeStyle plugin
-# consider-using-namedtuple-or-dataclass - too opinionated
-# consider-using-assignment-expr - decision to use := better left to devs
 disable = [
     "format",
     "abstract-method",
@@ -281,8 +279,6 @@ disable = [
     "too-many-boolean-expressions",
     "too-many-positional-arguments",
     "wrong-import-order",
-    "consider-using-namedtuple-or-dataclass",
-    "consider-using-assignment-expr",
     "possibly-used-before-assignment",
 
     # Handled by ruff
@@ -393,9 +389,7 @@ disable = [
     "wrong-import-position", # E402
     "comparison-of-constants", # PLR0133
     "comparison-with-itself", # PLR0124
-    "consider-alternative-union-syntax", # UP007
     "consider-merging-isinstance", # PLR1701
-    "consider-using-alias", # UP006
     "consider-using-dict-comprehension", # C402
     "consider-using-generator", # C417
     "consider-using-get", # SIM401
