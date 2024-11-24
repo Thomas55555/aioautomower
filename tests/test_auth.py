@@ -1,22 +1,20 @@
 """Test automower auth."""
 
-import json
-
 import aiohttp
 import pytest
 
 from aioautomower.auth import AbstractAuth, AuthException
-from tests import load_fixture
 
 
 class MockAuth(AbstractAuth):
     """Mock authentication class for testing."""
 
-    def __init__(self, websession, host, simulate_token=None):
+    def __init__(self, websession, host, jwt_token, simulate_token=None):
         """Initialize with a session, host, and optional token simulation."""
         super().__init__(websession, host)
         self.simulate_token = simulate_token
         self.request_with_retry = None  # Initialize attribute
+        self.jwt_token = jwt_token
 
     async def get_access_token(self):
         """Return a mock access token or raise exceptions."""
@@ -24,7 +22,7 @@ class MockAuth(AbstractAuth):
             raise AuthException("Invalid token")
         if self.simulate_token == "error":
             raise RuntimeError("Unexpected error")  # More specific exception
-        return json.loads(load_fixture("jwt.json"))["data"]
+        return self.jwt_token
 
     async def async_get_access_token(self):
         """Return a mock access token asynchronously."""
@@ -47,9 +45,17 @@ class MockAuth(AbstractAuth):
 
 
 @pytest.mark.asyncio
-async def test_request_with_token_success(async_session_fixture, test_host_fixture):
+async def test_request_with_token_success(
+    async_session_fixture,
+    test_host_fixture,
+    jwt_token,
+):
     """Test successful token-based request."""
-    auth = MockAuth(async_session_fixture, test_host_fixture)
+    auth = MockAuth(
+        async_session_fixture,
+        test_host_fixture,
+        jwt_token,
+    )
     response = await auth.request_with_token(
         "GET", "https://jsonplaceholder.typicode.com/todos/1"
     )
@@ -58,10 +64,12 @@ async def test_request_with_token_success(async_session_fixture, test_host_fixtu
 
 @pytest.mark.asyncio
 async def test_request_with_token_invalid_token(
-    async_session_fixture, test_host_fixture
+    async_session_fixture, test_host_fixture, jwt_token
 ):
     """Test token-based request with invalid token simulation."""
-    auth = MockAuth(async_session_fixture, test_host_fixture, simulate_token="invalid")
+    auth = MockAuth(
+        async_session_fixture, test_host_fixture, jwt_token, simulate_token="invalid"
+    )
     with pytest.raises(AuthException, match="Unauthorized access"):
         await auth.request_with_token(
             "GET", "https://jsonplaceholder.typicode.com/todos/1"
@@ -69,9 +77,11 @@ async def test_request_with_token_invalid_token(
 
 
 @pytest.mark.asyncio
-async def test_get_json_failure(async_session_fixture, test_host_fixture):
+async def test_get_json_failure(async_session_fixture, test_host_fixture, jwt_token):
     """Test failure in the get_json method due to invalid token."""
-    auth = MockAuth(async_session_fixture, test_host_fixture, simulate_token="invalid")
+    auth = MockAuth(
+        async_session_fixture, test_host_fixture, jwt_token, simulate_token="invalid"
+    )
 
     async def mock_request_with_retry(method, url, **kwargs):
         raise AuthException("Invalid token")

@@ -1,11 +1,11 @@
 """Test helpers for Husqvarna Automower."""
 
 import json
+import zoneinfo
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-import zoneinfo
 from aiohttp import ClientSession
 from syrupy import SnapshotAssertion
 
@@ -27,9 +27,9 @@ def mower_tz() -> zoneinfo.ZoneInfo:
 
 
 @pytest.fixture(name="jwt_token")
-def mock_jwt_token() -> zoneinfo.ZoneInfo:
+def mock_jwt_token() -> str:
     """Return snapshot assertion fixture with the Automower extension."""
-    return load_fixture("jwt.json")
+    return json.loads(load_fixture("jwt.json"))["data"]
 
 
 @pytest.fixture
