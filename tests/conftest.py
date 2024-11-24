@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import zoneinfo
+from aiohttp import ClientSession
 from syrupy import SnapshotAssertion
 
 from tests import load_fixture
@@ -23,6 +24,12 @@ def snapshot_assertion(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 def mower_tz() -> zoneinfo.ZoneInfo:
     """Return snapshot assertion fixture with the Automower extension."""
     return zoneinfo.ZoneInfo("Europe/Berlin")
+
+
+@pytest.fixture(name="jwt_token")
+def mock_jwt_token() -> zoneinfo.ZoneInfo:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return load_fixture("jwt.json")
 
 
 @pytest.fixture
@@ -68,3 +75,16 @@ def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
         mowers_python = {"data": mower1_python["data"] + mower2_python["data"]}
         client.get_json.return_value = mowers_python
         yield client
+
+
+@pytest.fixture
+async def async_session_fixture():
+    """Fixture for creating an aiohttp session."""
+    async with ClientSession() as session:
+        yield session
+
+
+@pytest.fixture
+def test_host_fixture():
+    """Fixture providing a mock host URL."""
+    return "http://testhost"
