@@ -213,17 +213,6 @@ class Mower(DataClassDictMixin):
             alias="errorCodeTimestamp",
         ),
     )
-    error_timestamp: int = field(metadata=field_options(alias="errorCodeTimestamp"))
-    error_datetime_naive: datetime | None = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
-            ),
-            alias="errorCodeTimestamp",
-        ),
-    )
     inactive_reason: str = field(
         metadata=field_options(deserialize=lambda x: x.lower(), alias="inactiveReason"),
     )
@@ -423,21 +412,6 @@ class Planner(DataClassDictMixin):
             alias="nextStartTimestamp",
         ),
     )
-    next_start: int = field(
-        metadata=field_options(
-            alias="nextStartTimestamp",
-        ),
-    )
-    next_start_datetime_naive: datetime | None = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x / 1000, tz=UTC).replace(tzinfo=None)
-            ),
-            alias="nextStartTimestamp",
-        ),
-    )
     override: Override
     restricted_reason: str = field(
         metadata=field_options(
@@ -550,17 +524,6 @@ class WorkArea(DataClassDictMixin):
     last_time_completed: datetime | None = field(
         metadata=field_options(
             deserialize=convert_timestamp_to_aware_datetime,
-            alias="lastTimeCompleted",
-        ),
-        default=None,
-    )
-    last_time_completed_naive: datetime | None = field(
-        metadata=field_options(
-            deserialize=lambda x: (
-                None
-                if x == 0
-                else datetime.fromtimestamp(x, tz=UTC).replace(tzinfo=None)
-            ),
             alias="lastTimeCompleted",
         ),
         default=None,
