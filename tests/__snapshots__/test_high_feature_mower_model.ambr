@@ -54,9 +54,7 @@
     'activity': 'parked_in_cs',
     'error_code': 0,
     'error_datetime': None,
-    'error_datetime_naive': None,
     'error_key': None,
-    'error_timestamp': 0,
     'inactive_reason': 'none',
     'is_error_confirmable': False,
     'mode': 'main_area',
@@ -67,9 +65,7 @@
 # ---
 # name: test_mower_snapshot[planner]
   dict({
-    'next_start': 1685991600000,
     'next_start_datetime': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-    'next_start_datetime_naive': FakeDatetime(2023, 6, 5, 19, 0),
     'override': dict({
       'action': 'not_active',
     }),
@@ -199,7 +195,6 @@
       'cutting_height': 10,
       'enabled': False,
       'last_time_completed': FakeDatetime(2024, 8, 12, 5, 7, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-      'last_time_completed_naive': FakeDatetime(2024, 8, 12, 5, 7, 49),
       'name': 'my_lawn',
       'progress': 20,
     }),
@@ -207,7 +202,6 @@
       'cutting_height': 50,
       'enabled': True,
       'last_time_completed': FakeDatetime(2024, 8, 12, 7, 54, 29, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-      'last_time_completed_naive': FakeDatetime(2024, 8, 12, 7, 54, 29),
       'name': 'Front lawn',
       'progress': 40,
     }),
@@ -215,7 +209,6 @@
       'cutting_height': 25,
       'enabled': True,
       'last_time_completed': None,
-      'last_time_completed_naive': None,
       'name': 'Back lawn',
       'progress': None,
     }),
