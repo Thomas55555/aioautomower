@@ -95,7 +95,7 @@
   dict({
     'model': 'Automower Aspire',
     'name': 'Test Mower 1',
-    'serial_number': 123,
+    'serial_number': '123',
   })
 # ---
 # name: test_mower_snapshot[work_area_dict]
