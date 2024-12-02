@@ -68,7 +68,7 @@ Many mowers are available from your local garden dealer or major online retailer
 The links provided below are affiliate links, so if you prefer shopping on Amazon and decide to purchase something there, you’ll also be supporting me at no additional cost to you.
 Alternatively, if you'd like to support the project directly, consider contributing through [GitHub sponsors](https://github.com/sponsors/Thomas55555).
 Here are some affiliate links to support my work:
-[Automower R4 Aspire](https://amzn.to/3Z987Oc)
-[Endurence blades](https://amzn.to/3OyK1YD)
-[Regular blades](https://amzn.to/3ZCn8Zt)
-[Cabel connector](https://amzn.to/4f3OtJn)
+- [Automower R4 Aspire](https://amzn.to/3Z987Oc)
+- [Endurence blades](https://amzn.to/3OyK1YD)
+- [Regular blades](https://amzn.to/3ZCn8Zt)
+- [Cabel connector](https://amzn.to/4f3OtJn)
