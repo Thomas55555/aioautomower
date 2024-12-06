@@ -1,0 +1,10 @@
+{
+    "id": "256b2365-33a7-46fe-a9fb-e67e84f4ac01",
+    "type": "positions-event-v2",
+    "attributes": {
+      "position": {
+            "latitude": 57.70074,
+            "longitude": 14.4787133
+        }
+    }
+  }

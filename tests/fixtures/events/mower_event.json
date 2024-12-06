@@ -1,0 +1,16 @@
+{
+    "id": "256b2365-33a7-46fe-a9fb-e67e84f4ac01",
+    "type": "mower-event-v2",
+    "attributes": {
+      "mower": {
+        "mode": "MAIN_AREA",
+        "activity": "MOWING",
+        "inactiveReason": "NONE",
+        "state": "IN_OPERATION",
+        "errorCode": 0,
+        "isErrorConfirmable": false,
+        "workAreaId": "78555",
+        "errorCodeTimestamp": 0
+      }
+    }
+  }

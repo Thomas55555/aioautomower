@@ -1,0 +1,9 @@
+{
+    "id": "256b2365-33a7-46fe-a9fb-e67e84f4ac01",
+    "type": "cuttingHeight-event-v2",
+    "attributes": {
+      "cuttingHeight": {
+          "height": 5
+      }
+    }
+  }

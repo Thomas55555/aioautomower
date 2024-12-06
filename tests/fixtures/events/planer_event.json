@@ -1,0 +1,14 @@
+{
+    "id": "256b2365-33a7-46fe-a9fb-e67e84f4ac01",
+    "type": "planner-event-v2",
+    "attributes": {
+      "planner": {
+        "nextStartTimestamp": 0,
+        "override": {
+          "action": "FORCE_MOW"
+        },
+        "restrictedReason": "PARK_OVERRIDE",
+        "externalReason": 7
+      }
+    }
+  }
