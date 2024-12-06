@@ -4,6 +4,7 @@ import asyncio
 import datetime
 import logging
 import time
+from pathlib import Path
 from pprint import pprint
 from typing import cast
 
@@ -24,7 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 # Fill out the secrets in secrets.yaml, you can find an example
 # _secrets.yaml file, which has to be renamed after filling out the secrets.
 
-with open("./secrets.yaml", encoding="UTF-8") as file:
+file_path = Path("./secrets.yaml")
+
+with file_path.open(encoding="UTF-8") as file:
     secrets = yaml.safe_load(file)
 
 CLIENT_ID = secrets["CLIENT_ID"]
@@ -80,34 +83,32 @@ async def main() -> None:
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
     automower_api.register_pong_callback(pong_callback)
-    for _mower_id in automower_api.data:
-        (
-            print(
-                "next start:", automower_api.data[_mower_id].planner.next_start_datetime
-            ),
-        )
-        cursor = automower_api.data[_mower_id].calendar.timeline.overlapping(
+    for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
+        print("next start:", mower_data.planner.next_start_datetime)
+
+        cursor = mower_data.calendar.timeline.overlapping(
             datetime.datetime.now(),
             datetime.datetime.now() + datetime.timedelta(weeks=1),
         )
         print("cursor", cursor)
-        cursor2 = automower_api.data[_mower_id].calendar.timeline.active_after(
-            datetime.datetime.now()
-        )
+
+        cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
+
         print("cursor2", next(cursor2, None))
         print("program_event1", next(cursor2, None))
         print("program_event2", next(cursor2, None))
         print("program_event3", next(cursor2, None))
         print("program_event4", next(cursor2, None))
         print("program_event5", next(cursor2, None))
-        # Uncomment one or more lines above to send this command to all the mowers
-        # await automower_api.commands.set_datetime(_mower_id, datetime.datetime.now())t
-        # await automower_api.commands.park_until_next_schedule(_mower_id)
-        # await automower_api.commands.park_until_further_notice(_mower_id)
-        # await automower_api.commands.resume_schedule(_mower_id)
-        # await automower_api.commands.pause_mowing(_mower_id)
+
+        # Uncomment one or more lines below to send this command to all the mowers
+        # await automower_api.commands.set_datetime(mower_id, datetime.datetime.now())
+        # await automower_api.commands.park_until_next_schedule(mower_id)
+        # await automower_api.commands.park_until_further_notice(mower_id)
+        # await automower_api.commands.resume_schedule(mower_id)
+        # await automower_api.commands.pause_mowing(mower_id)
         # await automower_api.commands.start_in_workarea(
-        #     _mower_id, 0, datetime.timedelta(minutes=30)
+        #     mower_id, 0, datetime.timedelta(minutes=30)
         # )
 
     await asyncio.sleep(3000)
@@ -120,8 +121,8 @@ async def main() -> None:
 
 def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
-    for mower_id in ws_data:
-        pprint(ws_data[mower_id])
+    for mower_data in ws_data.values():
+        pprint(mower_data)
 
 
 def pong_callback(ws_data: datetime.datetime):
