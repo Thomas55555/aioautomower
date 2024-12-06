@@ -1,0 +1,22 @@
+{
+    "id": "256b2365-33a7-46fe-a9fb-e67e84f4ac01",
+    "type": "calendar-event-v2",
+    "attributes": {
+      "calendar": {
+          "tasks": [
+              {
+                  "start": 420,
+                  "duration": 780,
+                  "workAreaId": 78543,
+                  "monday": true,
+                  "tuesday": true,
+                  "wednesday": true,
+                  "thursday": true,
+                  "friday": true,
+                  "saturday": false,
+                  "sunday": false
+              }
+          ]
+      }
+    }
+  }
