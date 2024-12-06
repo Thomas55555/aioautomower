@@ -1,13 +1,13 @@
 """Test automower session."""
 
 import json
+import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 import pytest
 import tzlocal
-import zoneinfo
 from aiohttp import WSMessage, WSMsgType
 from freezegun import freeze_time
 
@@ -225,12 +225,6 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         FeatureNotSupportedException,
         match="This mower does not support this command.",
     ):
-        await automower_api.commands.set_cutting_height_workarea("1234", 50, 0)
-
-    with pytest.raises(
-        FeatureNotSupportedException,
-        match="This mower does not support this command.",
-    ):
         await automower_api.commands.error_confirm("1234")
 
     with pytest.raises(
@@ -265,17 +259,14 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
         },
     )
 
-    await automower_api.commands.set_cutting_height_workarea(MOWER_ID, 9, 0)
-    assert mocked_method.call_count == 2
-    mocked_method.assert_called_with(
-        f"mowers/{MOWER_ID}/workAreas/0",
-        json={
-            "data": {"type": "workArea", "id": 0, "attributes": {"cuttingHeight": 9}}
-        },
-    )
+    with pytest.raises(
+        FeatureNotSupportedException,
+        match="This mower does not support this command.",
+    ):
+        await automower_api.commands.switch_stay_out_zone("1234", "vallhala", True)
 
     await automower_api.commands.workarea_settings(MOWER_ID, 0, 9)
-    assert mocked_method.call_count == 3
+    assert mocked_method.call_count == 2
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/workAreas/0",
         json={
@@ -291,7 +282,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
     )
 
     await automower_api.commands.workarea_settings(MOWER_ID, 0, enabled=True)
-    assert mocked_method.call_count == 4
+    assert mocked_method.call_count == 3
     mocked_method.assert_called_with(
         f"mowers/{MOWER_ID}/workAreas/0",
         json={
@@ -310,7 +301,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
         FeatureNotSupportedException,
         match="This mower does not support this command.",
     ):
-        await automower_api.commands.switch_stay_out_zone("1234", "vallhala", True)
+        await automower_api.commands.workarea_settings("1234", 50, 0)
 
     mocked_method.reset_mock()
     await automower_api.close()
