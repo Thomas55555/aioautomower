@@ -8,7 +8,11 @@ contact_links:
       Assistant core repository unless a developer told you otherwise.
   - name: I have a question or need support in Home Assistant
     url: https://www.home-assistant.io/help
-    about: We use GitHub for tracking bugs, check the Home Assistant website for resources on getting help.
+    about: |
+      We use GitHub for tracking bugs, check the Home Assistant website
+      for resources on getting help.
   - name: Feature Request in Home Assistant
     url: https://community.home-assistant.io/c/feature-requests
-    about: Please use the Home Assistant Community Forum for making feature requests.
+    about: |
+      Please use the Home Assistant Community Forum for making
+      feature requests.
