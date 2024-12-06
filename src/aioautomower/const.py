@@ -1,6 +1,6 @@
 """The constants for aioautomower."""
 
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 
 API_BASE_URL = "https://api.amc.husqvarna.dev/v1"
 AUTH_API_BASE_URL = "https://api.authentication.husqvarnagroup.dev/v1"
@@ -21,6 +21,19 @@ REST_POLL_CYCLE = 300
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
 USER_URL = f"{AUTH_API_BASE_URL}/users"
 WS_URL = "wss://ws.openapi.husqvarna.dev/v1"
+
+
+class EventTypesV2(StrEnum):
+    """Websocket events from websocket V2."""
+
+    BATTERY = "battery-event-v2"
+    CALENDAR = "calendar-event-v2"
+    CUTTING_HEIGHT = "cuttingHeight-event-v2"
+    HEADLIGHTS = "headLights-event-v2"
+    MESSAGES = "messages-event-v2"
+    MOWER = "mower-event-v2"
+    PLANNER = "planner-event-v2"
+    POSITIONS = "positions-event-v2"
 
 
 class DayOfWeek(IntEnum):
