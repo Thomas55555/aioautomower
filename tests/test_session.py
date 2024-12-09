@@ -436,8 +436,27 @@ async def test_cutting_height_event(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
+async def test_headlights_event(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 headlight update."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    assert (
+        automower_api.data[MOWER_ID].settings.headlight.mode
+        == HeadlightModes.EVENING_ONLY
+    )
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/headlights_event.json"), None)
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert (
+        automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
+    )
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
 async def test_single_mower_event(mock_automower_client: AbstractAuth):
-    """Test automower websocket V2 calendar update with work area."""
+    """Test automower websocket V2 mower event update with just one change."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     msg = WSMessage(
@@ -455,7 +474,7 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
 
 
 async def test_sinlge_planner_event(mock_automower_client: AbstractAuth):
-    """Test automower websocket V2 calendar update with work area."""
+    """Test automower websocket V2 planner event update with just one change."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
@@ -487,7 +506,7 @@ async def test_sinlge_planner_event(mock_automower_client: AbstractAuth):
 
 
 async def test_full_planner_event(mock_automower_client: AbstractAuth):
-    """Test automower websocket V2 calendar update with work area."""
+    """Test automower websocket V2 planner event full update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
@@ -514,7 +533,7 @@ async def test_full_planner_event(mock_automower_client: AbstractAuth):
 
 
 async def test_positions_event(mock_automower_client: AbstractAuth):
-    """Test automower websocket V2 calendar update with work area."""
+    """Test automower websocket V2 positions update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].positions[0] == Positions(
