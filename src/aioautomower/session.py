@@ -475,7 +475,9 @@ class AutomowerSession:
         if msg.data:
             msg_dict = msg.json()
             if "type" in msg_dict:
-                if msg_dict["type"] in EVENT_TYPES or EventTypesV2:
+                if msg_dict["type"] in set(EVENT_TYPES) | {
+                    member.value for member in EventTypesV2
+                }:
                     if msg_dict["type"] == "settings-event":
                         copy = dict(msg_dict)
                         msg_dict = self.add_settigs_tree(copy)
