@@ -18,11 +18,13 @@ from aioautomower.exceptions import (
     WorkAreasDifferentException,
 )
 from aioautomower.model import (
+    Actions,
     Calendar,
     HeadlightModes,
     MowerModes,
-    Tasks,
+    Positions,
     RestrictedReasons,
+    Tasks,
 )
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
@@ -452,22 +454,75 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_single_planner_event(mock_automower_client: AbstractAuth):
+async def test_sinlge_planner_event(mock_automower_client: AbstractAuth):
     """Test automower websocket V2 calendar update with work area."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
+    assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
+        2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert automower_api.data[MOWER_ID].planner.override.action == Actions.NOT_ACTIVE
     assert (
         automower_api.data[MOWER_ID].planner.restricted_reason
         == RestrictedReasons.WEEK_SCHEDULE
     )
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/planer_event.json"), None)
+    msg = WSMessage(
+        WSMsgType.TEXT,
+        b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "planner-event-v2", "attributes": {"planner": {"restrictedReason": "ALL_WORK_AREAS_COMPLETED"}}}',
+        None,
+    )
     automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
+        2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert automower_api.data[MOWER_ID].planner.override.action == Actions.NOT_ACTIVE
+    assert (
+        automower_api.data[MOWER_ID].planner.restricted_reason
+        == RestrictedReasons.ALL_WORK_AREAS_COMPLETED
+    )
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_full_planner_event(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 calendar update with work area."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
+        2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert automower_api.data[MOWER_ID].planner.override.action == Actions.NOT_ACTIVE
+    assert (
+        automower_api.data[MOWER_ID].planner.restricted_reason
+        == RestrictedReasons.WEEK_SCHEDULE
+    )
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/planner_event.json"), None)
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
+    assert automower_api.data[MOWER_ID].planner.override.action == Actions.FORCE_MOW
     assert (
         automower_api.data[MOWER_ID].planner.restricted_reason
         == RestrictedReasons.PARK_OVERRIDE
     )
-    assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
 
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_positions_event(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 calendar update with work area."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    assert automower_api.data[MOWER_ID].positions[0] == Positions(
+        35.5402913, -82.5527055
+    )
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/positions_event.json"), None)
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None

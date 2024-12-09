@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -479,8 +479,6 @@ class AutomowerSession:
                     if msg_dict["type"] == "settings-event":
                         copy = dict(msg_dict)
                         msg_dict = self.add_settigs_tree(copy)
-                    if msg_dict["type"] == EventTypesV2.CUTTING_HEIGHT:
-                        copy = dict(msg_dict)
                     if msg_dict["type"] == "status-event":
                         copy = dict(msg_dict)
                         msg_dict = self.filter_work_area_id(copy)
@@ -528,48 +526,70 @@ class AutomowerSession:
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
-    def _update_data(self, new_data) -> None:
+    def _update_data(self, new_data: Mapping[str, Any]) -> None:
         """Update internal data with new data from websocket."""
         if self._data is None:
             raise NoDataAvailableException
 
         data = self._data["data"]
-        updated = False
-
-        def update_nested_dict(original: dict, updates: dict) -> None:
-            """Recursively update a nested dictionary with new values."""
-            for key, value in updates.items():
-                if (
-                    isinstance(value, dict)
-                    and key in original
-                    and isinstance(original[key], dict)
-                ):
-                    update_nested_dict(original[key], value)
-                else:
-                    original[key] = value
 
         for mower in data:
             if mower["type"] == "mower" and mower["id"] == new_data["id"]:
-                if new_data["type"] == "cuttingHeight-event-v2":
-                    # Specific handling for cuttingHeight-event-v2
-                    new_cutting_height = new_data["attributes"]["cuttingHeight"][
-                        "height"
-                    ]
-                    mower["attributes"]["settings"]["cuttingHeight"] = (
-                        new_cutting_height
-                    )
-                    updated = True
-                    break  # Exit the loop since the update is done
+                self._process_event(mower, new_data)
+                break
 
-                # General handling for other event types
-                update_nested_dict(mower["attributes"], new_data["attributes"])
-                updated = True
-                break  # Exit the loop since the update is done
+        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
+        self._schedule_data_callbacks()
 
-        if updated:
-            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-            self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
-            self._schedule_data_callbacks()
+    def _process_event(self, mower: dict, new_data: Mapping[str, Any]) -> None:
+        """Process a specific event type."""
+        handlers = {
+            "cuttingHeight": self._handle_cutting_height_event,
+            "headLight": self._handle_headlight_event,
+            "position": self._handle_position_event,
+        }
+
+        attributes = new_data.get("attributes", {})
+        for key, handler in handlers.items():
+            if key in attributes:
+                handler(mower, attributes)
+                return
+
+        # General handling for other attributes
+        self._update_nested_dict(mower["attributes"], attributes)
+
+    def _handle_cutting_height_event(self, mower: dict, attributes: dict) -> None:
+        """Handle cuttingHeight-specific updates."""
+        new_cutting_height = attributes["cuttingHeight"]["height"]
+        mower["attributes"]["settings"]["cuttingHeight"] = new_cutting_height
+
+    def _handle_headlight_event(self, mower: dict, attributes: dict) -> None:
+        """Handle headLight-specific updates."""
+        new_headlight_mode = attributes["headLight"]["mode"]
+        mower["attributes"]["settings"]["headlight"]["mode"] = new_headlight_mode
+
+    def _handle_position_event(self, mower: dict, attributes: dict) -> None:
+        """Handle position-specific updates."""
+        new_position = attributes["position"]
+        if "positions" not in mower["attributes"]:
+            mower["attributes"]["positions"] = []
+        mower["attributes"]["positions"].insert(0, new_position)
+
+    @staticmethod
+    def _update_nested_dict(
+        original: MutableMapping[Any, Any], updates: Mapping[Any, Any]
+    ) -> None:
+        """Recursively update a nested dictionary with new values."""
+        for key, value in updates.items():
+            if (
+                isinstance(value, dict)
+                and key in original
+                and isinstance(original[key], dict)
+            ):
+                AutomowerSession._update_nested_dict(original[key], value)
+            else:
+                original[key] = value
 
     async def _rest_task(self) -> None:
         """Poll data periodically via Rest."""
