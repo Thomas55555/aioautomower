@@ -1,0 +1,13 @@
+{
+  "id": "c7233734-b219-4287-a173-08e3643f89f0",
+  "type": "messages-event-v2",
+  "attributes": {
+    "message": {
+      "time": 1728034996,
+      "code": 3,
+      "severity": "WARNING",
+      "latitude": 57.7086409,
+      "longitude": 14.1678988
+    }
+  }
+}

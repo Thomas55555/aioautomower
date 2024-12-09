@@ -1,0 +1,9 @@
+{
+  "id": "c7233734-b219-4287-a173-08e3643f89f0",
+  "type": "battery-event-v2",
+  "attributes": {
+    "battery": {
+      "batteryPercent": 77
+    }
+  }
+}
