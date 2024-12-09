@@ -366,6 +366,68 @@ async def test_update_data(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
+async def test_battery_event(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 battery update."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/battery_event.json"), None)
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].battery.battery_percent == 77
+
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 calendar update with work area."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+
+    msg = WSMessage(
+        WSMsgType.TEXT, load_fixture("events/calendar_event_work_area.json"), None
+    )
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].calendar.tasks == [
+        Calendar(
+            start=time(hour=12),
+            duration=timedelta(minutes=300),
+            monday=True,
+            tuesday=True,
+            wednesday=True,
+            thursday=True,
+            friday=True,
+            saturday=True,
+            sunday=True,
+            work_area_id=78543,
+        )
+    ]
+
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+# async def test_cutting_height_event(mock_automower_client: AbstractAuth):
+#     """Test automower websocket V2 calendar update with work area."""
+#     automower_api = AutomowerSession(mock_automower_client, poll=True)
+#     await automower_api.connect()
+
+#     msg = WSMessage(
+#         WSMsgType.TEXT, load_fixture("events/cutting_height_event.json"), None
+#     )
+#     automower_api._handle_text_message(msg)  # noqa: SLF001
+#     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
+
+#     await automower_api.close()
+#     if TYPE_CHECKING:
+#         assert automower_api.rest_task is not None
+#     assert automower_api.rest_task.cancelled()
+
+
 async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
     """Test automower empty task."""
     automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)

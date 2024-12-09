@@ -13,7 +13,7 @@ import tzlocal
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
-from .const import EVENT_TYPES, REST_POLL_CYCLE
+from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
 from .exceptions import (
     FeatureNotSupportedException,
     NoDataAvailableException,
@@ -475,10 +475,12 @@ class AutomowerSession:
         if msg.data:
             msg_dict = msg.json()
             if "type" in msg_dict:
-                if msg_dict["type"] in EVENT_TYPES:
+                if msg_dict["type"] in EVENT_TYPES or EventTypesV2:
                     if msg_dict["type"] == "settings-event":
                         copy = dict(msg_dict)
                         msg_dict = self.add_settigs_tree(copy)
+                    if msg_dict["type"] == EventTypesV2.CUTTING_HEIGHT:
+                        copy = dict(msg_dict)
                     if msg_dict["type"] == "status-event":
                         copy = dict(msg_dict)
                         msg_dict = self.filter_work_area_id(copy)
