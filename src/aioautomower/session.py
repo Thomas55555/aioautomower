@@ -563,20 +563,20 @@ class AutomowerSession:
 
     def _handle_cutting_height_event(self, mower: dict, attributes: dict) -> None:
         """Handle cuttingHeight-specific updates."""
-        new_cutting_height = attributes["cuttingHeight"]["height"]
-        mower["attributes"]["settings"]["cuttingHeight"] = new_cutting_height
+        mower["attributes"]["settings"]["cuttingHeight"] = attributes["cuttingHeight"][
+            "height"
+        ]
 
     def _handle_headlight_event(self, mower: dict, attributes: dict) -> None:
         """Handle headLight-specific updates."""
-        new_headlight_mode = attributes["headLight"]["mode"]
-        mower["attributes"]["settings"]["headlight"]["mode"] = new_headlight_mode
+        mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headLight"][
+            "mode"
+        ]
 
-    def _handle_position_event(self, mower: dict, attributes: dict) -> None:
-        """Handle position-specific updates."""
-        new_position = attributes["position"]
-        if "positions" not in mower["attributes"]:
-            mower["attributes"]["positions"] = []
-        mower["attributes"]["positions"].insert(0, new_position)
+    def _handle_position_event(
+        self, mower: dict[str, dict[str, list[dict]]], attributes: dict[str, dict]
+    ) -> None:
+        mower["attributes"]["positions"].insert(0, attributes["position"])
 
     @staticmethod
     def _update_nested_dict(
