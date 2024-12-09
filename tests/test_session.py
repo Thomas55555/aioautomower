@@ -17,7 +17,7 @@ from aioautomower.exceptions import (
     NoDataAvailableException,
     WorkAreasDifferentException,
 )
-from aioautomower.model import Calendar, HeadlightModes, Tasks
+from aioautomower.model import Calendar, HeadlightModes, MowerModes, Tasks
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
@@ -411,21 +411,39 @@ async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-# async def test_cutting_height_event(mock_automower_client: AbstractAuth):
-#     """Test automower websocket V2 calendar update with work area."""
-#     automower_api = AutomowerSession(mock_automower_client, poll=True)
-#     await automower_api.connect()
+async def test_cutting_height_event(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 calendar update with work area."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
 
-#     msg = WSMessage(
-#         WSMsgType.TEXT, load_fixture("events/cutting_height_event.json"), None
-#     )
-#     automower_api._handle_text_message(msg)  # noqa: SLF001
-#     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
+    msg = WSMessage(
+        WSMsgType.TEXT, load_fixture("events/cutting_height_event.json"), None
+    )
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
-#     await automower_api.close()
-#     if TYPE_CHECKING:
-#         assert automower_api.rest_task is not None
-#     assert automower_api.rest_task.cancelled()
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_single_mower_event(mock_automower_client: AbstractAuth):
+    """Test automower websocket V2 calendar update with work area."""
+    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    await automower_api.connect()
+    msg = WSMessage(
+        WSMsgType.TEXT,
+        b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "mower-event-v2", "attributes": {"mower": {"mode": "DEMO"}}}',
+        None,
+    )
+    automower_api._handle_text_message(msg)  # noqa: SLF001
+    assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
+
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
 
 
 async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):

@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -529,20 +529,47 @@ class AutomowerSession:
         return self.data
 
     def _update_data(self, new_data) -> None:
-        """Update internal data, with new data from websocket."""
+        """Update internal data with new data from websocket."""
         if self._data is None:
             raise NoDataAvailableException
 
         data = self._data["data"]
+        updated = False
+
+        def update_nested_dict(original: dict, updates: dict) -> None:
+            """Recursively update a nested dictionary with new values."""
+            for key, value in updates.items():
+                if (
+                    isinstance(value, dict)
+                    and key in original
+                    and isinstance(original[key], dict)
+                ):
+                    update_nested_dict(original[key], value)
+                else:
+                    original[key] = value
+
         for mower in data:
             if mower["type"] == "mower" and mower["id"] == new_data["id"]:
-                new_attributes: Mapping[Any, Any] = new_data["attributes"]
-                value: Mapping[Any, Any]
-                for attrib, value in new_attributes.items():
-                    mower["attributes"][attrib] = value
-        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-        self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
-        self._schedule_data_callbacks()
+                if new_data["type"] == "cuttingHeight-event-v2":
+                    # Specific handling for cuttingHeight-event-v2
+                    new_cutting_height = new_data["attributes"]["cuttingHeight"][
+                        "height"
+                    ]
+                    mower["attributes"]["settings"]["cuttingHeight"] = (
+                        new_cutting_height
+                    )
+                    updated = True
+                    break  # Exit the loop since the update is done
+
+                # General handling for other event types
+                update_nested_dict(mower["attributes"], new_data["attributes"])
+                updated = True
+                break  # Exit the loop since the update is done
+
+        if updated:
+            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+            self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
+            self._schedule_data_callbacks()
 
     async def _rest_task(self) -> None:
         """Poll data periodically via Rest."""
