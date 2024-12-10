@@ -449,27 +449,28 @@ async def test_get_status_400(
         await automower_client.get_status()
 
 
-# async def test_patch_request_success(
-#     responses: aioresponses, automower_client: AutomowerSession, control_response
-# ):
-#     """Test get status."""
-#     responses.get(
-#         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
-#         status=200,
-#         payload=json.loads(load_fixture("high_feature_mower.json")),
-#     )
-#     assert await automower_client.get_status() == mower_list_to_dictionary_dataclass(
-#         json.loads(load_fixture("high_feature_mower.json")),
-#         zoneinfo.ZoneInfo("Europe/Berlin"),
-#     )
+async def test_patch_request_success(
+    responses: aioresponses, automower_client: AutomowerSession, control_response
+):
+    """Test get status."""
 
-# responses.patch(
-#     f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
-#         mower_id=MOWER_ID, stay_out_id="1234")}",
-#     status=200,
-#     payload=control_response,
-# )
-# assert (
-#     await automower_client.commands.switch_stay_out_zone(MOWER_ID, "1234", True)
-#     is None
-# )
+    responses.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        status=200,
+        payload=json.loads(load_fixture("high_feature_mower.json")),
+    )
+    assert await automower_client.get_status() == mower_list_to_dictionary_dataclass(
+        json.loads(load_fixture("high_feature_mower.json")),
+        zoneinfo.ZoneInfo("Europe/Berlin"),
+    )
+
+    responses.patch(
+        f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
+            mower_id=MOWER_ID, stay_out_id="1234")}",
+        status=200,
+        payload=control_response,
+    )
+    assert (
+        await automower_client.commands.switch_stay_out_zone(MOWER_ID, "1234", True)
+        is None
+    )

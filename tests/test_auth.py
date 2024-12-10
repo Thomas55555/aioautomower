@@ -1,6 +1,5 @@
 """Tests for aioautomower auth module."""
 
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -8,11 +7,7 @@ from aiohttp import ClientSession
 from aioresponses import aioresponses
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
-from aioautomower.session import AutomowerEndpoint
-from tests import load_fixture
-
-from .const import MOWER_ID
+from aioautomower.const import AUTH_HEADER_FMT, WS_URL
 
 
 class MyAuth(AbstractAuth):
@@ -21,29 +16,6 @@ class MyAuth(AbstractAuth):
     async def async_get_access_token(self, jwt_token) -> str:
         """Return mocked access token."""
         return jwt_token
-
-
-# @pytest.mark.asyncio
-# async def test_get_request_success(jwt_token):
-#     async with ClientSession() as session:
-#         # Initialize the subclass with a mocked session and host
-#         auth = MyAuth(session, API_BASE_URL)
-
-#         # Mock the access token method
-#         auth.async_get_access_token = AsyncMock(return_value=jwt_token)
-
-#         # Use aioresponses to mock HTTP GET request
-#         with aioresponses() as m:
-#             url = f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"
-#             mocked_response = json.loads(load_fixture("high_feature_mower.json"))
-#             m.get(url, payload=mocked_response, status=200)
-
-#             # Call the `get_json` method
-#             response = await auth.get_json(AutomowerEndpoint.mowers)
-
-#             # Assertions
-#             assert response == mocked_response
-#             auth.async_get_access_token.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -63,35 +35,6 @@ async def test_post_request_success(jwt_token):
 
             # Call the `post_json` method
             response = await auth.post_json("resource", json=post_payload)
-
-            # Assertions
-            assert response == mocked_response
-            auth.async_get_access_token.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_patch_request_success(jwt_token):
-    """Test patch command."""
-    async with ClientSession() as session:
-        # Initialize the subclass with a mocked session and host
-        auth = MyAuth(session, API_BASE_URL)
-
-        # Mock the access token method
-        auth.async_get_access_token = AsyncMock(return_value=jwt_token)
-
-        # Use aioresponses to mock HTTP GET request
-        with aioresponses() as m:
-            url = f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
-            mower_id=MOWER_ID, stay_out_id="1234")}"
-            mocked_response = json.loads(load_fixture("high_feature_mower.json"))
-            m.patch(url, payload=mocked_response, status=200)
-
-            # Call the `get_json` method
-            response = await auth.patch_json(
-                url=AutomowerEndpoint.stay_out_zones.format(
-                    mower_id=MOWER_ID, stay_out_id="1234"
-                ),
-            )
 
             # Assertions
             assert response == mocked_response
