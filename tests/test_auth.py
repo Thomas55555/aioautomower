@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from aiohttp import ClientSession
-from aioresponses import aioresponses
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import AUTH_HEADER_FMT, WS_URL
