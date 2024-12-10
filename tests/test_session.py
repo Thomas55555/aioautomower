@@ -8,17 +8,24 @@ from unittest.mock import AsyncMock
 
 import pytest
 import tzlocal
-from aiohttp import WSMessage, WSMsgType
+from aiohttp import (
+    WSMessage,
+    WSMsgType,
+)
+from aioresponses import aioresponses
 from freezegun import freeze_time
 
 from aioautomower.auth import AbstractAuth
+from aioautomower.const import API_BASE_URL
 from aioautomower.exceptions import (
+    ApiBadRequestException,
     FeatureNotSupportedException,
     NoDataAvailableException,
     WorkAreasDifferentException,
 )
 from aioautomower.model import Calendar, HeadlightModes, Tasks
-from aioautomower.session import AutomowerSession
+from aioautomower.session import AutomowerEndpoint, AutomowerSession
+from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
@@ -397,3 +404,72 @@ async def test_timzeone_overwrite(mock_automower_client: AbstractAuth):
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
+
+
+async def test_get_status(
+    responses: aioresponses,
+    automower_client: AutomowerSession,
+):
+    """Test get status."""
+    responses.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        status=200,
+        payload=json.loads(load_fixture("high_feature_mower.json")),
+    )
+    assert await automower_client.get_status() == mower_list_to_dictionary_dataclass(
+        json.loads(load_fixture("high_feature_mower.json")),
+        zoneinfo.ZoneInfo("Europe/Berlin"),
+    )
+
+
+async def test_get_status_400(
+    responses: aioresponses,
+    automower_client: AutomowerSession,
+):
+    """Test get status with error."""
+    responses.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        status=400,
+        payload={
+            "errors": [
+                {
+                    "id": "f41d9bbd-abc3-4c4b-b68c-b0079bb10820",
+                    "status": "nnn",
+                    "code": "some.error.code",
+                    "title": "Some summary of the problem",
+                    "detail": "Some details about the specific problem.",
+                }
+            ]
+        },
+    )
+    with pytest.raises(
+        ApiBadRequestException,
+        match="Unable to send request with API: 400, message='Bad Request', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+    ):
+        await automower_client.get_status()
+
+
+# async def test_patch_request_success(
+#     responses: aioresponses, automower_client: AutomowerSession, control_response
+# ):
+#     """Test get status."""
+#     responses.get(
+#         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+#         status=200,
+#         payload=json.loads(load_fixture("high_feature_mower.json")),
+#     )
+#     assert await automower_client.get_status() == mower_list_to_dictionary_dataclass(
+#         json.loads(load_fixture("high_feature_mower.json")),
+#         zoneinfo.ZoneInfo("Europe/Berlin"),
+#     )
+
+# responses.patch(
+#     f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
+#         mower_id=MOWER_ID, stay_out_id="1234")}",
+#     status=200,
+#     payload=control_response,
+# )
+# assert (
+#     await automower_client.commands.switch_stay_out_zone(MOWER_ID, "1234", True)
+#     is None
+# )

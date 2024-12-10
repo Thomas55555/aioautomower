@@ -2,13 +2,17 @@
 
 import json
 import zoneinfo
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
-from aiohttp import ClientSession
+from aioresponses import aioresponses
 from syrupy import SnapshotAssertion
 
+from aioautomower.auth import AbstractAuth
+from aioautomower.const import API_BASE_URL
+from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
 from .syrupy import AutomowerSnapshotExtension
@@ -21,7 +25,7 @@ def snapshot_assertion(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 
 @pytest.fixture(name="mower_tz")
-def mower_tz() -> zoneinfo.ZoneInfo:
+def mock_mower_tz() -> zoneinfo.ZoneInfo:
     """Return snapshot assertion fixture with the Automower extension."""
     return zoneinfo.ZoneInfo("Europe/Berlin")
 
@@ -30,6 +34,12 @@ def mower_tz() -> zoneinfo.ZoneInfo:
 def mock_jwt_token() -> str:
     """Return snapshot assertion fixture with the Automower extension."""
     return json.loads(load_fixture("jwt.json"))["data"]
+
+
+@pytest.fixture(name="control_response")
+def mock_control_response() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return json.loads(load_fixture("control_response.json"))
 
 
 @pytest.fixture
@@ -77,14 +87,34 @@ def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
         yield client
 
 
-@pytest.fixture
-async def async_session_fixture():
-    """Fixture for creating an aiohttp session."""
-    async with ClientSession() as session:
-        yield session
+@pytest.fixture(name="automower_client")
+async def aio_client(
+    jwt_token: str, mower_tz: zoneinfo.ZoneInfo
+) -> AsyncGenerator[AutomowerSession, None]:
+    """Return an Automower session client."""
+
+    class MockAuth(AbstractAuth):
+        async def async_get_access_token(self) -> str:
+            return jwt_token
+
+        async def __aenter__(self):
+            # Perform any setup needed for MyAuth
+            return self
+
+        async def __aexit__(self, exc_type, exc_value, traceback):
+            # Perform any cleanup needed for MyAuth
+            await self._websession.close()
+
+    async with (
+        aiohttp.ClientSession() as session,
+        MockAuth(websession=session, host=API_BASE_URL) as auth,
+    ):
+        automower_client = AutomowerSession(auth=auth, mower_tz=mower_tz, poll=False)
+        yield automower_client
 
 
-@pytest.fixture
-def test_host_fixture():
-    """Fixture providing a mock host URL."""
-    return "http://testhost"
+@pytest.fixture(name="responses")
+def aioresponses_fixture() -> Generator[aioresponses, None, None]:
+    """Return aioresponses fixture."""
+    with aioresponses() as mocked_responses:
+        yield mocked_responses
