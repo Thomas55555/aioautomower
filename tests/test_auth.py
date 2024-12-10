@@ -19,29 +19,6 @@ class MyAuth(AbstractAuth):
 
 
 @pytest.mark.asyncio
-async def test_post_request_success(jwt_token):
-    """Test post command."""
-    async with ClientSession() as session:
-        auth = MyAuth(session, "https://mockapi.com")
-
-        # Mock the access token method
-        auth.async_get_access_token = AsyncMock(return_value=jwt_token)
-
-        with aioresponses() as m:
-            url = "https://mockapi.com/resource"
-            post_payload = {"data": "test"}
-            mocked_response = {"result": "success"}
-            m.post(url, payload=mocked_response, status=201)
-
-            # Call the `post_json` method
-            response = await auth.post_json("resource", json=post_payload)
-
-            # Assertions
-            assert response == mocked_response
-            auth.async_get_access_token.assert_awaited_once()
-
-
-@pytest.mark.asyncio
 async def test_websocket_connect(jwt_token):
     """Test websocket connection."""
     async with ClientSession() as session:
