@@ -42,6 +42,12 @@ def mock_control_response() -> dict:
     return json.loads(load_fixture("control_response.json"))
 
 
+@pytest.fixture(name="mower_data")
+def mock_mower_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return json.loads(load_fixture("high_feature_mower.json"))
+
+
 @pytest.fixture
 def mock_automower_client() -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
