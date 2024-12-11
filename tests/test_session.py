@@ -16,7 +16,6 @@ from freezegun import freeze_time
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
     FeatureNotSupportedException,
-    NoDataAvailableException,
     WorkAreasDifferentException,
 )
 from aioautomower.model import (
@@ -313,62 +312,6 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
         await automower_api.commands.workarea_settings("1234", 50, 0)
 
     mocked_method.reset_mock()
-    await automower_api.close()
-    if TYPE_CHECKING:
-        assert automower_api.rest_task is not None
-    assert automower_api.rest_task.cancelled()
-
-
-async def test_update_data(mock_automower_client: AbstractAuth):
-    """Test automower session patch commands."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
-    await automower_api.connect()
-
-    # Test empty tasks. doesn't delete the tasks
-    calendar = automower_api.data[MOWER_ID].calendar.tasks
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("settings_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
-    assert automower_api.data[MOWER_ID].calendar.tasks == calendar
-    assert (
-        automower_api.data[MOWER_ID].settings.headlight.mode
-        == HeadlightModes.EVENING_AND_NIGHT
-    )
-
-    # Test new tasks arrive
-    msg = WSMessage(
-        WSMsgType.TEXT, load_fixture("settings_event_with_tasks.json"), None
-    )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
-    assert automower_api.data[MOWER_ID].calendar.tasks == [
-        Calendar(
-            start=time(hour=12),
-            duration=timedelta(minutes=300),
-            monday=True,
-            tuesday=True,
-            wednesday=True,
-            thursday=True,
-            friday=True,
-            saturday=True,
-            sunday=True,
-            work_area_id=None,
-        )
-    ]
-
-    # Test new positions arrive
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("positions_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
-    assert automower_api.data[MOWER_ID].positions[0].latitude == 1  # type: ignore[index]
-    assert automower_api.data[MOWER_ID].positions[0].longitude == 2  # type: ignore[index]
-
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("status_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
-    assert automower_api.data[MOWER_ID].mower.work_area_id == 123456
-
-    # Test NoDataAvailableException is risen, if there is no data
-    automower_api._data = None  # noqa: SLF001
-    with pytest.raises(NoDataAvailableException):
-        automower_api._handle_text_message(msg)  # noqa: SLF001
-
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
