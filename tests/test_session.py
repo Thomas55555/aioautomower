@@ -463,9 +463,10 @@ async def test_post_request_success(
 ):
     """Test get status."""
     await setup_connection(responses, automower_client, mower_data, mower_tz)
+    endpoint = AutomowerEndpoint.actions.format(mower_id=MOWER_ID)
+    url = "{}/{}".format(API_BASE_URL, endpoint)
     responses.post(
-        f"{API_BASE_URL}/{AutomowerEndpoint.actions.format(
-            mower_id=MOWER_ID)}",
+        url=url,
         status=200,
         payload=control_response,
     )
