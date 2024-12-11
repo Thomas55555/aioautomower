@@ -474,12 +474,14 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_sinlge_planner_event(mock_automower_client: AbstractAuth):
+async def test_sinlge_planner_event(
+    mock_automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+):
     """Test automower websocket V2 planner event update with just one change."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
-        2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.NOT_ACTIVE
     assert (
@@ -493,7 +495,7 @@ async def test_sinlge_planner_event(mock_automower_client: AbstractAuth):
     )
     automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
-        2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.NOT_ACTIVE
     assert (
@@ -506,12 +508,14 @@ async def test_sinlge_planner_event(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_full_planner_event(mock_automower_client: AbstractAuth):
+async def test_full_planner_event(
+    mock_automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+):
     """Test automower websocket V2 planner event full update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
-        2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.NOT_ACTIVE
     assert (
