@@ -4,8 +4,10 @@ Run tests with `poetry run pytest`
 and to update snapshots `poetry run pytest --snapshot-update`
 """
 
+import json
 import zoneinfo
 from pathlib import Path
+from typing import Any
 
 from aioresponses import aioresponses
 
@@ -21,6 +23,12 @@ def load_fixture(filename: str) -> str:
     """Load a fixture."""
     path = Path(__package__) / "fixtures" / filename
     return path.read_text(encoding="utf-8")
+
+
+def load_fixture_json(filename: str) -> Any:
+    """Load a fixture and return json."""
+    path = Path(__package__) / "fixtures" / filename
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 async def setup_connection(

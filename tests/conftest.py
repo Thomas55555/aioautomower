@@ -1,6 +1,5 @@
 """Test helpers for Husqvarna Automower."""
 
-import json
 import zoneinfo
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
@@ -13,7 +12,7 @@ from syrupy import SnapshotAssertion
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerSession
-from tests import load_fixture
+from tests import load_fixture_json
 
 from .syrupy import AutomowerSnapshotExtension
 
@@ -33,19 +32,19 @@ def mock_mower_tz() -> zoneinfo.ZoneInfo:
 @pytest.fixture(name="jwt_token")
 def mock_jwt_token() -> str:
     """Return snapshot assertion fixture with the Automower extension."""
-    return json.loads(load_fixture("jwt.json"))["data"]
+    return load_fixture_json("jwt.json")["data"]
 
 
 @pytest.fixture(name="control_response")
 def mock_control_response() -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
-    return json.loads(load_fixture("control_response.json"))
+    return load_fixture_json("control_response.json")
 
 
 @pytest.fixture(name="mower_data")
 def mock_mower_data() -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
-    return json.loads(load_fixture("high_feature_mower.json"))
+    return load_fixture_json("high_feature_mower.json")
 
 
 @pytest.fixture
@@ -56,9 +55,7 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.get_json.return_value = json.loads(
-            load_fixture("high_feature_mower.json")
-        )
+        client.get_json.return_value = load_fixture_json("high_feature_mower.json")
         yield client
 
 
@@ -70,8 +67,8 @@ def mock_automower_client_without_tasks() -> Generator[AsyncMock, None, None]:
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.get_json.return_value = json.loads(
-            load_fixture("high_feature_mower_without_tasks.json")
+        client.get_json.return_value = load_fixture_json(
+            "high_feature_mower_without_tasks.json"
         )
         yield client
 
@@ -84,10 +81,8 @@ def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        mower_fixture = load_fixture("high_feature_mower.json")
-        mower1_python = json.loads(mower_fixture)
-        mower_fixture = load_fixture("low_feature_mower.json")
-        mower2_python = json.loads(mower_fixture)
+        mower1_python = load_fixture_json("high_feature_mower.json")
+        mower2_python = load_fixture_json("low_feature_mower.json")
         mowers_python = {"data": mower1_python["data"] + mower2_python["data"]}
         client.get_json.return_value = mowers_python
         yield client

@@ -1,6 +1,5 @@
 """Test automower session."""
 
-import json
 import zoneinfo
 from unittest.mock import AsyncMock, patch
 
@@ -15,7 +14,7 @@ from aioautomower.exceptions import (
 )
 from aioautomower.session import AutomowerEndpoint, AutomowerSession
 
-from . import load_fixture, setup_connection
+from . import load_fixture_json, setup_connection
 from .const import MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS
 
 
@@ -27,7 +26,7 @@ async def test_get_status_400(
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
         status=400,
-        payload=json.loads(load_fixture("error.json")),
+        payload=load_fixture_json("error.json"),
     )
     with pytest.raises(
         ApiBadRequestException,
@@ -44,7 +43,7 @@ async def test_get_status_401(
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
         status=401,
-        payload=json.loads(load_fixture("error.json")),
+        payload=load_fixture_json("error.json"),
     )
     with pytest.raises(
         ApiUnauthorizedException,
@@ -61,7 +60,7 @@ async def test_get_status_402(
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
         status=403,
-        payload=json.loads(load_fixture("error.json")),
+        payload=load_fixture_json("error.json"),
     )
     with pytest.raises(
         ApiForbiddenException,

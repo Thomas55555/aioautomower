@@ -1,7 +1,5 @@
 """Tests for asynchronous Python client for aioautomower."""
 
-import json
-
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.utils import (
@@ -9,15 +7,14 @@ from aioautomower.utils import (
     error_key_list,
     mower_list_to_dictionary_dataclass,
 )
-from tests import load_fixture
+from tests import load_fixture_json
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
 async def test_error_key(mower_tz) -> None:
     """Test translating an error code to an error key."""
-    mower_fixture = load_fixture("high_feature_mower.json")
-    mower_python = json.loads(mower_fixture)
+    mower_python = load_fixture_json("high_feature_mower.json")
     mowers = mower_list_to_dictionary_dataclass(mower_python, mower_tz)
     assert mowers[MOWER_ID].mower.error_key is None
 

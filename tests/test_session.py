@@ -1,6 +1,5 @@
 """Test automower session."""
 
-import json
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
@@ -23,7 +22,7 @@ from aioautomower.exceptions import (
 from aioautomower.model import Calendar, HeadlightModes, Tasks
 from aioautomower.session import AutomowerSession
 
-from . import load_fixture
+from . import load_fixture, load_fixture_json
 from .const import MOWER_ID, MOWER_ID_LOW_FEATURE
 
 
@@ -178,7 +177,7 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     )
 
     # Test calendar with workareas
-    tasks_dict: dict = json.loads(load_fixture("tasks.json"))
+    tasks_dict: dict = load_fixture_json("tasks.json")
     tasks = Tasks.from_dict(tasks_dict)
     await automower_api.commands.set_calendar(MOWER_ID, tasks)
     for task in tasks_dict["tasks"]:
@@ -199,8 +198,8 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         await automower_api.commands.set_calendar(MOWER_ID, tasks)
 
     # Test calendar without workareas
-    tasks_dict_without_work_areas: dict = json.loads(
-        load_fixture("tasks_without_work_area.json")
+    tasks_dict_without_work_areas: dict = load_fixture_json(
+        "tasks_without_work_area.json"
     )
     tasks_without_work_areas = Tasks.from_dict(tasks_dict_without_work_areas)
     await automower_api.commands.set_calendar(
