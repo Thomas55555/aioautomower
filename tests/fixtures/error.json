@@ -1,0 +1,11 @@
+{
+  "errors": [
+    {
+      "id": "f41d9bbd-abc3-4c4b-b68c-b0079bb10820",
+      "status": "nnn",
+      "code": "some.error.code",
+      "title": "Some summary of the problem",
+      "detail": "Some details about the specific problem."
+    }
+  ]
+}
