@@ -440,9 +440,10 @@ async def test_patch_request_success(
 ):
     """Test patch request success."""
     await setup_connection(responses, automower_client, mower_data, mower_tz)
+    url = f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
+            mower_id=MOWER_ID, stay_out_id=STAY_OUT_ZONE_ID_SPRING_FLOWERS)}"
     responses.patch(
-        url=f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
-            mower_id=MOWER_ID, stay_out_id=STAY_OUT_ZONE_ID_SPRING_FLOWERS)}",
+        url=url,
         status=200,
         payload=control_response,
     )
