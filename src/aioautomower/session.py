@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -13,7 +13,7 @@ import tzlocal
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
-from .const import EVENT_TYPES, REST_POLL_CYCLE
+from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
 from .exceptions import (
     FeatureNotSupportedException,
     NoDataAvailableException,
@@ -475,7 +475,9 @@ class AutomowerSession:
         if msg.data:
             msg_dict = msg.json()
             if "type" in msg_dict:
-                if msg_dict["type"] in EVENT_TYPES:
+                if msg_dict["type"] in set(EVENT_TYPES) | {
+                    event.value for event in EventTypesV2
+                }:
                     if msg_dict["type"] == "settings-event":
                         copy = dict(msg_dict)
                         msg_dict = self.add_settigs_tree(copy)
@@ -526,21 +528,70 @@ class AutomowerSession:
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
-    def _update_data(self, new_data) -> None:
-        """Update internal data, with new data from websocket."""
+    def _update_data(self, new_data: Mapping[str, Any]) -> None:
+        """Update internal data with new data from websocket."""
         if self._data is None:
             raise NoDataAvailableException
 
         data = self._data["data"]
+
         for mower in data:
             if mower["type"] == "mower" and mower["id"] == new_data["id"]:
-                new_attributes: Mapping[Any, Any] = new_data["attributes"]
-                value: Mapping[Any, Any]
-                for attrib, value in new_attributes.items():
-                    mower["attributes"][attrib] = value
+                self._process_event(mower, new_data)
+                break
+
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         self._schedule_data_callbacks()
+
+    def _process_event(self, mower: dict, new_data: Mapping[str, Any]) -> None:
+        """Process a specific event type."""
+        handlers = {
+            "cuttingHeight": self._handle_cutting_height_event,
+            "headLight": self._handle_headlight_event,
+            "position": self._handle_position_event,
+        }
+
+        attributes = new_data.get("attributes", {})
+        for key, handler in handlers.items():
+            if key in attributes:
+                handler(mower, attributes)
+                return
+
+        # General handling for other attributes
+        self._update_nested_dict(mower["attributes"], attributes)
+
+    def _handle_cutting_height_event(self, mower: dict, attributes: dict) -> None:
+        """Handle cuttingHeight-specific updates."""
+        mower["attributes"]["settings"]["cuttingHeight"] = attributes["cuttingHeight"][
+            "height"
+        ]
+
+    def _handle_headlight_event(self, mower: dict, attributes: dict) -> None:
+        """Handle headLight-specific updates."""
+        mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headLight"][
+            "mode"
+        ]
+
+    def _handle_position_event(
+        self, mower: dict[str, dict[str, list[dict]]], attributes: dict[str, dict]
+    ) -> None:
+        mower["attributes"]["positions"].insert(0, attributes["position"])
+
+    @staticmethod
+    def _update_nested_dict(
+        original: MutableMapping[Any, Any], updates: Mapping[Any, Any]
+    ) -> None:
+        """Recursively update a nested dictionary with new values."""
+        for key, value in updates.items():
+            if (
+                isinstance(value, dict)
+                and key in original
+                and isinstance(original[key], dict)
+            ):
+                AutomowerSession._update_nested_dict(original[key], value)
+            else:
+                original[key] = value
 
     async def _rest_task(self) -> None:
         """Poll data periodically via Rest."""

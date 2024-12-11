@@ -1,0 +1,21 @@
+{
+  "id": "c7233734-b219-4287-a173-08e3643f89f0",
+  "type": "calendar-event-v2",
+  "attributes": {
+    "calendar": {
+      "tasks": [
+        {
+          "start": 420,
+          "duration": 780,
+          "monday": true,
+          "tuesday": true,
+          "wednesday": true,
+          "thursday": true,
+          "friday": true,
+          "saturday": false,
+          "sunday": false
+        }
+      ]
+    }
+  }
+}
