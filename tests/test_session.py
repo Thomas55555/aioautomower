@@ -4,7 +4,7 @@ import json
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import tzlocal
@@ -16,7 +16,7 @@ from aioresponses import aioresponses
 from freezegun import freeze_time
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.const import API_BASE_URL
+from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from aioautomower.exceptions import (
     ApiBadRequestException,
     FeatureNotSupportedException,
@@ -474,3 +474,22 @@ async def test_post_request_success(
         payload=control_response,
     )
     assert await automower_client.commands.resume_schedule(MOWER_ID) is None
+
+
+@pytest.mark.asyncio
+async def test_websocket_connect(automower_client: AutomowerSession, jwt_token: str):
+    """Test websocket connection."""
+    with patch(
+        "aiohttp.ClientSession.ws_connect", new_callable=AsyncMock
+    ) as mock_ws_connect:
+        mock_ws = AsyncMock()
+        mock_ws_connect.return_value = mock_ws
+
+        await automower_client.auth.websocket_connect()
+
+        mock_ws_connect.assert_called_once_with(
+            url=WS_URL,
+            headers={"Authorization": AUTH_HEADER_FMT.format(jwt_token)},
+            heartbeat=60,
+        )
+        assert automower_client.auth.ws == mock_ws
