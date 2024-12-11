@@ -1,6 +1,5 @@
 """Test automower session."""
 
-import json
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
@@ -8,7 +7,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 import tzlocal
-from aiohttp import WSMessage, WSMsgType
+from aiohttp import (
+    WSMessage,
+    WSMsgType,
+)
 from freezegun import freeze_time
 
 from aioautomower.auth import AbstractAuth
@@ -19,10 +21,9 @@ from aioautomower.exceptions import (
 )
 from aioautomower.model import Calendar, HeadlightModes, Tasks
 from aioautomower.session import AutomowerSession
-from tests import load_fixture
 
-MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
-MOWER_ID_LOW_FEATURE = "1234"
+from . import load_fixture, load_fixture_json
+from .const import MOWER_ID, MOWER_ID_LOW_FEATURE
 
 
 async def test_connect_disconnect(mock_automower_client: AbstractAuth):
@@ -176,7 +177,7 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
     )
 
     # Test calendar with workareas
-    tasks_dict: dict = json.loads(load_fixture("tasks.json"))
+    tasks_dict: dict = load_fixture_json("tasks.json")
     tasks = Tasks.from_dict(tasks_dict)
     await automower_api.commands.set_calendar(MOWER_ID, tasks)
     for task in tasks_dict["tasks"]:
@@ -197,8 +198,8 @@ async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
         await automower_api.commands.set_calendar(MOWER_ID, tasks)
 
     # Test calendar without workareas
-    tasks_dict_without_work_areas: dict = json.loads(
-        load_fixture("tasks_without_work_area.json")
+    tasks_dict_without_work_areas: dict = load_fixture_json(
+        "tasks_without_work_area.json"
     )
     tasks_without_work_areas = Tasks.from_dict(tasks_dict_without_work_areas)
     await automower_api.commands.set_calendar(
