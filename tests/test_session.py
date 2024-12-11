@@ -27,9 +27,7 @@ from aioautomower.model import Calendar, HeadlightModes, Tasks
 from aioautomower.session import AutomowerEndpoint, AutomowerSession
 
 from . import load_fixture, setup_connection
-
-MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
-MOWER_ID_LOW_FEATURE = "1234"
+from .const import MOWER_ID, MOWER_ID_LOW_FEATURE, STAY_OUT_ZONE_ID_SPRING_FLOWERS
 
 
 async def test_connect_disconnect(mock_automower_client: AbstractAuth):
@@ -444,12 +442,14 @@ async def test_patch_request_success(
     await setup_connection(responses, automower_client, mower_data, mower_tz)
     responses.patch(
         f"{API_BASE_URL}/{AutomowerEndpoint.stay_out_zones.format(
-            mower_id=MOWER_ID, stay_out_id="1234")}",
+            mower_id=MOWER_ID, stay_out_id=STAY_OUT_ZONE_ID_SPRING_FLOWERS)}",
         status=200,
         payload=control_response,
     )
     assert (
-        await automower_client.commands.switch_stay_out_zone(MOWER_ID, "1234", True)
+        await automower_client.commands.switch_stay_out_zone(
+            MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS, True
+        )
         is None
     )
 
