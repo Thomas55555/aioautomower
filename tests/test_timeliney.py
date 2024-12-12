@@ -1,9 +1,9 @@
 """Test automower session."""
 
+import zoneinfo
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import zoneinfo
 from aiohttp import WSMessage, WSMsgType
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
@@ -94,9 +94,7 @@ async def test_daily_schedule(
     )
     await automower_api.connect()
     # Test event of other mower doesn't overwrite the data
-    msg = WSMessage(
-        WSMsgType.TEXT, load_fixture("settings_event_with_tasks.json"), None
-    )
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/calendar_event.json"), None)
     automower_api._handle_text_message(msg)  # noqa: SLF001
 
     mower_timeline = automower_api.data["1234"].calendar.timeline
