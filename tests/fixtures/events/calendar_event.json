@@ -5,15 +5,15 @@
     "calendar": {
       "tasks": [
         {
-          "start": 420,
-          "duration": 780,
+          "start": 720,
+          "duration": 300,
           "monday": true,
           "tuesday": true,
           "wednesday": true,
           "thursday": true,
           "friday": true,
-          "saturday": false,
-          "sunday": false
+          "saturday": true,
+          "sunday": true
         }
       ]
     }
