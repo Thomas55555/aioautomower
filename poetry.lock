@@ -464,17 +464,17 @@ files = [
 
 [[package]]
 name = "ical"
-version = "8.2.0"
+version = "8.3.1"
 description = "Python iCalendar implementation (rfc 2445)"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.11"
 files = [
-    {file = "ical-8.2.0-py3-none-any.whl", hash = "sha256:f35d7b80dc88f437dca94d19ae3f7cd99b3cc1118a44779a58481697240aa11d"},
-    {file = "ical-8.2.0.tar.gz", hash = "sha256:fb65ab62a0dc38fb8fb1a1fce3912ea505873c352b51d5206e3e1253b8416cb8"},
+    {file = "ical-8.3.1-py3-none-any.whl", hash = "sha256:22e07acd9d36ef0ccb3970a47d5efd5ff29a833fe541145d6f1d3a7676334fa3"},
+    {file = "ical-8.3.1.tar.gz", hash = "sha256:4d3c8c215230c18b1544d11f8e3342301943b5c6fc1b9980442735b84f8015cd"},
 ]
 
 [package.dependencies]
-pydantic = ">=1.9.1"
+pydantic = ">=2.10.4"
 pyparsing = ">=3.0.9"
 python-dateutil = ">=2.8.2"
 tzdata = ">=2023.3"
