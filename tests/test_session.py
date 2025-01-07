@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 import pytest
+import time_machine
 import tzlocal
 from aiohttp import (
     WSMessage,
     WSMsgType,
 )
-from freezegun import freeze_time
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
@@ -31,6 +31,7 @@ from aioautomower.model import (
 from aioautomower.session import AutomowerSession
 
 from . import load_fixture, load_fixture_json
+from .conftest import TEST_TZ
 from .const import MOWER_ID, MOWER_ID_LOW_FEATURE
 
 
@@ -44,10 +45,14 @@ async def test_connect_disconnect(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-@freeze_time("2024-05-04 8:00:00")
-async def test_post_commands(mock_automower_client_two_mowers: AbstractAuth):
+@time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
+async def test_post_commands(
+    mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+):
     """Test automower session post commands."""
-    automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
+    automower_api = AutomowerSession(
+        mock_automower_client_two_mowers, mower_tz=mower_tz, poll=True
+    )
     await automower_api.connect()
     mocked_method = AsyncMock()
     setattr(mock_automower_client_two_mowers, "post_json", mocked_method)
@@ -474,11 +479,13 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_sinlge_planner_event(
+async def test_single_planner_event(
     mock_automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
 ):
     """Test automower websocket V2 planner event update with just one change."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    automower_api = AutomowerSession(
+        mock_automower_client, mower_tz=mower_tz, poll=True
+    )
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
@@ -512,7 +519,9 @@ async def test_full_planner_event(
     mock_automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
 ):
     """Test automower websocket V2 planner event full update."""
-    automower_api = AutomowerSession(mock_automower_client, poll=True)
+    automower_api = AutomowerSession(
+        mock_automower_client, mower_tz=mower_tz, poll=True
+    )
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
