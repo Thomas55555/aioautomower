@@ -33,7 +33,7 @@ class EventTypesV2(StrEnum):
     MESSAGES = "messages-event-v2"
     MOWER = "mower-event-v2"
     PLANNER = "planner-event-v2"
-    POSITIONS = "positions-event-v2"
+    POSITIONS = "position-event-v2"
 
 
 class DayOfWeek(IntEnum):
