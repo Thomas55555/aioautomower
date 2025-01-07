@@ -13,10 +13,15 @@ from aioautomower.model import make_name_string
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
+from .conftest import TEST_TZ
+
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-@time_machine.travel(datetime(2024, 5, 4, 8), tick=False)
+@time_machine.travel(
+    datetime(2024, 5, 4, 8, tzinfo=TEST_TZ),
+    tick=False,
+)
 async def test_timeline(
     mock_automower_client: AbstractAuth,
     snapshot: SnapshotAssertion,
