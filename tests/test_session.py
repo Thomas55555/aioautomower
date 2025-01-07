@@ -546,14 +546,14 @@ async def test_full_planner_event(
     assert automower_api.rest_task.cancelled()
 
 
-async def test_positions_event(mock_automower_client: AbstractAuth):
+async def test_position_event(mock_automower_client: AbstractAuth):
     """Test automower websocket V2 positions update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].positions[0] == Positions(
         35.5402913, -82.5527055
     )
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/positions_event.json"), None)
+    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/position_event.json"), None)
     automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     await automower_api.close()
