@@ -3,7 +3,7 @@
 from dataclasses import fields
 from typing import cast
 
-from freezegun import freeze_time
+import time_machine
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.auth import AbstractAuth
@@ -46,7 +46,7 @@ async def test_high_feature_mower(
     assert len(mowers[MOWER_ID].positions) != 0  # type: ignore[arg-type]
 
 
-@freeze_time("2024-05-04 8:00:00")
+@time_machine.travel("2024-05-04 8:00:00")
 async def test_mower_snapshot(
     mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion, mower_tz
 ):

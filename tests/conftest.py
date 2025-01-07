@@ -16,6 +16,8 @@ from tests import load_fixture_json
 
 from .syrupy import AutomowerSnapshotExtension
 
+TEST_TZ = zoneinfo.ZoneInfo("Europe/Berlin")
+
 
 @pytest.fixture(name="snapshot")
 def snapshot_assertion(snapshot: SnapshotAssertion) -> SnapshotAssertion:

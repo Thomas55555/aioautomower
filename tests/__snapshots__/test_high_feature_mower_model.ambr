@@ -46,7 +46,7 @@
 # name: test_mower_snapshot[metadata]
   dict({
     'connected': True,
-    'status_dateteime': FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
+    'status_dateteime': datetime.datetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
   })
 # ---
 # name: test_mower_snapshot[mower]
@@ -65,7 +65,7 @@
 # ---
 # name: test_mower_snapshot[planner]
   dict({
-    'next_start_datetime': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    'next_start_datetime': datetime.datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'override': dict({
       'action': 'not_active',
     }),
@@ -194,14 +194,14 @@
     0: dict({
       'cutting_height': 10,
       'enabled': False,
-      'last_time_completed': FakeDatetime(2024, 8, 12, 5, 7, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+      'last_time_completed': datetime.datetime(2024, 8, 12, 5, 7, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
       'name': 'my_lawn',
       'progress': 20,
     }),
     123456: dict({
       'cutting_height': 50,
       'enabled': True,
-      'last_time_completed': FakeDatetime(2024, 8, 12, 7, 54, 29, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+      'last_time_completed': datetime.datetime(2024, 8, 12, 7, 54, 29, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
       'name': 'Front lawn',
       'progress': 40,
     }),
