@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum, StrEnum
 
 from mashumaro import DataClassDictMixin, field_options
@@ -10,6 +10,7 @@ from mashumaro import DataClassDictMixin, field_options
 from .battery import Battery
 from .calendar import Tasks
 from .capabilities import Capabilities
+from .metadata import Metadata
 from .mower import Mower
 from .planner import Planner
 from .system import System
@@ -37,19 +38,6 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
-
-
-@dataclass
-class Metadata(DataClassDictMixin):
-    """DataClass for Metadata values."""
-
-    connected: bool
-    status_dateteime: datetime = field(
-        metadata=field_options(
-            deserialize=lambda x: (datetime.fromtimestamp(x / 1000, tz=UTC)),
-            alias="statusTimestamp",
-        ),
-    )
 
 
 @dataclass

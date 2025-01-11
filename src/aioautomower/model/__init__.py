@@ -12,11 +12,11 @@ from .calendar import (
     make_name_string,
 )
 from .capabilities import Capabilities
+from .metadata import Metadata
 from .model import (
     Actions,
     Headlight,
     HeadlightModes,
-    Metadata,
     MowerActivities,
     MowerAttributes,
     MowerData,
