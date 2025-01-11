@@ -20,6 +20,7 @@ from aioautomower import tz_util
 from aioautomower.const import ERRORCODES, DayOfWeek, ProgramFrequency
 from aioautomower.timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
+from .battery import Battery
 from .system import System
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,13 +139,6 @@ class DurationSerializationStrategy(SerializationStrategy):
     def deserialize(self, value: int) -> timedelta:
         """Deserialize an integer representing total minutes to a timedelta object."""
         return timedelta(minutes=value)
-
-
-@dataclass
-class Battery(DataClassDictMixin):
-    """Information about the battery in the Automower."""
-
-    battery_percent: int = field(metadata=field_options(alias="batteryPercent"))
 
 
 @dataclass
