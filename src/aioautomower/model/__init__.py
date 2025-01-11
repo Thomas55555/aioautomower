@@ -1,15 +1,19 @@
 """Provide a model for the Automower Connect API."""
 
 from .battery import Battery
-from .capabilities import Capabilities
-from .model import (
+from .calendar import (
     WEEKDAYS,
     WEEKDAYS_TO_ICAL,
-    Actions,
     AutomowerCalendarEvent,
     Calendar,
     ConvertScheduleToCalendar,
     DurationSerializationStrategy,
+    TimeSerializationStrategy,
+    make_name_string,
+)
+from .capabilities import Capabilities
+from .model import (
+    Actions,
     Headlight,
     HeadlightModes,
     Metadata,
@@ -27,13 +31,11 @@ from .model import (
     Statistics,
     StayOutZones,
     Tasks,
-    TimeSerializationStrategy,
     WorkArea,
     Zone,
     generate_work_area_dict,
     generate_work_area_names_list,
     get_work_area_name,
-    make_name_string,
 )
 from .mower import (
     Mower,
