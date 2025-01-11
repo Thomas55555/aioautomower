@@ -16,9 +16,9 @@ from mashumaro import DataClassDictMixin, field_options
 from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
 
-from . import tz_util
-from .const import ERRORCODES, DayOfWeek, ProgramFrequency
-from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
+from aioautomower import tz_util
+from aioautomower.const import ERRORCODES, DayOfWeek, ProgramFrequency
+from aioautomower.timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,34 +110,6 @@ def make_name_string(work_area_name: str | None, number: int) -> str:
     if work_area_name is not None:
         return f"{work_area_name} schedule {number}"
     return f"Schedule {number}"
-
-
-@dataclass
-class User(DataClassDictMixin):
-    """The user details of the JWT."""
-
-    first_name: str
-    last_name: str
-    custom_attributes: dict[str, str]
-    customer_id: str
-
-
-@dataclass
-class JWT(DataClassDictMixin):
-    """The content of the JWT."""
-
-    jti: str
-    iss: str
-    roles: list[str]
-    groups: list[str]
-    scopes: list[str]
-    scope: str
-    client_id: str
-    customer_id: str
-    user: User
-    iat: int
-    exp: int
-    sub: str
 
 
 class TimeSerializationStrategy(SerializationStrategy):
