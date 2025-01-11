@@ -8,35 +8,35 @@ from .calendar import (
     Calendar,
     ConvertScheduleToCalendar,
     DurationSerializationStrategy,
+    Tasks,
     TimeSerializationStrategy,
     make_name_string,
 )
 from .capabilities import Capabilities
 from .metadata import Metadata
 from .model import (
-    Actions,
-    MowerActivities,
     MowerAttributes,
     MowerData,
     MowerList,
-    MowerModes,
-    MowerStates,
-    RestrictedReasons,
-    Settings,
-    Statistics,
-    Tasks,
     generate_work_area_dict,
     generate_work_area_names_list,
     get_work_area_name,
 )
 from .mower import (
     Mower,
+    MowerActivities,
+    MowerModes,
+    MowerStates,
     error_key_dict,
     error_key_list,
 )
 from .planner import (
+    Actions,
+    ExternalReasons,
+    InactiveReasons,
     Override,
     Planner,
+    RestrictedReasons,
 )
 from .positions import (
     Positions,
@@ -64,11 +64,13 @@ __all__ = [
     "DurationSerializationStrategy",
     "error_key_dict",
     "error_key_list",
+    "ExternalReasons",
     "generate_work_area_dict",
     "generate_work_area_names_list",
     "get_work_area_name",
     "Headlight",
     "HeadlightModes",
+    "InactiveReasons",
     "JWT",
     "make_name_string",
     "Metadata",

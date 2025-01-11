@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import StrEnum
 from re import sub
 
 from mashumaro import DataClassDictMixin, field_options
@@ -222,3 +223,43 @@ def error_key_dict() -> dict[str, str]:
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text
     return codes
+
+
+class MowerActivities(StrEnum):
+    """Mower activities of a lawn mower."""
+
+    UNKNOWN = "unknown"
+    NOT_APPLICABLE = "not_applicable"
+    MOWING = "mowing"
+    GOING_HOME = "going_home"
+    CHARGING = "charging"
+    LEAVING = "leaving"
+    PARKED_IN_CS = "parked_in_cs"
+    STOPPED_IN_GARDEN = "stopped_in_garden"
+
+
+class MowerModes(StrEnum):
+    """Mower activities of a lawn mower."""
+
+    MAIN_AREA = "main_area"
+    DEMO = "demo"
+    SECONDARY_AREA = "secondary_area"
+    HOME = "home"
+    UNKNOWN = "unknown"
+
+
+class MowerStates(StrEnum):
+    """Mower states of a lawn mower."""
+
+    FATAL_ERROR = "fatal_error"
+    ERROR = "error"
+    ERROR_AT_POWER_UP = "error_at_power_up"
+    NOT_APPLICABLE = "not_applicable"
+    UNKNOWN = "unknown"
+    STOPPED = "stopped"
+    OFF = "off"
+    PAUSED = "paused"
+    IN_OPERATION = "in_operation"
+    WAIT_UPDATING = "wait_updating"
+    WAIT_POWER_UP = "wait_power_up"
+    RESTRICTED = "restricted"

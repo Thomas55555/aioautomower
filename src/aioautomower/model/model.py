@@ -2,7 +2,6 @@
 
 import logging
 from dataclasses import dataclass, field
-from enum import Enum, StrEnum
 
 from mashumaro import DataClassDictMixin, field_options
 
@@ -109,87 +108,3 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
-
-
-class MowerStates(StrEnum):
-    """Mower states of a lawn mower."""
-
-    FATAL_ERROR = "fatal_error"
-    ERROR = "error"
-    ERROR_AT_POWER_UP = "error_at_power_up"
-    NOT_APPLICABLE = "not_applicable"
-    UNKNOWN = "unknown"
-    STOPPED = "stopped"
-    OFF = "off"
-    PAUSED = "paused"
-    IN_OPERATION = "in_operation"
-    WAIT_UPDATING = "wait_updating"
-    WAIT_POWER_UP = "wait_power_up"
-    RESTRICTED = "restricted"
-
-
-class MowerActivities(StrEnum):
-    """Mower activities of a lawn mower."""
-
-    UNKNOWN = "unknown"
-    NOT_APPLICABLE = "not_applicable"
-    MOWING = "mowing"
-    GOING_HOME = "going_home"
-    CHARGING = "charging"
-    LEAVING = "leaving"
-    PARKED_IN_CS = "parked_in_cs"
-    STOPPED_IN_GARDEN = "stopped_in_garden"
-
-
-class MowerModes(StrEnum):
-    """Mower activities of a lawn mower."""
-
-    MAIN_AREA = "main_area"
-    DEMO = "demo"
-    SECONDARY_AREA = "secondary_area"
-    HOME = "home"
-    UNKNOWN = "unknown"
-
-
-class RestrictedReasons(StrEnum):
-    """Restricted reasons in the planner of lawn mower."""
-
-    NONE = "none"
-    WEEK_SCHEDULE = "week_schedule"
-    PARK_OVERRIDE = "park_override"
-    SENSOR = "sensor"
-    DAILY_LIMIT = "daily_limit"
-    FOTA = "fota"
-    FROST = "frost"
-    ALL_WORK_AREAS_COMPLETED = "all_work_areas_completed"
-    EXTERNAL = "external"
-    NOT_APPLICABLE = "not_applicable"
-
-
-class Actions(StrEnum):
-    """Actions in the planner of lawn mower."""
-
-    NOT_ACTIVE = "not_active"
-    FORCE_PARK = "force_park"
-    FORCE_MOW = "force_mow"
-
-
-class ExternalReasons(Enum):
-    """External reasons for restrictions."""
-
-    GOOGLE_ASSISTANT = range(1000, 1999)
-    AMAZON_ALEXA = range(2000, 2999)
-    DEVELOPER_PORTAL = range(3000, 3999), range(200000, 299999)
-    IFTT = 4000, range(4003, 4999)
-    IFTT_WILDLIFE = 4001
-    IFTT_FROST_AND_RAIN = 4002
-    IFTT_CALENDAR_CONNECTION = 4003
-    IFTT_APPLETS = range(100000, 199999)
-
-
-class InactiveReasons(Enum):
-    """Inactive reasons why the mower is not working."""
-
-    NONE = "none"
-    PLANNING = "planing"
-    SEARCHING_FOR_SATELLITES = "searching_for_satellites"
