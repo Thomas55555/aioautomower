@@ -23,8 +23,6 @@ from .model import (
     MowerList,
     MowerModes,
     MowerStates,
-    Override,
-    Planner,
     Positions,
     RestrictedReasons,
     Settings,
@@ -41,6 +39,10 @@ from .mower import (
     Mower,
     error_key_dict,
     error_key_list,
+)
+from .planner import (
+    Override,
+    Planner,
 )
 from .system import System
 from .token import (

@@ -11,6 +11,7 @@ from .battery import Battery
 from .calendar import Tasks
 from .capabilities import Capabilities
 from .mower import Mower
+from .planner import Planner
 from .system import System
 from .utils import convert_timestamp_to_aware_datetime
 
@@ -36,31 +37,6 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
-
-
-@dataclass
-class Override(DataClassDictMixin):
-    """DataClass for Override values."""
-
-    action: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-
-
-@dataclass
-class Planner(DataClassDictMixin):
-    """DataClass for Planner values."""
-
-    next_start_datetime: datetime | None = field(
-        metadata=field_options(
-            deserialize=convert_timestamp_to_aware_datetime,
-            alias="nextStartTimestamp",
-        ),
-    )
-    override: Override
-    restricted_reason: str = field(
-        metadata=field_options(
-            deserialize=lambda x: x.lower(), alias="restrictedReason"
-        )
-    )
 
 
 @dataclass
