@@ -13,7 +13,6 @@ from .model import (
     Headlight,
     HeadlightModes,
     Metadata,
-    Mower,
     MowerActivities,
     MowerAttributes,
     MowerData,
@@ -31,12 +30,15 @@ from .model import (
     TimeSerializationStrategy,
     WorkArea,
     Zone,
-    convert_timestamp_to_aware_datetime,
     generate_work_area_dict,
     generate_work_area_names_list,
     get_work_area_name,
     make_name_string,
-    snake_case,
+)
+from .mower import (
+    Mower,
+    error_key_dict,
+    error_key_list,
 )
 from .system import System
 from .token import (
@@ -53,6 +55,8 @@ __all__ = [
     "convert_timestamp_to_aware_datetime",
     "ConvertScheduleToCalendar",
     "DurationSerializationStrategy",
+    "error_key_dict",
+    "error_key_list",
     "generate_work_area_dict",
     "generate_work_area_names_list",
     "get_work_area_name",
@@ -73,7 +77,6 @@ __all__ = [
     "Positions",
     "RestrictedReasons",
     "Settings",
-    "snake_case",
     "Statistics",
     "StayOutZones",
     "System",

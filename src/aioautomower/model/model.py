@@ -5,7 +5,6 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, time, timedelta
 from enum import Enum, StrEnum
-from re import sub
 
 from ical.iter import (
     MergedIterable,
@@ -17,12 +16,14 @@ from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
 
 from aioautomower import tz_util
-from aioautomower.const import ERRORCODES, DayOfWeek, ProgramFrequency
+from aioautomower.const import DayOfWeek, ProgramFrequency
 from aioautomower.timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
 from .battery import Battery
 from .capabilities import Capabilities
+from .mower import Mower
 from .system import System
+from .utils import convert_timestamp_to_aware_datetime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,47 +46,6 @@ WEEKDAYS_TO_ICAL = {
     "friday": DayOfWeek.FRIDAY,
     "saturday": DayOfWeek.SATURDAY,
 }
-
-
-def snake_case(string: str | None) -> str:
-    """Convert an error text to snake case."""
-    if string is None:
-        raise TypeError
-    return "_".join(
-        sub(
-            "([A-Z][a-z][,]+)",
-            r" \1",
-            sub(
-                "([A-Z]+)",
-                r" \1",
-                string.replace("-", " ")
-                .replace(",", "")
-                .replace(".", "")
-                .replace("!", ""),
-            ),
-        ).split()
-    ).lower()
-
-
-def convert_timestamp_to_aware_datetime(timestamp: int) -> datetime | None:
-    """Convert the timestamp to an aware datetime object.
-
-    The Python datetime library expects timestamps to be anchored in UTC,
-    however, the automower timestamps are anchored in local time. So we convert
-    the timestamp to a datetime and replace the timezone with the local time.
-    After that we convert the timezone to UTC.
-    """
-    if timestamp == 0:
-        return None
-    if timestamp > 32503680000:
-        # This will break on January 1th 3000. If mankind still exists there
-        # please fix it.
-        return datetime.fromtimestamp(timestamp / 1000, tz=UTC).replace(
-            tzinfo=tz_util.MOWER_TIME_ZONE
-        )
-    return datetime.fromtimestamp(timestamp, tz=UTC).replace(
-        tzinfo=tz_util.MOWER_TIME_ZONE
-    )
 
 
 def generate_work_area_names_list(workarea_list: list) -> list[str]:
@@ -140,42 +100,6 @@ class DurationSerializationStrategy(SerializationStrategy):
     def deserialize(self, value: int) -> timedelta:
         """Deserialize an integer representing total minutes to a timedelta object."""
         return timedelta(minutes=value)
-
-
-@dataclass
-class Mower(DataClassDictMixin):
-    """Information about the mowers current status."""
-
-    mode: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-    activity: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-    state: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-    error_code: int = field(metadata=field_options(alias="errorCode"))
-    error_key: str | None = field(
-        metadata=field_options(
-            deserialize=lambda x: None if x == 0 else snake_case(ERRORCODES.get(x)),
-            alias="errorCode",
-        )
-    )
-    error_datetime: datetime | None = field(
-        metadata=field_options(
-            deserialize=convert_timestamp_to_aware_datetime,
-            alias="errorCodeTimestamp",
-        ),
-    )
-    inactive_reason: str = field(
-        metadata=field_options(deserialize=lambda x: x.lower(), alias="inactiveReason"),
-    )
-    is_error_confirmable: bool = field(
-        metadata=field_options(alias="isErrorConfirmable"), default=False
-    )
-    work_area_id: int | None = field(
-        metadata=field_options(alias="workAreaId"), default=None
-    )
-    work_area_name: str | None = field(init=False, default=None)
-
-    def __post_init__(self):
-        """Initialize work_area_name to None for later external setting."""
-        self.work_area_name = None
 
 
 @dataclass
