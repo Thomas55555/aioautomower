@@ -15,6 +15,7 @@ from .mower import Mower
 from .planner import Planner
 from .positions import Positions
 from .settings import Settings
+from .statistics import Statistics
 from .system import System
 from .utils import convert_timestamp_to_aware_datetime
 
@@ -40,36 +41,6 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
-
-
-@dataclass
-class Statistics(DataClassDictMixin):
-    """DataClass for Statistics values."""
-
-    cutting_blade_usage_time: int | None = field(
-        metadata=field_options(alias="cuttingBladeUsageTime"), default=None
-    )
-    number_of_charging_cycles: int | None = field(
-        metadata=field_options(alias="numberOfChargingCycles"), default=None
-    )
-    number_of_collisions: int | None = field(
-        metadata=field_options(alias="numberOfCollisions"), default=None
-    )
-    total_charging_time: int | None = field(
-        metadata=field_options(alias="totalChargingTime"), default=None
-    )
-    total_cutting_time: int | None = field(
-        metadata=field_options(alias="totalCuttingTime"), default=None
-    )
-    total_drive_distance: int | None = field(
-        metadata=field_options(alias="totalDriveDistance"), default=None
-    )
-    total_running_time: int | None = field(
-        metadata=field_options(alias="totalRunningTime"), default=None
-    )
-    total_searching_time: int | None = field(
-        metadata=field_options(alias="totalSearchingTime"), default=None
-    )
 
 
 @dataclass
