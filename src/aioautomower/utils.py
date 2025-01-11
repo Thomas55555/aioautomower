@@ -12,9 +12,9 @@ import aiohttp
 import jwt
 
 from . import tz_util
-from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS, ERRORCODES
+from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
 from .exceptions import ApiException
-from .model import JWT, MowerAttributes, MowerList, snake_case
+from .model import JWT, MowerAttributes, MowerList
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,20 +96,6 @@ def mower_list_to_dictionary_dataclass(
     for mower in mowers_list.data:
         mowers_dict[mower.id] = mower.attributes
     return mowers_dict
-
-
-def error_key_list() -> list[str]:
-    """Create a list with all possible error keys."""
-    codes = [snake_case(error_text) for error_text in ERRORCODES.values()]
-    return sorted(codes)
-
-
-def error_key_dict() -> dict[str, str]:
-    """Create a dictionary with error keys and a human friendly text."""
-    codes = {}
-    for error_text in ERRORCODES.values():
-        codes[snake_case(error_text)] = error_text
-    return codes
 
 
 def timedelta_to_minutes(delta: timedelta) -> int:

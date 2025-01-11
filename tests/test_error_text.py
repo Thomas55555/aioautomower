@@ -2,11 +2,8 @@
 
 from syrupy.assertion import SnapshotAssertion
 
-from aioautomower.utils import (
-    error_key_dict,
-    error_key_list,
-    mower_list_to_dictionary_dataclass,
-)
+from aioautomower.model import error_key_dict, error_key_list
+from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture_json
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
