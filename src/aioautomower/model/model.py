@@ -2,7 +2,6 @@
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum, StrEnum
 
 from mashumaro import DataClassDictMixin, field_options
@@ -18,7 +17,7 @@ from .settings import Settings
 from .statistics import Statistics
 from .stay_out_zones import StayOutZones
 from .system import System
-from .utils import convert_timestamp_to_aware_datetime
+from .work_areas import WorkArea
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,27 +41,6 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
-
-
-@dataclass
-class WorkArea(DataClassDictMixin):
-    """DataClass for WorkArea values."""
-
-    name: str = field(
-        metadata=field_options(
-            deserialize=lambda x: "my_lawn" if x == "" else x,
-        ),
-    )
-    cutting_height: int = field(metadata=field_options(alias="cuttingHeight"))
-    enabled: bool = field(default=False)
-    progress: int | None = field(default=None)
-    last_time_completed: datetime | None = field(
-        metadata=field_options(
-            deserialize=convert_timestamp_to_aware_datetime,
-            alias="lastTimeCompleted",
-        ),
-        default=None,
-    )
 
 
 @dataclass

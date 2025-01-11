@@ -25,7 +25,6 @@ from .model import (
     Settings,
     Statistics,
     Tasks,
-    WorkArea,
     generate_work_area_dict,
     generate_work_area_names_list,
     get_work_area_name,
@@ -52,6 +51,7 @@ from .token import (
     JWT,
     User,
 )
+from .work_areas import WorkArea
 
 __all__ = [
     "Actions",
