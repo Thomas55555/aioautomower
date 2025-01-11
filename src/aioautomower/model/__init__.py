@@ -1,13 +1,13 @@
 """Provide a model for the Automower Connect API."""
 
 from .battery import Battery
+from .capabilities import Capabilities
 from .model import (
     WEEKDAYS,
     WEEKDAYS_TO_ICAL,
     Actions,
     AutomowerCalendarEvent,
     Calendar,
-    Capabilities,
     ConvertScheduleToCalendar,
     DurationSerializationStrategy,
     Headlight,

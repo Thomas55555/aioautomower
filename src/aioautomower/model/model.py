@@ -21,6 +21,7 @@ from aioautomower.const import ERRORCODES, DayOfWeek, ProgramFrequency
 from aioautomower.timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
 from .battery import Battery
+from .capabilities import Capabilities
 from .system import System
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,17 +140,6 @@ class DurationSerializationStrategy(SerializationStrategy):
     def deserialize(self, value: int) -> timedelta:
         """Deserialize an integer representing total minutes to a timedelta object."""
         return timedelta(minutes=value)
-
-
-@dataclass
-class Capabilities(DataClassDictMixin):
-    """Information about what capabilities the Automower has."""
-
-    can_confirm_error: bool = field(metadata=field_options(alias="canConfirmError"))
-    headlights: bool
-    position: bool
-    stay_out_zones: bool = field(metadata=field_options(alias="stayOutZones"))
-    work_areas: bool = field(metadata=field_options(alias="workAreas"))
 
 
 @dataclass
