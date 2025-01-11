@@ -15,8 +15,6 @@ from .capabilities import Capabilities
 from .metadata import Metadata
 from .model import (
     Actions,
-    Headlight,
-    HeadlightModes,
     MowerActivities,
     MowerAttributes,
     MowerData,
@@ -45,6 +43,10 @@ from .planner import (
 )
 from .positions import (
     Positions,
+)
+from .settings import (
+    Headlight,
+    HeadlightModes,
 )
 from .system import System
 from .token import (
