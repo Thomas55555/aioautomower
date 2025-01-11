@@ -13,6 +13,7 @@ from .capabilities import Capabilities
 from .metadata import Metadata
 from .mower import Mower
 from .planner import Planner
+from .positions import Positions
 from .system import System
 from .utils import convert_timestamp_to_aware_datetime
 
@@ -38,21 +39,6 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
-
-
-@dataclass
-class Positions(DataClassDictMixin):
-    """List of the GPS positions.
-
-    Latest registered position is first in the
-    array and the oldest last in the array.
-    Max number of positions is 50 after
-    that the latest position is removed
-    from the array.
-    """
-
-    latitude: float
-    longitude: float
 
 
 @dataclass
