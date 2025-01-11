@@ -1,4 +1,4 @@
-"""Models for Husqvarna Automower data."""
+"""Models for Husqvarna Authentication API."""
 
 from dataclasses import dataclass
 

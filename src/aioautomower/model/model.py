@@ -20,6 +20,8 @@ from aioautomower import tz_util
 from aioautomower.const import ERRORCODES, DayOfWeek, ProgramFrequency
 from aioautomower.timeline import ProgramEvent, ProgramTimeline, create_recurrence
 
+from .system import System
+
 _LOGGER = logging.getLogger(__name__)
 
 WEEKDAYS = (
@@ -136,15 +138,6 @@ class DurationSerializationStrategy(SerializationStrategy):
     def deserialize(self, value: int) -> timedelta:
         """Deserialize an integer representing total minutes to a timedelta object."""
         return timedelta(minutes=value)
-
-
-@dataclass
-class System(DataClassDictMixin):
-    """System information about a Automower."""
-
-    name: str
-    model: str
-    serial_number: str = field(metadata=field_options(alias="serialNumber"))
 
 
 @dataclass

@@ -27,7 +27,6 @@ from .model import (
     Settings,
     Statistics,
     StayOutZones,
-    System,
     Tasks,
     TimeSerializationStrategy,
     WorkArea,
@@ -39,7 +38,8 @@ from .model import (
     make_name_string,
     snake_case,
 )
-from .token_model import (
+from .system import System
+from .token import (
     JWT,
     User,
 )
