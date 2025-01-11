@@ -24,10 +24,8 @@ from .model import (
     RestrictedReasons,
     Settings,
     Statistics,
-    StayOutZones,
     Tasks,
     WorkArea,
-    Zone,
     generate_work_area_dict,
     generate_work_area_names_list,
     get_work_area_name,
@@ -48,6 +46,7 @@ from .settings import (
     Headlight,
     HeadlightModes,
 )
+from .stay_out_zones import StayOutZones, Zone
 from .system import System
 from .token import (
     JWT,

@@ -16,6 +16,7 @@ from .planner import Planner
 from .positions import Positions
 from .settings import Settings
 from .statistics import Statistics
+from .stay_out_zones import StayOutZones
 from .system import System
 from .utils import convert_timestamp_to_aware_datetime
 
@@ -41,28 +42,6 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 def get_work_area_name(name: str) -> str:
     """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
     return "my_lawn" if name == "" else name
-
-
-@dataclass
-class Zone(DataClassDictMixin):
-    """DataClass for Zone values."""
-
-    name: str
-    enabled: bool
-
-
-@dataclass
-class StayOutZones(DataClassDictMixin):
-    """DataClass for StayOutZones values."""
-
-    dirty: bool
-    zones: dict[str, Zone] = field(
-        metadata=field_options(
-            deserialize=lambda zone_list: {
-                zone["id"]: Zone.from_dict(zone) for zone in zone_list
-            },
-        ),
-    )
 
 
 @dataclass
