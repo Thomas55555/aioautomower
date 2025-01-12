@@ -1,6 +1,6 @@
 {
   "id": "c7233734-b219-4287-a173-08e3643f89f0",
-  "type": "messages-event-v2",
+  "type": "message-event-v2",
   "attributes": {
     "message": {
       "time": 1728034996,
