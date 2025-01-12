@@ -426,7 +426,7 @@ class AutomowerSession:
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
                     self._update_data(msg_dict)
                 else:
-                    _LOGGER.warning("Received unknown ws type %s", msg_dict["type"])
+                    _LOGGER.debug("Received unknown ws type %s", msg_dict["type"])
             elif "ready" in msg_dict and "connectionId" in msg_dict:
                 _LOGGER.debug(
                     "Websocket ready=%s (id='%s')",
