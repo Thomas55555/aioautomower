@@ -86,7 +86,6 @@ ignore = [
 
   # Conflicts with the Ruff formatter
   "COM812",
-  "ISC001",
 ]
 select = ["ALL"]
 
