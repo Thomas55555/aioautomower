@@ -23,7 +23,7 @@ from ical.timespan import Timespan
 
 from .const import DayOfWeek, ProgramFrequency
 
-__all__ = ["ProgramTimeline", "ProgramEvent"]
+__all__ = ["ProgramEvent", "ProgramTimeline"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,6 @@ def create_recurrence(
     days_of_week: set[DayOfWeek],
 ) -> Iterable[SortableItem[Timespan, ProgramEvent]]:
     """Create a timeline using a recurrence rule."""
-
     byweekday = [RRULE_WEEKDAY[day_of_week] for day_of_week in days_of_week]
     ruleset = rrule.rruleset()
     rule: rrule.rrule

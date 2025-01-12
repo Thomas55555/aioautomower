@@ -8,9 +8,9 @@ from aioresponses import aioresponses
 
 from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from aioautomower.exceptions import (
-    ApiBadRequestException,
-    ApiForbiddenException,
-    ApiUnauthorizedException,
+    ApiBadRequestError,
+    ApiForbiddenError,
+    ApiUnauthorizedError,
 )
 from aioautomower.session import AutomowerEndpoint, AutomowerSession
 
@@ -29,8 +29,8 @@ async def test_get_status_400(
         payload=load_fixture_json("error.json"),
     )
     with pytest.raises(
-        ApiBadRequestException,
-        match="Unable to send request with API: 400, message='Bad Request', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        ApiBadRequestError,
+        match="400, message='Bad Request', url='https://api.amc.husqvarna.dev/v1/mowers/'",
     ):
         await automower_client.get_status()
 
@@ -46,8 +46,8 @@ async def test_get_status_401(
         payload=load_fixture_json("error.json"),
     )
     with pytest.raises(
-        ApiUnauthorizedException,
-        match="Unable to authenticate with API: 401, message='Unauthorized', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        ApiUnauthorizedError,
+        match="401, message='Unauthorized', url='https://api.amc.husqvarna.dev/v1/mowers/'",
     ):
         await automower_client.get_status()
 
@@ -63,8 +63,8 @@ async def test_get_status_402(
         payload=load_fixture_json("error.json"),
     )
     with pytest.raises(
-        ApiForbiddenException,
-        match="Forbidden response from API: 403, message='Forbidden', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        ApiForbiddenError,
+        match="403, message='Forbidden', url='https://api.amc.husqvarna.dev/v1/mowers/'",
     ):
         await automower_client.get_status()
 
