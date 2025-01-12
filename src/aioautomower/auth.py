@@ -17,11 +17,11 @@ from aiohttp import (
 
 from .const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from .exceptions import (
-    ApiBadRequestException,
-    ApiException,
-    ApiForbiddenException,
-    ApiUnauthorizedException,
-    AuthException,
+    ApiBadRequestError,
+    ApiError,
+    ApiForbiddenError,
+    ApiUnauthorizedError,
+    AuthError,
     HusqvarnaWSServerHandshakeError,
 )
 from .utils import structure_token
@@ -64,7 +64,7 @@ class AbstractAuth(ABC):
         try:
             resp = await self.request("get", url, **kwargs)
         except ClientError as err:
-            raise ApiException(f"Error connecting to API: {err}") from err
+            raise ApiError(err) from err
         return await AbstractAuth._raise_for_status(resp)
 
     async def get_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
@@ -73,9 +73,9 @@ class AbstractAuth(ABC):
         try:
             result = await resp.json(encoding="UTF-8")
         except ClientError as err:
-            raise ApiException("Server returned malformed response") from err
+            raise ApiError(err) from err
         if not isinstance(result, dict):
-            raise ApiException(f"Server return malformed response: {result}")
+            raise ApiError(result) from result
         _LOGGER.debug("response=%s", result)
         return result
 
@@ -84,7 +84,7 @@ class AbstractAuth(ABC):
         try:
             resp = await self.request("post", url, **kwargs)
         except ClientError as err:
-            raise ApiException(f"Error connecting to API: {err}") from err
+            raise ApiError(err) from err
         return await AbstractAuth._raise_for_status(resp)
 
     async def post_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
@@ -93,9 +93,9 @@ class AbstractAuth(ABC):
         try:
             result = await resp.json()
         except ClientError as err:
-            raise ApiException("Server returned malformed response") from err
+            raise ApiError(err) from err
         if not isinstance(result, dict):
-            raise ApiException(f"Server returned malformed response: {result}")
+            raise ApiError(result) from result
         _LOGGER.debug("response=%s", result)
         return result
 
@@ -104,7 +104,7 @@ class AbstractAuth(ABC):
         try:
             resp = await self.request("patch", url, **kwargs)
         except ClientError as err:
-            raise ApiException(f"Error connecting to API: {err}") from err
+            raise ApiError(err) from err
         return await AbstractAuth._raise_for_status(resp)
 
     async def patch_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
@@ -113,9 +113,9 @@ class AbstractAuth(ABC):
         try:
             result = await resp.json()
         except ClientError as err:
-            raise ApiException("Server returned malformed response") from err
+            raise ApiError(err) from err
         if not isinstance(result, dict):
-            raise ApiException(f"Server returned malformed response: {result}")
+            raise ApiError(result) from result
         _LOGGER.debug("response=%s", result)
         return result
 
@@ -124,7 +124,7 @@ class AbstractAuth(ABC):
         try:
             return await self.async_get_access_token()
         except ClientError as err:
-            raise AuthException(f"Access token failure: {err}") from err
+            raise AuthError(err) from err
 
     async def headers(self) -> dict[str, str]:
         """Generate headers for ReST requests."""
@@ -141,27 +141,21 @@ class AbstractAuth(ABC):
 
     @staticmethod
     async def _raise_for_status(resp: ClientResponse) -> ClientResponse:
-        """Raise exceptions on failure methods."""
+        """Raise Errors on failure methods."""
         detail = await AbstractAuth._error_detail(resp)
         try:
             resp.raise_for_status()
         except ClientResponseError as err:
             if err.status == HTTPStatus.BAD_REQUEST:
-                raise ApiBadRequestException(
-                    f"Unable to send request with API: {err}"
-                ) from err
+                raise ApiBadRequestError(err) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
-                raise ApiUnauthorizedException(
-                    f"Unable to authenticate with API: {err}"
-                ) from err
+                raise ApiUnauthorizedError(err) from err
             if err.status == HTTPStatus.FORBIDDEN:
-                raise ApiForbiddenException(
-                    f"Forbidden response from API: {err}"
-                ) from err
+                raise ApiForbiddenError(err) from err
             detail.append(err.message)
-            raise ApiException(": ".join(detail)) from err
+            raise ApiError(": ".join(detail)) from err
         except ClientError as err:
-            raise ApiException(f"Error from API: {err}") from err
+            raise ApiError(err) from err
         return resp
 
     @staticmethod

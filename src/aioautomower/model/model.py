@@ -5,18 +5,18 @@ from dataclasses import dataclass, field
 
 from mashumaro import DataClassDictMixin, field_options
 
-from .battery import Battery
-from .calendar import Tasks
-from .capabilities import Capabilities
-from .metadata import Metadata
-from .mower import Mower
-from .planner import Planner
-from .positions import Positions
-from .settings import Settings
-from .statistics import Statistics
-from .stay_out_zones import StayOutZones
-from .system import System
-from .work_areas import WorkArea
+from .model_battery import Battery
+from .model_calendar import Tasks
+from .model_capabilities import Capabilities
+from .model_metadata import Metadata
+from .model_mower import Mower
+from .model_planner import Planner
+from .model_positions import Positions
+from .model_settings import Settings
+from .model_statistics import Statistics
+from .model_stay_out_zones import StayOutZones
+from .model_system import System
+from .model_work_areas import WorkArea
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,10 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 
 
 def get_work_area_name(name: str) -> str:
-    """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
+    """Return the work area name.
+
+    Replacing empty strings with a default name 'my_lawn'.
+    """
     return "my_lawn" if name == "" else name
 
 
@@ -83,12 +86,12 @@ class MowerAttributes(DataClassDictMixin):
         default=None,
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set the name after init."""
         if self.capabilities.work_areas:
             if self.mower.work_area_id is None:
                 self.mower.work_area_name = "no_work_area_active"
-            if self.work_areas is not None:
+            if self.work_areas and self.mower.work_area_id is not None:
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name

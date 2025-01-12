@@ -186,7 +186,7 @@ class Mower(DataClassDictMixin):
     )
     work_area_name: str | None = field(init=False, default=None)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize work_area_name to None for later external setting."""
         self.work_area_name = None
 

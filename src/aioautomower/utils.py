@@ -13,7 +13,7 @@ import jwt
 
 from . import tz_util
 from .const import AUTH_API_REVOKE_URL, AUTH_API_TOKEN_URL, AUTH_HEADERS
-from .exceptions import ApiException
+from .exceptions import ApiError
 from .model import JWT, MowerAttributes, MowerList
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,10 +50,9 @@ async def async_get_access_token(client_id: str, client_secret: str) -> dict[str
             result = await resp.json(encoding="UTF-8")
             result["expires_at"] = result["expires_in"] + time.time()
         if resp.status >= 400:
-            raise ApiException(
-                f"""The token is invalid, response from
+            msg = f"""The token is invalid, response from
                     Husqvarna Automower API: {result}"""
-            )
+            raise ApiError(msg)
     result["status"] = resp.status
     return cast(dict[str, str], result)
 

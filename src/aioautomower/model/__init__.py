@@ -1,7 +1,15 @@
 """Provide a model for the Automower Connect API."""
 
-from .battery import Battery
-from .calendar import (
+from .model import (
+    MowerAttributes,
+    MowerData,
+    MowerList,
+    generate_work_area_dict,
+    generate_work_area_names_list,
+    get_work_area_name,
+)
+from .model_battery import Battery
+from .model_calendar import (
     WEEKDAYS,
     WEEKDAYS_TO_ICAL,
     AutomowerCalendarEvent,
@@ -12,17 +20,9 @@ from .calendar import (
     TimeSerializationStrategy,
     make_name_string,
 )
-from .capabilities import Capabilities
-from .metadata import Metadata
-from .model import (
-    MowerAttributes,
-    MowerData,
-    MowerList,
-    generate_work_area_dict,
-    generate_work_area_names_list,
-    get_work_area_name,
-)
-from .mower import (
+from .model_capabilities import Capabilities
+from .model_metadata import Metadata
+from .model_mower import (
     Mower,
     MowerActivities,
     MowerModes,
@@ -30,7 +30,7 @@ from .mower import (
     error_key_dict,
     error_key_list,
 )
-from .planner import (
+from .model_planner import (
     Actions,
     ExternalReasons,
     InactiveReasons,
@@ -38,41 +38,36 @@ from .planner import (
     Planner,
     RestrictedReasons,
 )
-from .positions import (
+from .model_positions import (
     Positions,
 )
-from .settings import (
+from .model_settings import (
     Headlight,
     HeadlightModes,
 )
-from .stay_out_zones import StayOutZones, Zone
-from .system import System
-from .token import (
+from .model_stay_out_zones import StayOutZones, Zone
+from .model_system import System
+from .model_token import (
     JWT,
     User,
 )
-from .work_areas import WorkArea
+from .model_work_areas import WorkArea
 
 __all__ = [
+    "JWT",
+    "WEEKDAYS",
+    "WEEKDAYS_TO_ICAL",
     "Actions",
     "AutomowerCalendarEvent",
     "Battery",
     "Calendar",
     "Capabilities",
-    "convert_timestamp_to_aware_datetime",
     "ConvertScheduleToCalendar",
     "DurationSerializationStrategy",
-    "error_key_dict",
-    "error_key_list",
     "ExternalReasons",
-    "generate_work_area_dict",
-    "generate_work_area_names_list",
-    "get_work_area_name",
     "Headlight",
     "HeadlightModes",
     "InactiveReasons",
-    "JWT",
-    "make_name_string",
     "Metadata",
     "Mower",
     "MowerActivities",
@@ -92,8 +87,13 @@ __all__ = [
     "Tasks",
     "TimeSerializationStrategy",
     "User",
-    "WEEKDAYS_TO_ICAL",
-    "WEEKDAYS",
     "WorkArea",
     "Zone",
+    "convert_timestamp_to_aware_datetime",
+    "error_key_dict",
+    "error_key_list",
+    "generate_work_area_dict",
+    "generate_work_area_names_list",
+    "get_work_area_name",
+    "make_name_string",
 ]

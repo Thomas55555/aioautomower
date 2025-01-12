@@ -38,7 +38,6 @@ async def setup_connection(
     mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Fixture for setting up the connection."""
-
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
         status=200,

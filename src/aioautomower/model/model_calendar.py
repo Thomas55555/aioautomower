@@ -1,14 +1,13 @@
 """Models for Automower Connect API - Calendar."""
 
-from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
 from datetime import datetime, time, timedelta
+from typing import TYPE_CHECKING
 
 from ical.iter import (
     MergedIterable,
     SortableItem,
 )
-from ical.timespan import Timespan
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
@@ -16,6 +15,11 @@ from mashumaro.types import SerializationStrategy
 from aioautomower import tz_util
 from aioautomower.const import DayOfWeek, ProgramFrequency
 from aioautomower.timeline import ProgramEvent, ProgramTimeline, create_recurrence
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from ical.timespan import Timespan
 
 WEEKDAYS = (
     "monday",
@@ -116,7 +120,7 @@ class ConvertScheduleToCalendar:
     def __init__(self, task: Calendar) -> None:
         """Initialize the schedule to calendar converter."""
         self.task = task
-        self.now = datetime.now()
+        self.now = datetime.now()  # noqa: DTZ005
         self.begin_of_current_day = self.now.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -142,9 +146,11 @@ class ConvertScheduleToCalendar:
                         )
                         + self.task.duration
                     )
-                    if self.begin_of_current_day == time_to_check_begin_of_day:
-                        if end_task < self.now:
-                            break
+                    if (
+                        self.begin_of_current_day == time_to_check_begin_of_day
+                        and end_task < self.now
+                    ):
+                        break
                     return self.now + timedelta(days)
         return self.now
 
@@ -220,11 +226,10 @@ class Tasks(DataClassDictMixin):
         """Return a schedule number."""
         if task is not None:
             if task.work_area_id is not None:
-                if task.work_area_id is not None:
-                    self.schedule_no[task.work_area_id] = (
-                        self.schedule_no[task.work_area_id] + 1
-                    )
-                    return self.schedule_no[task.work_area_id]
+                self.schedule_no[task.work_area_id] = (
+                    self.schedule_no[task.work_area_id] + 1
+                )
+                return self.schedule_no[task.work_area_id]
             self.schedule_no["-1"] = self.schedule_no["-1"] + 1
             return self.schedule_no["-1"]
         return None
