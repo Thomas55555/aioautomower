@@ -4,9 +4,8 @@ import zoneinfo
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import time_machine
 from aiohttp import WSMessage, WSMsgType
-from freezegun import freeze_time
-from freezegun.api import FakeDatetime
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.auth import AbstractAuth
@@ -14,10 +13,15 @@ from aioautomower.model import make_name_string
 from aioautomower.session import AutomowerSession
 from tests import load_fixture
 
+from .conftest import TEST_TZ
+
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-@freeze_time("2024-05-04 8:00:00")
+@time_machine.travel(
+    datetime(2024, 5, 4, 8, tzinfo=TEST_TZ),
+    tick=False,
+)
 async def test_timeline(
     mock_automower_client: AbstractAuth,
     snapshot: SnapshotAssertion,
@@ -26,7 +30,6 @@ async def test_timeline(
     """Test automower timeline."""
     automower_api = AutomowerSession(mock_automower_client, mower_tz, poll=True)
     await automower_api.connect()
-
     mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
     if TYPE_CHECKING:
         assert mower_timeline is not None
@@ -37,10 +40,10 @@ async def test_timeline(
     overlapping = next(cursor, None)
     if TYPE_CHECKING:
         assert overlapping is not None
-    assert overlapping.start == FakeDatetime(
+    assert overlapping.start == datetime(
         2024, 5, 4, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
     )
-    assert overlapping.end == FakeDatetime(
+    assert overlapping.end == datetime(
         2024, 5, 4, 8, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
     )
     assert overlapping.schedule_no == 1
@@ -59,10 +62,10 @@ async def test_timeline(
     active_after = next(cursor, None)
     if TYPE_CHECKING:
         assert active_after is not None
-    assert active_after.start == FakeDatetime(
+    assert active_after.start == datetime(
         2024, 5, 6, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
     )
-    assert active_after.end == FakeDatetime(
+    assert active_after.end == datetime(
         2024, 5, 7, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
     )
     assert active_after.schedule_no == 1
@@ -84,7 +87,7 @@ async def test_timeline(
     assert automower_api.rest_task.cancelled()
 
 
-@freeze_time("2024-05-04 8:00:00")
+@time_machine.travel("2024-05-04 8:00:00")
 async def test_daily_schedule(
     mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
 ):
@@ -102,10 +105,10 @@ async def test_daily_schedule(
     active_after = next(cursor, None)
     if TYPE_CHECKING:
         assert active_after is not None
-    assert active_after.start == FakeDatetime(
+    assert active_after.start == datetime(
         2024, 5, 6, 2, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
     )
-    assert active_after.end == FakeDatetime(
+    assert active_after.end == datetime(
         2024, 5, 6, 2, 49, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
     )
     assert active_after.schedule_no == 1
@@ -127,7 +130,7 @@ async def test_daily_schedule(
     assert automower_api.rest_task.cancelled()
 
 
-@freeze_time("2024-05-04 8:00:00")
+@time_machine.travel("2024-05-04 8:00:00")
 async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
     """Test automower session patch commands."""
     automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)

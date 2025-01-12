@@ -34,14 +34,14 @@
 # name: test_mower_snapshot[metadata]
   dict({
     'connected': True,
-    'status_dateteime': FakeDatetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
+    'status_dateteime': datetime.datetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
   })
 # ---
 # name: test_mower_snapshot[mower]
   dict({
     'activity': 'parked_in_cs',
     'error_code': 1,
-    'error_datetime': FakeDatetime(2024, 10, 18, 16, 37, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    'error_datetime': datetime.datetime(2024, 10, 18, 16, 37, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'error_key': 'outside_working_area',
     'inactive_reason': 'none',
     'is_error_confirmable': False,
@@ -53,7 +53,7 @@
 # ---
 # name: test_mower_snapshot[planner]
   dict({
-    'next_start_datetime': FakeDatetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    'next_start_datetime': datetime.datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'override': dict({
       'action': 'not_active',
     }),

@@ -2,7 +2,7 @@
 
 from dataclasses import fields
 
-from freezegun import freeze_time
+import time_machine
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
@@ -22,7 +22,7 @@ async def test_low_feature_mower(mower_tz) -> None:
     assert isinstance(mowers[MOWER_ID].calendar.tasks, list)
 
 
-@freeze_time("2024-05-06 02:50:00")
+@time_machine.travel("2024-05-06 02:50:00")
 def test_mower_snapshot(snapshot: SnapshotAssertion, mower_tz) -> None:
     """Testing a snapshot of a high feature mower."""
     mower_python = load_fixture_json("low_feature_mower.json")
