@@ -412,71 +412,6 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    def add_settigs_tree(self, msg_dict: dict) -> dict:
-        """Add settings key and ignore empty calendar tasks.
-
-        Needed, because when polling the API `headlight` and `cuttingHeight` are
-        nested under the `settings` key. But when receiving a websocket message,
-        the `settings` key is missing.
-        """
-        copy_msg_dict = dict(msg_dict)
-        current_data = self._data
-        if current_data is None:
-            raise NoDataAvailableError
-        dater_iter = current_data["data"]
-        for _, current_data_mower in enumerate(dater_iter):
-            if current_data_mower["id"] == copy_msg_dict["id"]:
-                current_attributes = current_data_mower["attributes"]
-                formated_msg = {
-                    "id": current_data_mower["id"],
-                    "type": "settings-event",
-                    "attributes": {
-                        "calendar": {"tasks": current_attributes["calendar"]["tasks"]},
-                        "settings": {
-                            "cuttingHeight": current_attributes["settings"][
-                                "cuttingHeight"
-                            ],
-                            "headlight": {
-                                "mode": current_attributes["settings"]["headlight"][
-                                    "mode"
-                                ]
-                            },
-                        },
-                    },
-                }
-                new_attributes = copy_msg_dict["attributes"]
-                if len(new_attributes["calendar"]["tasks"]) > 0:
-                    formated_msg["attributes"]["calendar"]["tasks"] = copy_msg_dict[
-                        "attributes"
-                    ]["calendar"]["tasks"]
-                if "cuttingHeight" in new_attributes:
-                    formated_msg["attributes"]["settings"]["cuttingHeight"] = (
-                        copy_msg_dict["attributes"]["cuttingHeight"]
-                    )
-                if "headlight" in new_attributes:
-                    formated_msg["attributes"]["settings"]["headlight"]["mode"] = (
-                        copy_msg_dict["attributes"]["headlight"]["mode"]
-                    )
-                return formated_msg
-        return copy_msg_dict
-
-    def filter_work_area_id(self, msg_dict: dict) -> dict:
-        """Filter empty work_area_id."""
-        if not self._data:
-            raise NoDataAvailableError
-        mower_id = msg_dict["id"]
-        new_attributes = msg_dict["attributes"]
-        for mower in self._data["data"]:
-            if (
-                mower["id"] == mower_id
-                and mower["attributes"]["capabilities"]["workAreas"]
-            ):
-                new_attributes["mower"]["workAreaId"] = mower["attributes"]["mower"][
-                    "workAreaId"
-                ]
-                break
-        return msg_dict
-
     def _handle_text_message(self, msg: WSMessage) -> None:
         """Process a text message to data."""
         if not msg.data:
@@ -486,19 +421,12 @@ class AutomowerSession:
         if msg.data:
             msg_dict = msg.json()
             if "type" in msg_dict:
-                if msg_dict["type"] in set(EVENT_TYPES) | {
-                    event.value for event in EventTypesV2
-                }:
-                    if msg_dict["type"] == "settings-event":
-                        copy = dict(msg_dict)
-                        msg_dict = self.add_settigs_tree(copy)
-                    if msg_dict["type"] == "status-event":
-                        copy = dict(msg_dict)
-                        msg_dict = self.filter_work_area_id(copy)
-                    _LOGGER.debug("Got %s, data: %s", msg_dict["type"], msg_dict)
+                if msg_dict["type"] in set(EVENT_TYPES):
+                    _LOGGER.debug("Received websocket V1 type %s", msg_dict["type"])
+                if msg_dict["type"] in {event.value for event in EventTypesV2}:
                     self._update_data(msg_dict)
                 else:
-                    _LOGGER.warning("Received unknown ws type %s", msg_dict["type"])
+                    _LOGGER.debug("Received unknown ws type %s", msg_dict["type"])
             elif "ready" in msg_dict and "connectionId" in msg_dict:
                 _LOGGER.debug(
                     "Websocket ready=%s (id='%s')",
