@@ -1,17 +1,16 @@
 """Models for Husqvarna Automower data."""
 
 import logging
-from collections.abc import Iterable
 from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime, time, timedelta
 from enum import Enum, StrEnum
 from re import sub
+from typing import TYPE_CHECKING
 
 from ical.iter import (
     MergedIterable,
     SortableItem,
 )
-from ical.timespan import Timespan
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.config import BaseConfig
 from mashumaro.types import SerializationStrategy
@@ -19,6 +18,11 @@ from mashumaro.types import SerializationStrategy
 from . import tz_util
 from .const import ERRORCODES, DayOfWeek, ProgramFrequency
 from .timeline import ProgramEvent, ProgramTimeline, create_recurrence
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from ical.timespan import Timespan
 
 _LOGGER = logging.getLogger(__name__)
 

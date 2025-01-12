@@ -50,9 +50,12 @@ async def async_get_access_token(client_id: str, client_secret: str) -> dict[str
             result = await resp.json(encoding="UTF-8")
             result["expires_at"] = result["expires_in"] + time.time()
         if resp.status >= 400:
-            raise ApiError(
+            msg = (
                 f"""The token is invalid, response from
                     Husqvarna Automower API: {result}"""
+            )
+            raise ApiError(
+                msg
             )
     result["status"] = resp.status
     return cast(dict[str, str], result)

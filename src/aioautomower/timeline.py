@@ -5,8 +5,6 @@ the logic for interpreting recurring events for the Husqvarna Automower
 calendar. Only upcoming events will be shown.
 """
 
-from __future__ import annotations
-
 import datetime
 import logging
 from collections.abc import Iterable
@@ -98,7 +96,8 @@ def create_recurrence(
         dtstart: datetime.datetime | datetime.date,
     ) -> SortableItem[Timespan, ProgramEvent]:
         if not isinstance(dtstart, datetime.datetime):
-            raise TypeError("Expected datetime, got date")
+            msg = "Expected datetime, got date"
+            raise TypeError(msg)
         dtend = dtstart + duration
 
         def build() -> ProgramEvent:

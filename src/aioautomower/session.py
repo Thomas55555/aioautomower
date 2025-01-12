@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Iterable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -16,12 +16,17 @@ from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
 from .exceptions import (
     FeatureNotSupportedError,
-    NoDataAvailableError,
     HusqvarnaTimeoutError,
+    NoDataAvailableError,
     WorkAreasDifferentError,
 )
-from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
+from .model import HeadlightModes, MowerAttributes, Tasks
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .model import Calendar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +70,7 @@ class _MowerCommands:
         auth: AbstractAuth,
         data: dict[str, MowerAttributes],
         mower_tz: zoneinfo.ZoneInfo,
-    ):
+    ) -> None:
         """Send all commands to the API.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
@@ -74,7 +79,7 @@ class _MowerCommands:
         self.data = data
         self.mower_tz = mower_tz
 
-    async def resume_schedule(self, mower_id: str):
+    async def resume_schedule(self, mower_id: str) -> None:
         """Resume schedule.
 
         Remove any override on the Planner and let the mower
@@ -84,25 +89,25 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def pause_mowing(self, mower_id: str):
+    async def pause_mowing(self, mower_id: str) -> None:
         """Send pause mowing command to the mower via Rest."""
         body = {"data": {"type": "Pause"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_until_next_schedule(self, mower_id: str):
+    async def park_until_next_schedule(self, mower_id: str) -> None:
         """Send park until next schedule command to the mower."""
         body = {"data": {"type": "ParkUntilNextSchedule"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_until_further_notice(self, mower_id: str):
+    async def park_until_further_notice(self, mower_id: str) -> None:
         """Send park until further notice command to the mower."""
         body = {"data": {"type": "ParkUntilFurtherNotice"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, tdelta: datetime.timedelta):
+    async def park_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
         """Parks the mower for a period of minutes.
 
         The mower will drive to
@@ -122,10 +127,11 @@ class _MowerCommands:
         mower_id: str,
         work_area_id: int,
         tdelta: datetime.timedelta,
-    ):
+    ) -> None:
         """Start the mower in a work area for a period of minutes."""
         if not self.data[mower_id].capabilities.work_areas:
-            raise FeatureNotSupportedError("This mower does not support this command.")
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {
             "data": {
                 "type": "StartInWorkArea",
@@ -138,7 +144,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def start_for(self, mower_id: str, tdelta: datetime.timedelta):
+    async def start_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
         """Start the mower for a period of minutes."""
         body = {
             "data": {
@@ -149,7 +155,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def set_cutting_height(self, mower_id: str, cutting_height: int):
+    async def set_cutting_height(self, mower_id: str, cutting_height: int) -> None:
         """Set the cutting height for the mower."""
         body = {
             "data": {
@@ -162,7 +168,7 @@ class _MowerCommands:
 
     async def set_datetime(
         self, mower_id: str, current_time: datetime.datetime | None = None
-    ):
+    ) -> None:
         """Set the datetime of the mower.
 
         Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in the local time of the mower.
@@ -189,10 +195,11 @@ class _MowerCommands:
         work_area_id: int,
         cutting_height: int | None = None,
         enabled: bool | None = None,
-    ):
+    ) -> None:
         """Set the stettings for for a specific work area."""
         if not self.data[mower_id].capabilities.work_areas:
-            raise FeatureNotSupportedError("This mower does not support this command.")
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         current_mower = self.data[mower_id].work_areas
         if TYPE_CHECKING:
             assert current_mower is not None
@@ -221,10 +228,11 @@ class _MowerCommands:
             HeadlightModes.EVENING_AND_NIGHT,
             HeadlightModes.EVENING_ONLY,
         ],
-    ):
+    ) -> None:
         """Send headlight mode to the mower."""
         if not self.data[mower_id].capabilities.headlights:
-            raise FeatureNotSupportedError("This mower does not support this command.")
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {
             "data": {
                 "type": "settings",
@@ -238,7 +246,7 @@ class _MowerCommands:
         self,
         mower_id: str,
         tasks: Tasks,
-    ):
+    ) -> None:
         """Send calendar task to the mower."""
         if not self.data[mower_id].capabilities.work_areas:
             body = {
@@ -257,9 +265,8 @@ class _MowerCommands:
                 if first_work_area_id is None:
                     first_work_area_id = work_area_id
                 elif work_area_id != first_work_area_id:
-                    raise WorkAreasDifferentError(
-                        "Only identical work areas are allowed in one command."
-                    )
+                    msg = "Only identical work areas are allowed in one command."
+                    raise WorkAreasDifferentError(msg)
             body = {
                 "data": {
                     "type": "calendar",
@@ -273,10 +280,11 @@ class _MowerCommands:
 
     async def switch_stay_out_zone(
         self, mower_id: str, stay_out_zone_id: str, switch: bool
-    ):
+    ) -> None:
         """Enable or disable a stay out zone."""
         if not self.data[mower_id].capabilities.stay_out_zones:
-            raise FeatureNotSupportedError("This mower does not support this command.")
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {
             "data": {
                 "type": "stayOutZone",
@@ -289,10 +297,11 @@ class _MowerCommands:
         )
         await self.auth.patch_json(url, json=body)
 
-    async def error_confirm(self, mower_id: str):
+    async def error_confirm(self, mower_id: str) -> None:
         """Confirm non-fatal mower error."""
         if not self.data[mower_id].capabilities.can_confirm_error:
-            raise FeatureNotSupportedError("This mower does not support this command.")
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)

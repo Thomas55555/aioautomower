@@ -7,12 +7,12 @@ import aiohttp
 import pytest
 from aioresponses import aioresponses
 
+from aioautomower.exceptions import (
+    ApiError,
+)
 from aioautomower.utils import (
     async_get_access_token,
     async_invalidate_access_token,
-)
-from aioautomower.exceptions import (
-    ApiError,
 )
 
 

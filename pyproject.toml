@@ -71,6 +71,7 @@ asyncio_default_fixture_loop_scope = "session"
 fix = true
 show-fixes = true
 src = ["./src"]
+target-version = "py311"
 
 [tool.ruff.lint]
 ignore = [
