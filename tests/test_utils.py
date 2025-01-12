@@ -7,8 +7,10 @@ import aiohttp
 import pytest
 from aioresponses import aioresponses
 
+from aioautomower.exceptions import (
+    ApiError,
+)
 from aioautomower.utils import (
-    ApiException,
     async_get_access_token,
     async_invalidate_access_token,
 )
@@ -65,7 +67,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
         client_secret = "test_client_secret"
 
         # Call the async_get_access_token function and assert exception
-        with pytest.raises(ApiException):
+        with pytest.raises(ApiError):
             await async_get_access_token(client_id, client_secret)
 
     @aioresponses()

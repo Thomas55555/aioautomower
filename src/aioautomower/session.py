@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Iterable, Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -15,13 +15,18 @@ from aiohttp import WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
 from .exceptions import (
-    FeatureNotSupportedException,
-    NoDataAvailableException,
-    TimeoutException,
-    WorkAreasDifferentException,
+    FeatureNotSupportedError,
+    HusqvarnaTimeoutError,
+    NoDataAvailableError,
+    WorkAreasDifferentError,
 )
-from .model import Calendar, HeadlightModes, MowerAttributes, Tasks
+from .model import HeadlightModes, MowerAttributes, Tasks
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .model import Calendar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +70,7 @@ class _MowerCommands:
         auth: AbstractAuth,
         data: dict[str, MowerAttributes],
         mower_tz: zoneinfo.ZoneInfo,
-    ):
+    ) -> None:
         """Send all commands to the API.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
@@ -74,7 +79,7 @@ class _MowerCommands:
         self.data = data
         self.mower_tz = mower_tz
 
-    async def resume_schedule(self, mower_id: str):
+    async def resume_schedule(self, mower_id: str) -> None:
         """Resume schedule.
 
         Remove any override on the Planner and let the mower
@@ -84,25 +89,25 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def pause_mowing(self, mower_id: str):
+    async def pause_mowing(self, mower_id: str) -> None:
         """Send pause mowing command to the mower via Rest."""
         body = {"data": {"type": "Pause"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_until_next_schedule(self, mower_id: str):
+    async def park_until_next_schedule(self, mower_id: str) -> None:
         """Send park until next schedule command to the mower."""
         body = {"data": {"type": "ParkUntilNextSchedule"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_until_further_notice(self, mower_id: str):
+    async def park_until_further_notice(self, mower_id: str) -> None:
         """Send park until further notice command to the mower."""
         body = {"data": {"type": "ParkUntilFurtherNotice"}}
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, tdelta: datetime.timedelta):
+    async def park_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
         """Parks the mower for a period of minutes.
 
         The mower will drive to
@@ -122,12 +127,11 @@ class _MowerCommands:
         mower_id: str,
         work_area_id: int,
         tdelta: datetime.timedelta,
-    ):
+    ) -> None:
         """Start the mower in a work area for a period of minutes."""
         if not self.data[mower_id].capabilities.work_areas:
-            raise FeatureNotSupportedException(
-                "This mower does not support this command."
-            )
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {
             "data": {
                 "type": "StartInWorkArea",
@@ -140,7 +144,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def start_for(self, mower_id: str, tdelta: datetime.timedelta):
+    async def start_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
         """Start the mower for a period of minutes."""
         body = {
             "data": {
@@ -151,7 +155,7 @@ class _MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def set_cutting_height(self, mower_id: str, cutting_height: int):
+    async def set_cutting_height(self, mower_id: str, cutting_height: int) -> None:
         """Set the cutting height for the mower."""
         body = {
             "data": {
@@ -164,7 +168,7 @@ class _MowerCommands:
 
     async def set_datetime(
         self, mower_id: str, current_time: datetime.datetime | None = None
-    ):
+    ) -> None:
         """Set the datetime of the mower.
 
         If the current has not tz_info, the mower_tz will be used as tz_info.
@@ -192,12 +196,11 @@ class _MowerCommands:
         work_area_id: int,
         cutting_height: int | None = None,
         enabled: bool | None = None,
-    ):
+    ) -> None:
         """Set the stettings for for a specific work area."""
         if not self.data[mower_id].capabilities.work_areas:
-            raise FeatureNotSupportedException(
-                "This mower does not support this command."
-            )
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         current_mower = self.data[mower_id].work_areas
         if TYPE_CHECKING:
             assert current_mower is not None
@@ -226,12 +229,11 @@ class _MowerCommands:
             HeadlightModes.EVENING_AND_NIGHT,
             HeadlightModes.EVENING_ONLY,
         ],
-    ):
+    ) -> None:
         """Send headlight mode to the mower."""
         if not self.data[mower_id].capabilities.headlights:
-            raise FeatureNotSupportedException(
-                "This mower does not support this command."
-            )
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {
             "data": {
                 "type": "settings",
@@ -245,7 +247,7 @@ class _MowerCommands:
         self,
         mower_id: str,
         tasks: Tasks,
-    ):
+    ) -> None:
         """Send calendar task to the mower."""
         if not self.data[mower_id].capabilities.work_areas:
             body = {
@@ -257,16 +259,15 @@ class _MowerCommands:
             url = AutomowerEndpoint.calendar.format(mower_id=mower_id)
             await self.auth.post_json(url, json=body)
         if self.data[mower_id].capabilities.work_areas:
-            task_list: list[Calendar] = getattr(tasks, "tasks")
+            task_list: list[Calendar] = tasks.tasks
             first_work_area_id = None
             for task in task_list:
-                work_area_id = getattr(task, "work_area_id")
+                work_area_id = task.work_area_id
                 if first_work_area_id is None:
                     first_work_area_id = work_area_id
                 elif work_area_id != first_work_area_id:
-                    raise WorkAreasDifferentException(
-                        "Only identical work areas are allowed in one command."
-                    )
+                    msg = "Only identical work areas are allowed in one command."
+                    raise WorkAreasDifferentError(msg)
             body = {
                 "data": {
                     "type": "calendar",
@@ -279,13 +280,12 @@ class _MowerCommands:
             await self.auth.post_json(url, json=body)
 
     async def switch_stay_out_zone(
-        self, mower_id: str, stay_out_zone_id: str, switch: bool
-    ):
+        self, mower_id: str, stay_out_zone_id: str, *, switch: bool
+    ) -> None:
         """Enable or disable a stay out zone."""
         if not self.data[mower_id].capabilities.stay_out_zones:
-            raise FeatureNotSupportedException(
-                "This mower does not support this command."
-            )
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {
             "data": {
                 "type": "stayOutZone",
@@ -298,12 +298,11 @@ class _MowerCommands:
         )
         await self.auth.patch_json(url, json=body)
 
-    async def error_confirm(self, mower_id: str):
+    async def error_confirm(self, mower_id: str) -> None:
         """Confirm non-fatal mower error."""
         if not self.data[mower_id].capabilities.can_confirm_error:
-            raise FeatureNotSupportedException(
-                "This mower does not support this command."
-            )
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
         body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
@@ -320,6 +319,7 @@ class AutomowerSession:
         self,
         auth: AbstractAuth,
         mower_tz: zoneinfo.ZoneInfo | None = None,
+        *,
         poll: bool = False,
     ) -> None:
         """Create a session.
@@ -340,15 +340,19 @@ class AutomowerSession:
         self.rest_task: asyncio.Task | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
-    def register_data_callback(self, callback) -> None:
+    def register_data_callback(
+        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
         """Register a data update callback."""
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
 
-    def _schedule_data_callback(self, cb) -> None:
+    def _schedule_data_callback(
+        self, cb: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
         """Schedule a data callback."""
         if self.poll and self.data is None:
-            raise NoDataAvailableException
+            raise NoDataAvailableError
         self.loop.call_soon_threadsafe(cb, self.data)
 
     def _schedule_data_callbacks(self) -> None:
@@ -356,7 +360,9 @@ class AutomowerSession:
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
-    def unregister_data_callback(self, callback) -> None:
+    def unregister_data_callback(
+        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
         """Unregister a data update callback.
 
         :param func callback: Takes one function, which should be unregistered.
@@ -364,7 +370,9 @@ class AutomowerSession:
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
 
-    def register_pong_callback(self, pong_callback) -> None:
+    def register_pong_callback(
+        self, pong_callback: Callable[[datetime.datetime], None]
+    ) -> None:
         """Register a pong callback.
 
         It's not real ping/pong, but a way to check if the websocket
@@ -373,7 +381,7 @@ class AutomowerSession:
         if pong_callback not in self.pong_cbs:
             self.pong_cbs.append(pong_callback)
 
-    def _schedule_pong_callback(self, cb) -> None:
+    def _schedule_pong_callback(self, cb: Callable[[datetime.datetime], None]) -> None:
         """Schedule a pong callback."""
         self.loop.call_soon_threadsafe(cb, self.last_ws_message)
 
@@ -382,7 +390,9 @@ class AutomowerSession:
         for cb in self.pong_cbs:
             self._schedule_pong_callback(cb)
 
-    def unregister_pong_callback(self, pong_callback) -> None:
+    def unregister_pong_callback(
+        self, pong_callback: Callable[[datetime.datetime], None]
+    ) -> None:
         """Unregister a pong update callback.
 
         :param func callback: Takes one function, which should be unregistered.
@@ -412,7 +422,7 @@ class AutomowerSession:
         copy_msg_dict = dict(msg_dict)
         current_data = self._data
         if current_data is None:
-            raise NoDataAvailableException
+            raise NoDataAvailableError
         dater_iter = current_data["data"]
         for _, current_data_mower in enumerate(dater_iter):
             if current_data_mower["id"] == copy_msg_dict["id"]:
@@ -453,7 +463,7 @@ class AutomowerSession:
     def filter_work_area_id(self, msg_dict: dict) -> dict:
         """Filter empty work_area_id."""
         if not self._data:
-            raise NoDataAvailableException
+            raise NoDataAvailableError
         mower_id = msg_dict["id"]
         new_attributes = msg_dict["attributes"]
         for mower in self._data["data"]:
@@ -512,7 +522,7 @@ class AutomowerSession:
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:
-                raise TimeoutException from exc
+                raise HusqvarnaTimeoutError from exc
 
     async def send_empty_message(self) -> None:
         """Send an empty message every 60s."""
@@ -532,7 +542,7 @@ class AutomowerSession:
     def _update_data(self, new_data: Mapping[str, Any]) -> None:
         """Update internal data with new data from websocket."""
         if self._data is None:
-            raise NoDataAvailableException
+            raise NoDataAvailableError
 
         data = self._data["data"]
 

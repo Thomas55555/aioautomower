@@ -1,49 +1,49 @@
-"""Library for exceptions using the Husqvarna Automower API."""
+"""Library for Exception using the Husqvarna Automower API."""
 
 
-class HusqvarnaAutomowerException(Exception):
-    """Base class for all client exceptions."""
+class HusqvarnaAutomowerError(Exception):
+    """Base class for all client Errors."""
 
 
-class ApiException(HusqvarnaAutomowerException):
+class ApiError(HusqvarnaAutomowerError):
     """Raised during problems talking to the API."""
 
 
-class FeatureNotSupportedException(HusqvarnaAutomowerException):
+class FeatureNotSupportedError(HusqvarnaAutomowerError):
     """Raised when the feature is not supported by the mower."""
 
 
-class WorkAreasDifferentException(HusqvarnaAutomowerException):
+class WorkAreasDifferentError(HusqvarnaAutomowerError):
     """Raised when the work areas for setting the calendar are different."""
 
 
-class AuthException(HusqvarnaAutomowerException):
+class AuthError(HusqvarnaAutomowerError):
     """Raised due to auth problems talking to API."""
 
 
-class InvalidSyncTokenException(HusqvarnaAutomowerException):
+class InvalidSyncTokenError(HusqvarnaAutomowerError):
     """Raised when the sync token is invalid."""
 
 
-class ApiBadRequestException(HusqvarnaAutomowerException):
+class ApiBadRequestError(HusqvarnaAutomowerError):
     """Raised due sending a Rest command resulting in a bad request."""
 
 
-class ApiForbiddenException(HusqvarnaAutomowerException):
+class ApiForbiddenError(HusqvarnaAutomowerError):
     """Raised due to permission errors talking to API."""
 
 
-class ApiUnauthorizedException(HusqvarnaAutomowerException):
+class ApiUnauthorizedError(HusqvarnaAutomowerError):
     """Raised occasionally, mustn't harm the connection."""
 
 
-class NoDataAvailableException(HusqvarnaAutomowerException):
+class NoDataAvailableError(HusqvarnaAutomowerError):
     """Raised due updating data, when no data is available."""
 
 
-class TimeoutException(HusqvarnaAutomowerException):
+class HusqvarnaTimeoutError(HusqvarnaAutomowerError):
     """Raised due connecting the websocket."""
 
 
-class HusqvarnaWSServerHandshakeError(HusqvarnaAutomowerException):
+class HusqvarnaWSServerHandshakeError(HusqvarnaAutomowerError):
     """Raised due connecting the websocket if server not available."""
