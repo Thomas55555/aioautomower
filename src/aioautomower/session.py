@@ -5,7 +5,7 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -171,9 +171,10 @@ class _MowerCommands:
     ) -> None:
         """Set the datetime of the mower.
 
-        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in the local time of the mower.
+        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in
+        the local time of the mower.
         """
-        current_time = current_time or datetime.datetime.now()
+        current_time = current_time or datetime.datetime.now()  # noqa: DTZ005
         body = {
             "data": {
                 "type": "settings",
@@ -279,7 +280,7 @@ class _MowerCommands:
             await self.auth.post_json(url, json=body)
 
     async def switch_stay_out_zone(
-        self, mower_id: str, stay_out_zone_id: str, switch: bool
+        self, mower_id: str, stay_out_zone_id: str, *, switch: bool
     ) -> None:
         """Enable or disable a stay out zone."""
         if not self.data[mower_id].capabilities.stay_out_zones:
@@ -318,6 +319,7 @@ class AutomowerSession:
         self,
         auth: AbstractAuth,
         mower_tz: zoneinfo.ZoneInfo | None = None,
+        *,
         poll: bool = False,
     ) -> None:
         """Create a session.
@@ -338,12 +340,16 @@ class AutomowerSession:
         self.rest_task: asyncio.Task | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
-    def register_data_callback(self, callback) -> None:
+    def register_data_callback(
+        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
         """Register a data update callback."""
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
 
-    def _schedule_data_callback(self, cb) -> None:
+    def _schedule_data_callback(
+        self, cb: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
         """Schedule a data callback."""
         if self.poll and self.data is None:
             raise NoDataAvailableError
@@ -354,7 +360,9 @@ class AutomowerSession:
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
-    def unregister_data_callback(self, callback) -> None:
+    def unregister_data_callback(
+        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
         """Unregister a data update callback.
 
         :param func callback: Takes one function, which should be unregistered.
@@ -362,7 +370,9 @@ class AutomowerSession:
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
 
-    def register_pong_callback(self, pong_callback) -> None:
+    def register_pong_callback(
+        self, pong_callback: Callable[[datetime.datetime], None]
+    ) -> None:
         """Register a pong callback.
 
         It's not real ping/pong, but a way to check if the websocket
@@ -371,7 +381,7 @@ class AutomowerSession:
         if pong_callback not in self.pong_cbs:
             self.pong_cbs.append(pong_callback)
 
-    def _schedule_pong_callback(self, cb) -> None:
+    def _schedule_pong_callback(self, cb: Callable[[datetime.datetime], None]) -> None:
         """Schedule a pong callback."""
         self.loop.call_soon_threadsafe(cb, self.last_ws_message)
 
@@ -380,7 +390,9 @@ class AutomowerSession:
         for cb in self.pong_cbs:
             self._schedule_pong_callback(cb)
 
-    def unregister_pong_callback(self, pong_callback) -> None:
+    def unregister_pong_callback(
+        self, pong_callback: Callable[[datetime.datetime], None]
+    ) -> None:
         """Unregister a pong update callback.
 
         :param func callback: Takes one function, which should be unregistered.

@@ -23,7 +23,5 @@ def set_mower_time_zone(time_zone: tzinfo) -> None:
     # pylint: disable-next=global-statement
     global MOWER_TIME_ZONE  # noqa: PLW0603
 
-    # assert isinstance(time_zone, datetime.tzinfo)
-
     MOWER_TIME_ZONE = time_zone
     get_mower_time_zone.cache_clear()

@@ -105,7 +105,10 @@ def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None
 
 
 def get_work_area_name(name: str) -> str:
-    """Return the work area name, replacing empty strings with a default name 'my_lawn'."""
+    """Return the work area name.
+
+    Replacing empty strings with a default name 'my_lawn'.
+    """
     return "my_lawn" if name == "" else name
 
 
@@ -228,7 +231,7 @@ class Mower(DataClassDictMixin):
     )
     work_area_name: str | None = field(init=False, default=None)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize work_area_name to None for later external setting."""
         self.work_area_name = None
 
@@ -285,7 +288,7 @@ class ConvertScheduleToCalendar:
     def __init__(self, task: Calendar) -> None:
         """Initialize the schedule to calendar converter."""
         self.task = task
-        self.now = datetime.now()
+        self.now = datetime.now()  # noqa: DTZ005
         self.begin_of_current_day = self.now.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -311,9 +314,11 @@ class ConvertScheduleToCalendar:
                         )
                         + self.task.duration
                     )
-                    if self.begin_of_current_day == time_to_check_begin_of_day:
-                        if end_task < self.now:
-                            break
+                    if (
+                        self.begin_of_current_day == time_to_check_begin_of_day
+                        and end_task < self.now
+                    ):
+                        break
                     return self.now + timedelta(days)
         return self.now
 
@@ -389,11 +394,10 @@ class Tasks(DataClassDictMixin):
         """Return a schedule number."""
         if task is not None:
             if task.work_area_id is not None:
-                if task.work_area_id is not None:
-                    self.schedule_no[task.work_area_id] = (
-                        self.schedule_no[task.work_area_id] + 1
-                    )
-                    return self.schedule_no[task.work_area_id]
+                self.schedule_no[task.work_area_id] = (
+                    self.schedule_no[task.work_area_id] + 1
+                )
+                return self.schedule_no[task.work_area_id]
             self.schedule_no["-1"] = self.schedule_no["-1"] + 1
             return self.schedule_no["-1"]
         return None
@@ -585,12 +589,12 @@ class MowerAttributes(DataClassDictMixin):
         default=None,
     )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set the name after init."""
         if self.capabilities.work_areas:
             if self.mower.work_area_id is None:
                 self.mower.work_area_name = "no_work_area_active"
-            if self.work_areas is not None:
+            if self.work_areas and self.mower.work_area_id is not None:
                 work_area = self.work_areas.get(self.mower.work_area_id)
                 if work_area:
                     self.mower.work_area_name = work_area.name

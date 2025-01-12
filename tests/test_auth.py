@@ -87,12 +87,10 @@ async def test_patch_request_success(
         status=200,
         payload=control_response,
     )
-    assert (
-        await automower_client.commands.switch_stay_out_zone(
-            MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS, True
-        )
-        is None
+    await automower_client.commands.switch_stay_out_zone(
+        MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS, switch=True
     )
+    assert len(responses.requests) > 0
 
 
 async def test_post_request_success(
@@ -111,7 +109,8 @@ async def test_post_request_success(
         status=200,
         payload=control_response,
     )
-    assert await automower_client.commands.resume_schedule(MOWER_ID) is None
+    await automower_client.commands.resume_schedule(MOWER_ID)
+    assert len(responses.requests) > 0
 
 
 @pytest.mark.asyncio
