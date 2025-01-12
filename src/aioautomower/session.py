@@ -171,19 +171,19 @@ class _MowerCommands:
     ) -> None:
         """Set the datetime of the mower.
 
-        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in
-        the local time of the mower.
+        If the current has not tz_info, the mower_tz will be used as tz_info.
         """
-        current_time = current_time or datetime.datetime.now()  # noqa: DTZ005
+        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
+        if current_time.tzinfo is None:
+            current_time = current_time.replace(tzinfo=self.mower_tz)
         body = {
             "data": {
                 "type": "settings",
                 "attributes": {
-                    "dateTime": int(
-                        current_time.astimezone(self.mower_tz)
-                        .replace(tzinfo=datetime.UTC)
-                        .timestamp()
-                    )
+                    "timer": {
+                        "dateTime": int(current_time.timestamp()),
+                        "timeZone": str(self.mower_tz),
+                    },
                 },
             }
         }
