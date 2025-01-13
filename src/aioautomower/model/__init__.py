@@ -21,6 +21,12 @@ from .model_calendar import (
     make_name_string,
 )
 from .model_capabilities import Capabilities
+from .model_event import (
+    CuttingHeightAttributes,
+    GenericEventData,
+    HeadLightAttributes,
+    PositionAttributes,
+)
 from .model_metadata import Metadata
 from .model_mower import (
     Mower,
@@ -63,8 +69,11 @@ __all__ = [
     "Calendar",
     "Capabilities",
     "ConvertScheduleToCalendar",
+    "CuttingHeightAttributes",
     "DurationSerializationStrategy",
     "ExternalReasons",
+    "GenericEventData",
+    "HeadLightAttributes",
     "Headlight",
     "HeadlightModes",
     "InactiveReasons",
@@ -78,6 +87,7 @@ __all__ = [
     "MowerStates",
     "Override",
     "Planner",
+    "PositionAttributes",
     "Positions",
     "RestrictedReasons",
     "Settings",

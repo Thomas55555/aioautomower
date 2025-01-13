@@ -20,12 +20,14 @@ from .exceptions import (
     NoDataAvailableError,
     WorkAreasDifferentError,
 )
-from .model import HeadlightModes, MowerAttributes, Tasks
-from .model.model_event import (
+from .model import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
+    HeadlightModes,
+    MowerAttributes,
     PositionAttributes,
+    Tasks,
 )
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
