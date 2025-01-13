@@ -5,9 +5,9 @@ import contextlib
 import datetime
 import logging
 import zoneinfo
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 import tzlocal
 from aiohttp import WSMessage, WSMsgType
@@ -21,25 +21,27 @@ from .exceptions import (
     WorkAreasDifferentError,
 )
 from .model import (
+    HeadlightModes,
+    MowerAttributes,
+    Tasks,
+)
+from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
-    HeadlightModes,
-    MowerAttributes,
+    MowerDataItem,
+    MowerDataResponse,
     PositionAttributes,
-    Tasks,
 )
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from .model import Calendar
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=dict[str, Any])
-HandlerType = Callable[[dict[str, Any], T], None]
+T = TypeVar("T")
+HandlerType = Callable[[MowerDataItem, dict[str, Any]], None]
 
 
 @dataclass
@@ -336,7 +338,7 @@ class AutomowerSession:
         :param class auth: The AbstractAuth class from aioautomower.auth.
         :param bool poll: Poll data with rest if True.
         """
-        self._data: dict[str, Iterable[Any]] | None = {}
+        self._data: MowerDataResponse | None = None
         self.auth = auth
         self.data: dict[str, MowerAttributes] = {}
         self.mower_tz = mower_tz or tzlocal.get_localzone()
@@ -470,7 +472,9 @@ class AutomowerSession:
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via Rest."""
-        mower_list = await self.auth.get_json(AutomowerEndpoint.mowers)
+        mower_list: MowerDataResponse = await self.auth.get_json(
+            AutomowerEndpoint.mowers
+        )
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
@@ -492,9 +496,9 @@ class AutomowerSession:
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         self._schedule_data_callbacks()
 
-    def _process_event(self, mower: dict[str, Any], new_data: GenericEventData) -> None:
+    def _process_event(self, mower: MowerDataItem, new_data: GenericEventData) -> None:
         """Process a specific event type."""
-        handlers: dict[str, HandlerType[Any]] = {
+        handlers: dict[str, Callable[[MowerDataItem, Any], None]] = {
             "cuttingHeight": self._handle_cutting_height_event,
             "headLight": self._handle_headlight_event,
             "position": self._handle_position_event,
@@ -503,14 +507,14 @@ class AutomowerSession:
         attributes = new_data.get("attributes", {})
         for key, handler in handlers.items():
             if key in attributes:
-                handler(mower, attributes)
+                handler(mower, attributes)  # Pass the specific attribute
                 return
-
+        mower_attributes = mower["attributes"]
         # General handling for other attributes
-        self._update_nested_dict(mower["attributes"], attributes)
+        self._update_nested_dict(cast(dict[str, Any], mower_attributes), attributes)
 
     def _handle_cutting_height_event(
-        self, mower: dict[str, Any], attributes: CuttingHeightAttributes
+        self, mower: MowerDataItem, attributes: CuttingHeightAttributes
     ) -> None:
         """Handle cuttingHeight-specific updates."""
         mower["attributes"]["settings"]["cuttingHeight"] = attributes["cuttingHeight"][
@@ -518,7 +522,7 @@ class AutomowerSession:
         ]
 
     def _handle_headlight_event(
-        self, mower: dict[str, Any], attributes: HeadLightAttributes
+        self, mower: MowerDataItem, attributes: HeadLightAttributes
     ) -> None:
         """Handle headLight-specific updates."""
         mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headLight"][
@@ -526,14 +530,12 @@ class AutomowerSession:
         ]
 
     def _handle_position_event(
-        self, mower: dict[str, Any], attributes: PositionAttributes
+        self, mower: MowerDataItem, attributes: PositionAttributes
     ) -> None:
         mower["attributes"]["positions"].insert(0, attributes["position"])
 
     @staticmethod
-    def _update_nested_dict(
-        original: MutableMapping[Any, Any], updates: Mapping[Any, Any]
-    ) -> None:
+    def _update_nested_dict(original: dict[str, Any], updates: dict[str, Any]) -> None:
         """Recursively update a nested dictionary with new values."""
         for key, value in updates.items():
             if (
