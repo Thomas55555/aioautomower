@@ -1,7 +1,9 @@
 """Models for Husqvarna Automower data."""
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from typing import Any
 
 from mashumaro import DataClassDictMixin, field_options
 
@@ -21,14 +23,16 @@ from .model_work_areas import WorkArea
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_work_area_names_list(workarea_list: list) -> list[str]:
+def generate_work_area_names_list(workarea_list: Mapping[Any, Any]) -> list[str]:
     """Return a list of names extracted from each work area dictionary."""
     wa_names = [WorkArea.from_dict(area).name for area in workarea_list]
     wa_names.append("no_work_area_active")
     return wa_names
 
 
-def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None:
+def generate_work_area_dict(
+    workarea_list: Mapping[Any, Any] | None,
+) -> dict[int, str] | None:
     """Return a dict of names extracted from each work area dictionary."""
     if workarea_list is None:
         return None

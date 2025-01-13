@@ -7,7 +7,7 @@ import logging
 import zoneinfo
 from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import tzlocal
 from aiohttp import WSMessage, WSMsgType
@@ -21,6 +21,12 @@ from .exceptions import (
     WorkAreasDifferentError,
 )
 from .model import HeadlightModes, MowerAttributes, Tasks
+from .model.model_event import (
+    CuttingHeightAttributes,
+    GenericEventData,
+    HeadLightAttributes,
+    PositionAttributes,
+)
 from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 
 if TYPE_CHECKING:
@@ -30,7 +36,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
+T = TypeVar("T", bound=dict[str, Any])
+HandlerType = Callable[[dict[str, Any], T], None]
 
 
 @dataclass
@@ -332,12 +339,12 @@ class AutomowerSession:
         self.data: dict[str, MowerAttributes] = {}
         self.mower_tz = mower_tz or tzlocal.get_localzone()
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
-        self.pong_cbs: list = []
-        self.data_update_cbs: list = []
+        self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
+        self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
-        self.rest_task: asyncio.Task | None = None
+        self.rest_task: asyncio.Task[None] | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -467,7 +474,7 @@ class AutomowerSession:
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
-    def _update_data(self, new_data: Mapping[str, Any]) -> None:
+    def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
         if self._data is None:
             raise NoDataAvailableError
@@ -483,9 +490,9 @@ class AutomowerSession:
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         self._schedule_data_callbacks()
 
-    def _process_event(self, mower: dict, new_data: Mapping[str, Any]) -> None:
+    def _process_event(self, mower: dict[str, Any], new_data: GenericEventData) -> None:
         """Process a specific event type."""
-        handlers = {
+        handlers: dict[str, HandlerType[Any]] = {
             "cuttingHeight": self._handle_cutting_height_event,
             "headLight": self._handle_headlight_event,
             "position": self._handle_position_event,
@@ -500,20 +507,24 @@ class AutomowerSession:
         # General handling for other attributes
         self._update_nested_dict(mower["attributes"], attributes)
 
-    def _handle_cutting_height_event(self, mower: dict, attributes: dict) -> None:
+    def _handle_cutting_height_event(
+        self, mower: dict[str, Any], attributes: CuttingHeightAttributes
+    ) -> None:
         """Handle cuttingHeight-specific updates."""
         mower["attributes"]["settings"]["cuttingHeight"] = attributes["cuttingHeight"][
             "height"
         ]
 
-    def _handle_headlight_event(self, mower: dict, attributes: dict) -> None:
+    def _handle_headlight_event(
+        self, mower: dict[str, Any], attributes: HeadLightAttributes
+    ) -> None:
         """Handle headLight-specific updates."""
         mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headLight"][
             "mode"
         ]
 
     def _handle_position_event(
-        self, mower: dict[str, dict[str, list[dict]]], attributes: dict[str, dict]
+        self, mower: dict[str, Any], attributes: PositionAttributes
     ) -> None:
         mower["attributes"]["positions"].insert(0, attributes["position"])
 
