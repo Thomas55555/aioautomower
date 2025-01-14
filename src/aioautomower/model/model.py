@@ -1,5 +1,7 @@
 """Models for Husqvarna Automower data."""
 
+from __future__ import annotations
+
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -115,3 +117,6 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
+
+
+MowerDictionary = dict[str, MowerAttributes]
