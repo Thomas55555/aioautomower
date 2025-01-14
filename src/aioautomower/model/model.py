@@ -3,23 +3,25 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mashumaro import DataClassDictMixin, field_options
 
-from .model_battery import Battery
-from .model_calendar import Tasks
-from .model_capabilities import Capabilities
-from .model_metadata import Metadata
-from .model_mower import Mower
-from .model_planner import Planner
-from .model_positions import Positions
-from .model_settings import Settings
-from .model_statistics import Statistics
-from .model_stay_out_zones import StayOutZones
-from .model_system import System
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+from .model_battery import Battery  # noqa:TC001
+from .model_calendar import Tasks  # noqa:TC001
+from .model_capabilities import Capabilities  # noqa:TC001
+from .model_metadata import Metadata  # noqa:TC001
+from .model_mower import Mower  # noqa:TC001
+from .model_planner import Planner  # noqa:TC001
+from .model_positions import Positions  # noqa:TC001
+from .model_settings import Settings  # noqa:TC001
+from .model_statistics import Statistics  # noqa:TC001
+from .model_stay_out_zones import StayOutZones  # noqa:TC001
+from .model_system import System  # noqa:TC001
 from .model_work_areas import WorkArea
 
 _LOGGER = logging.getLogger(__name__)
