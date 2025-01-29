@@ -67,7 +67,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def get_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
+    async def get_json(self, url: str, **kwargs: Any) -> Any:
         """Make a get request and return json response."""
         resp = await self.get(url, **kwargs)
         try:

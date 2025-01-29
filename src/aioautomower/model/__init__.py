@@ -3,6 +3,7 @@
 from .model import (
     MowerAttributes,
     MowerData,
+    MowerDictionary,
     MowerList,
     generate_work_area_dict,
     generate_work_area_names_list,
@@ -73,6 +74,7 @@ __all__ = [
     "MowerActivities",
     "MowerAttributes",
     "MowerData",
+    "MowerDictionary",
     "MowerList",
     "MowerModes",
     "MowerStates",

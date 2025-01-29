@@ -111,7 +111,7 @@ class AutomowerCalendarEvent:
     start: datetime
     duration: timedelta
     uid: str
-    day_set: set
+    day_set: set[DayOfWeek]
 
 
 class ConvertScheduleToCalendar:
@@ -154,10 +154,14 @@ class ConvertScheduleToCalendar:
                     return self.now + timedelta(days)
         return self.now
 
-    def make_dayset(self) -> set[DayOfWeek | None]:
+    def make_dayset(self) -> set[DayOfWeek]:
         """Generate a set of days from a task."""
         return {
-            WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+            day
+            for day in (
+                WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+            )
+            if day is not None
         }
 
     def make_event(self) -> AutomowerCalendarEvent:
@@ -191,12 +195,12 @@ class Tasks(DataClassDictMixin):
 
     def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
-        self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
+        self.schedule_no: dict[int, int] = {}  # pylint: disable=attribute-defined-outside-init
         for task in self.tasks:
             if task.work_area_id is not None:
                 self.schedule_no[task.work_area_id] = 0
             if task.work_area_id is None:
-                self.schedule_no["-1"] = 0
+                self.schedule_no[-1] = 0
 
         iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
@@ -230,8 +234,8 @@ class Tasks(DataClassDictMixin):
                     self.schedule_no[task.work_area_id] + 1
                 )
                 return self.schedule_no[task.work_area_id]
-            self.schedule_no["-1"] = self.schedule_no["-1"] + 1
-            return self.schedule_no["-1"]
+            self.schedule_no[-1] = self.schedule_no[-1] + 1
+            return self.schedule_no[-1]
         return None
 
 
