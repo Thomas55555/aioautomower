@@ -51,8 +51,8 @@ class TimeSerializationStrategy(SerializationStrategy):
 
     def deserialize(self, value: int) -> time:
         """Deserialize an integer to a time object."""
-        hour = int(value / 60)
-        minute = value - 60 * hour
+        hour = value // 60
+        minute = value % 60
         return time(hour=hour, minute=minute)
 
 
@@ -138,7 +138,7 @@ class ConvertScheduleToCalendar:
             for task_field in fields(self.task):
                 field_name = task_field.name
                 field_value = getattr(self.task, field_name)
-                if field_value is True and field_name is day_to_check_as_string:
+                if field_value is True and field_name == day_to_check_as_string:
                     end_task = (
                         time_to_check_begin_of_day
                         + timedelta(
@@ -151,7 +151,7 @@ class ConvertScheduleToCalendar:
                         and end_task < self.now
                     ):
                         break
-                    return self.now + timedelta(days)
+                    return self.now + timedelta(days=days)
         return self.now
 
     def make_dayset(self) -> set[DayOfWeek | None]:
@@ -184,6 +184,10 @@ class Tasks(DataClassDictMixin):
 
     tasks: list[Calendar]
 
+    def __post_init__(self) -> None:
+        """Initialize the schedule number dictionary."""
+        self.schedule_no: dict[int, int] = {}
+
     @property
     def timeline(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
@@ -191,12 +195,11 @@ class Tasks(DataClassDictMixin):
 
     def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
-        self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
         for task in self.tasks:
             if task.work_area_id is not None:
-                self.schedule_no[task.work_area_id] = 0
-            if task.work_area_id is None:
-                self.schedule_no["-1"] = 0
+                self.schedule_no.setdefault(task.work_area_id, 0)
+            else:
+                self.schedule_no.setdefault(-1, 0)
 
         iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
@@ -224,15 +227,11 @@ class Tasks(DataClassDictMixin):
 
     def generate_schedule_no(self, task: Calendar) -> int:
         """Return a schedule number."""
-        if task is not None:
-            if task.work_area_id is not None:
-                self.schedule_no[task.work_area_id] = (
-                    self.schedule_no[task.work_area_id] + 1
-                )
-                return self.schedule_no[task.work_area_id]
-            self.schedule_no["-1"] = self.schedule_no["-1"] + 1
-            return self.schedule_no["-1"]
-        return None
+        if task.work_area_id is not None:
+            self.schedule_no[task.work_area_id] += 1
+            return self.schedule_no[task.work_area_id]
+        self.schedule_no[-1] += 1
+        return self.schedule_no[-1]
 
 
 def make_name_string(work_area_name: str | None, number: int) -> str:
