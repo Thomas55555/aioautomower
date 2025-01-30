@@ -191,13 +191,13 @@ files = [
 
 [[package]]
 name = "codespell"
-version = "2.4.0"
+version = "2.4.1"
 description = "Fix common misspellings in text files"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "codespell-2.4.0-py3-none-any.whl", hash = "sha256:b4c5b779f747dd481587aeecb5773301183f52b94b96ed51a28126d0482eec1d"},
-    {file = "codespell-2.4.0.tar.gz", hash = "sha256:587d45b14707fb8ce51339ba4cce50ae0e98ce228ef61f3c5e160e34f681be58"},
+    {file = "codespell-2.4.1-py3-none-any.whl", hash = "sha256:3dadafa67df7e4a3dbf51e0d7315061b80d265f9552ebd699b3dd6834b47e425"},
+    {file = "codespell-2.4.1.tar.gz", hash = "sha256:299fcdcb09d23e81e35a671bbe746d5ad7e8385972e65dbb833a2eaac33c01e5"},
 ]
 
 [package.extras]
@@ -1630,4 +1630,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "600a98e0ba92c2f405b3c54b985c57354b538b7ffd3ccc149f7f0a0cec9f20e4"
+content-hash = "94ca9fdf8af2bedea2cb56d6e2d8b62d5d955e3b7666aaf1aa42cacbf21713ac"
