@@ -1,34 +1,43 @@
 """Models for Husqvarna Automower data."""
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from mashumaro import DataClassDictMixin, field_options
 
-from .model_battery import Battery
-from .model_calendar import Tasks
-from .model_capabilities import Capabilities
-from .model_metadata import Metadata
-from .model_mower import Mower
-from .model_planner import Planner
-from .model_positions import Positions
-from .model_settings import Settings
-from .model_statistics import Statistics
-from .model_stay_out_zones import StayOutZones
-from .model_system import System
+from .model_battery import Battery  # noqa:TC001
+from .model_calendar import Tasks  # noqa:TC001
+from .model_capabilities import Capabilities  # noqa:TC001
+from .model_metadata import Metadata  # noqa:TC001
+from .model_mower import Mower  # noqa:TC001
+from .model_planner import Planner  # noqa:TC001
+from .model_positions import Positions  # noqa:TC001
+from .model_settings import Settings  # noqa:TC001
+from .model_statistics import Statistics  # noqa:TC001
+from .model_stay_out_zones import StayOutZones  # noqa:TC001
+from .model_system import System  # noqa:TC001
 from .model_work_areas import WorkArea
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_work_area_names_list(workarea_list: list) -> list[str]:
+def generate_work_area_names_list(workarea_list: Mapping[Any, Any]) -> list[str]:
     """Return a list of names extracted from each work area dictionary."""
     wa_names = [WorkArea.from_dict(area).name for area in workarea_list]
     wa_names.append("no_work_area_active")
     return wa_names
 
 
-def generate_work_area_dict(workarea_list: list | None) -> dict[int, str] | None:
+def generate_work_area_dict(
+    workarea_list: Mapping[Any, Any] | None,
+) -> dict[int, str] | None:
     """Return a dict of names extracted from each work area dictionary."""
     if workarea_list is None:
         return None
@@ -111,3 +120,6 @@ class MowerList(DataClassDictMixin):
     """DataClass for a list of all mowers."""
 
     data: list[MowerData]
+
+
+MowerDictionary = dict[str, MowerAttributes]
