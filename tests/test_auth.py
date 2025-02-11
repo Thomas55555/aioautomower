@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from unittest.mock import Mock
 import pytest
 from aioresponses import aioresponses
-from aiohttp import ClientResponseError, RequestInfo, ClientError, ClientResponseError
+from aiohttp import ClientResponseError, RequestInfo, ClientError
 from multidict import CIMultiDict
 from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from aioautomower.exceptions import (
@@ -15,7 +15,8 @@ from aioautomower.exceptions import (
     ApiUnauthorizedError,
 )
 from aioautomower.session import AutomowerEndpoint, AutomowerSession
-
+from yarl import URL
+from multidict import CIMultiDictProxy
 from . import load_fixture_json, setup_connection
 from .const import MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS
 
@@ -70,24 +71,30 @@ async def test_get_status_402(
     ):
         await automower_client.get_status()
 
+
 async def test_get_status_with_error_handling(
     responses: aioresponses,
     automower_client: AutomowerSession,
     jwt_token: str,
 ):
     """Test get status with error handling code covered."""
-    
+
     # Mock eine ClientResponseError (dies deckt den ersten Teil ab, wo detail.append(err.message) ausgeführt wird)
+
     request_info = RequestInfo(
-        url=f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        url=URL(f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"),
         method="GET",
-        headers={
-            "Authorization": f"Bearer {jwt_token}",
-            "Authorization-Provider": "husqvarna",
-            "Content-Type": "application/vnd.api+json",
-            "X-Api-Key": "433e5fdf-5129-452c-xxxx-fadce3213042",
-        },
-        real_url=f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        headers=CIMultiDictProxy(
+            CIMultiDict(
+                {
+                    "Authorization": f"Bearer {jwt_token}",
+                    "Authorization-Provider": "husqvarna",
+                    "Content-Type": "application/vnd.api+json",
+                    "X-Api-Key": "433e5fdf-5129-452c-xxxx-fadce3213042",
+                }
+            )
+        ),
+        real_url=URL(f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"),
     )
 
     # Simuliere ClientResponseError mit einer Nachricht
@@ -95,7 +102,7 @@ async def test_get_status_with_error_handling(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
         exception=ClientResponseError(
             request_info=request_info,
-            history=[],
+            history=(),
             status=400,
             message="Bad Request",
         ),
