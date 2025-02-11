@@ -8,9 +8,6 @@ from typing import TYPE_CHECKING, Any
 
 from mashumaro import DataClassDictMixin, field_options
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
 from .model_battery import Battery  # noqa:TC001
 from .model_calendar import Tasks  # noqa:TC001
 from .model_capabilities import Capabilities  # noqa:TC001
@@ -23,6 +20,10 @@ from .model_statistics import Statistics  # noqa:TC001
 from .model_stay_out_zones import StayOutZones  # noqa:TC001
 from .model_system import System  # noqa:TC001
 from .model_work_areas import WorkArea
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 
 _LOGGER = logging.getLogger(__name__)
 
