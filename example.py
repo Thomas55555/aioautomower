@@ -102,7 +102,7 @@ async def main() -> None:
         print("program_event5", next(cursor2, None))
 
         # Uncomment one or more lines below to send this command to all the mowers
-        await automower_api.commands.set_datetime(mower_id, datetime.datetime.now())
+        # await automower_api.commands.set_datetime(mower_id, datetime.datetime.now())
         # await automower_api.commands.park_until_next_schedule(mower_id)
         # await automower_api.commands.park_until_further_notice(mower_id)
         # await automower_api.commands.resume_schedule(mower_id)
