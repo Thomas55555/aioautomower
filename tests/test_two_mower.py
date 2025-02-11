@@ -1,7 +1,7 @@
 """Tests for two mowers in aioautomower."""
 
 from typing import TYPE_CHECKING
-
+import pytest
 from aiohttp import WSMessage, WSMsgType
 
 from aioautomower.auth import AbstractAuth
