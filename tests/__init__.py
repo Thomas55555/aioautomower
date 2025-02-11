@@ -8,7 +8,7 @@ import json
 import zoneinfo
 from pathlib import Path
 from typing import Any
-
+import pytest
 from aioresponses import aioresponses
 
 from aioautomower.const import API_BASE_URL
@@ -31,6 +31,7 @@ def load_fixture_json(filename: str) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.benchmark
 async def setup_connection(
     responses: aioresponses,
     automower_client: AutomowerSession,

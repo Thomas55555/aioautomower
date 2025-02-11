@@ -44,6 +44,7 @@ async def test_connect_disconnect(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.benchmark
 @time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
 async def test_post_commands(
     mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
@@ -307,6 +308,7 @@ async def test_post_commands(
         assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.benchmark
 async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
     """Test automower session patch commands."""
     automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
