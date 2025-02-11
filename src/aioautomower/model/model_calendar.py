@@ -111,7 +111,7 @@ class AutomowerCalendarEvent:
     start: datetime
     duration: timedelta
     uid: str
-    day_set: set
+    day_set: set[DayOfWeek]
 
 
 class ConvertScheduleToCalendar:
@@ -154,10 +154,14 @@ class ConvertScheduleToCalendar:
                     return self.now + timedelta(days=days)
         return self.now
 
-    def make_dayset(self) -> set[DayOfWeek | None]:
+    def make_dayset(self) -> set[DayOfWeek]:
         """Generate a set of days from a task."""
         return {
-            WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+            day
+            for day in (
+                WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+            )
+            if day is not None
         }
 
     def make_event(self) -> AutomowerCalendarEvent:
