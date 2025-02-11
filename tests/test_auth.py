@@ -2,12 +2,14 @@
 
 import zoneinfo
 from unittest.mock import AsyncMock, patch
-
+from unittest.mock import Mock
 import pytest
 from aioresponses import aioresponses
-
+from aiohttp import ClientResponseError, RequestInfo, ClientError, ClientResponseError
+from multidict import CIMultiDict
 from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from aioautomower.exceptions import (
+    ApiError,
     ApiBadRequestError,
     ApiForbiddenError,
     ApiUnauthorizedError,
@@ -66,6 +68,51 @@ async def test_get_status_402(
         ApiForbiddenError,
         match="403, message='Forbidden', url='https://api.amc.husqvarna.dev/v1/mowers/'",
     ):
+        await automower_client.get_status()
+
+async def test_get_status_with_error_handling(
+    responses: aioresponses,
+    automower_client: AutomowerSession,
+    jwt_token: str,
+):
+    """Test get status with error handling code covered."""
+    
+    # Mock eine ClientResponseError (dies deckt den ersten Teil ab, wo detail.append(err.message) ausgeführt wird)
+    request_info = RequestInfo(
+        url=f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        method="GET",
+        headers={
+            "Authorization": f"Bearer {jwt_token}",
+            "Authorization-Provider": "husqvarna",
+            "Content-Type": "application/vnd.api+json",
+            "X-Api-Key": "433e5fdf-5129-452c-xxxx-fadce3213042",
+        },
+        real_url=f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+    )
+
+    # Simuliere ClientResponseError mit einer Nachricht
+    responses.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        exception=ClientResponseError(
+            request_info=request_info,
+            history=[],
+            status=400,
+            message="Bad Request",
+        ),
+    )
+
+    # Test, ob ApiError geworfen wird, wenn der Fehler in detail gespeichert wird
+    with pytest.raises(ApiError, match="Bad Request"):
+        await automower_client.get_status()
+
+    # Simuliere ClientError, um den ClientError Block abzudecken
+    responses.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        exception=ClientError("Client error occurred"),
+    )
+
+    # Test, ob ApiError geworfen wird, wenn der Fehler im ClientError Block gefangen wird
+    with pytest.raises(ApiError, match="Client error occurred"):
         await automower_client.get_status()
 
 
