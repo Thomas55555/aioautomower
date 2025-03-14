@@ -75,6 +75,7 @@
 # name: test_mower_snapshot[statistics]
   dict({
     'cutting_blade_usage_time': None,
+    'downtime': None,
     'number_of_charging_cycles': None,
     'number_of_collisions': None,
     'total_charging_time': None,
@@ -82,6 +83,7 @@
     'total_drive_distance': None,
     'total_running_time': None,
     'total_searching_time': None,
+    'uptime': None,
   })
 # ---
 # name: test_mower_snapshot[stay_out_zones]
