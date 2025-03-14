@@ -83,6 +83,7 @@ class StatisticsAttributes(TypedDict):
     """Represents mower statistics."""
 
     cuttingBladeUsageTime: int
+    downTime: int
     numberOfChargingCycles: int
     numberOfCollisions: int
     totalChargingTime: int
@@ -90,6 +91,7 @@ class StatisticsAttributes(TypedDict):
     totalDriveDistance: int
     totalRunningTime: int
     totalSearchingTime: int
+    upTime: int
 
 
 class StayOutZone(TypedDict):
