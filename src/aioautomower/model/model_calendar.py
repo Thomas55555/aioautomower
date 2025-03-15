@@ -188,10 +188,6 @@ class Tasks(DataClassDictMixin):
 
     tasks: list[Calendar]
 
-    def __post_init__(self) -> None:
-        """Initialize the schedule number dictionary."""
-        self.schedule_no: dict[int, int] = {}
-
     @property
     def timeline(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
@@ -199,22 +195,22 @@ class Tasks(DataClassDictMixin):
 
     def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
+        schedule_no: dict[int, int] = {}
         for task in self.tasks:
-            if task.work_area_id is not None:
-                self.schedule_no.setdefault(task.work_area_id, 0)
-            else:
-                self.schedule_no.setdefault(-1, 0)
+            key = task.work_area_id if task.work_area_id is not None else -1
+            schedule_no.setdefault(key, 0)
 
         iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
         for task in self.tasks:
             event = ConvertScheduleToCalendar(task).make_event()
-            number = self.generate_schedule_no(task)
+            number = self.generate_schedule_no(task, schedule_no)
 
-            if len(event.day_set) == 7:
-                freq = ProgramFrequency.DAILY
-            else:
-                freq = ProgramFrequency.WEEKLY
+            freq = (
+                ProgramFrequency.DAILY
+                if len(event.day_set) == 7
+                else ProgramFrequency.WEEKLY
+            )
 
             iters.append(
                 create_recurrence(
@@ -229,13 +225,11 @@ class Tasks(DataClassDictMixin):
 
         return ProgramTimeline(MergedIterable(iters))
 
-    def generate_schedule_no(self, task: Calendar) -> int:
+    def generate_schedule_no(self, task: Calendar, schedule_no: dict[int, int]) -> int:
         """Return a schedule number."""
-        if task.work_area_id is not None:
-            self.schedule_no[task.work_area_id] += 1
-            return self.schedule_no[task.work_area_id]
-        self.schedule_no[-1] += 1
-        return self.schedule_no[-1]
+        key = task.work_area_id if task.work_area_id is not None else -1
+        schedule_no[key] += 1
+        return schedule_no[key]
 
 
 def make_name_string(work_area_name: str | None, number: int) -> str:
