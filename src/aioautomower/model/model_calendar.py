@@ -187,6 +187,7 @@ class Tasks(DataClassDictMixin):
     """DataClass for Task values."""
 
     tasks: list[Calendar]
+    schedule_no: dict[int, int] = field(init=False, default_factory=dict)
 
     def __post_init__(self) -> None:
         """Initialize the schedule number dictionary."""
@@ -199,6 +200,7 @@ class Tasks(DataClassDictMixin):
 
     def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
+        self.schedule_no.clear()
         for task in self.tasks:
             if task.work_area_id is not None:
                 self.schedule_no.setdefault(task.work_area_id, 0)
