@@ -367,6 +367,40 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             },
         )
 
+        await automower_api.commands.workarea_settings(MOWER_ID, 123456, enabled=False)
+        assert mocked_method.call_count == 4
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/workAreas/123456",
+            json={
+                "data": {
+                    "type": "workArea",
+                    "id": 123456,
+                    "attributes": {
+                        "cuttingHeight": 50,
+                        "enable": False,
+                    },
+                }
+            },
+        )
+
+        await automower_api.commands.workarea_settings(
+            MOWER_ID, 123456, cutting_height=40
+        )
+        assert mocked_method.call_count == 5
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/workAreas/123456",
+            json={
+                "data": {
+                    "type": "workArea",
+                    "id": 123456,
+                    "attributes": {
+                        "cuttingHeight": 40,
+                        "enable": True,
+                    },
+                }
+            },
+        )
+
         with pytest.raises(
             FeatureNotSupportedError,
             match="This mower does not support this command.",

@@ -216,13 +216,22 @@ class _MowerCommands:
         if TYPE_CHECKING:
             assert current_mower is not None
         current_work_area = current_mower[work_area_id]
+        effective_cutting_height = (
+            cutting_height
+            if cutting_height is not None
+            else current_work_area.cutting_height
+        )
+        effective_enabled = (
+            enabled if enabled is not None else current_work_area.enabled
+        )
+
         body = {
             "data": {
                 "type": "workArea",
                 "id": work_area_id,
                 "attributes": {
-                    "cuttingHeight": cutting_height or current_work_area.cutting_height,
-                    "enable": enabled or current_work_area.enabled,
+                    "cuttingHeight": effective_cutting_height,
+                    "enable": effective_enabled,
                 },
             }
         }
@@ -511,7 +520,7 @@ class AutomowerSession:
                 return
         mower_attributes = mower["attributes"]
         # General handling for other attributes
-        self._update_nested_dict(cast(dict[str, Any], mower_attributes), attributes)
+        self._update_nested_dict(cast("dict[str, Any]", mower_attributes), attributes)
 
     def _handle_cutting_height_event(
         self, mower: MowerDataItem, attributes: CuttingHeightAttributes
