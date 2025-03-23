@@ -54,7 +54,7 @@ async def async_get_access_token(client_id: str, client_secret: str) -> dict[str
                     Husqvarna Automower API: {result}"""
             raise ApiError(msg)
     result["status"] = resp.status
-    return cast(dict[str, str], result)
+    return cast("dict[str, str]", result)
 
 
 async def async_invalidate_access_token(
@@ -82,7 +82,7 @@ async def async_invalidate_access_token(
         if resp.status >= 400:
             resp.raise_for_status()
             _LOGGER.error("Response body delete token: %s", result)
-    return cast(dict[str, str], result)
+    return cast("dict[str, str]", result)
 
 
 def mower_list_to_dictionary_dataclass(

@@ -185,7 +185,7 @@ class _MowerCommands:
         Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in
         the local time of the mower.
         """
-        current_time = current_time or datetime.datetime.now()  # noqa: DTZ005
+        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
         body = {
             "data": {
                 "type": "settings",
@@ -511,7 +511,7 @@ class AutomowerSession:
                 return
         mower_attributes = mower["attributes"]
         # General handling for other attributes
-        self._update_nested_dict(cast(dict[str, Any], mower_attributes), attributes)
+        self._update_nested_dict(cast("dict[str, Any]", mower_attributes), attributes)
 
     def _handle_cutting_height_event(
         self, mower: MowerDataItem, attributes: CuttingHeightAttributes
