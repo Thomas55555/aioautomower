@@ -295,7 +295,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
                 "1234", "vallhala", switch=True
             )
 
-        await automower_api.commands.workarea_settings(MOWER_ID, 0, 9)
+        await automower_api.commands.workarea_settings(MOWER_ID, 0, cutting_height=9)
         assert mocked_method.call_count == 2
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/0",
@@ -365,7 +365,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             FeatureNotSupportedError,
             match="This mower does not support this command.",
         ):
-            await automower_api.commands.workarea_settings("1234", 50, 0)
+            await automower_api.commands.workarea_settings("1234", 0, cutting_height=50)
 
         mocked_method.reset_mock()
         await automower_api.close()

@@ -205,6 +205,7 @@ class _MowerCommands:
         self,
         mower_id: str,
         work_area_id: int,
+        *,
         cutting_height: int | None = None,
         enabled: bool | None = None,
     ) -> None:
