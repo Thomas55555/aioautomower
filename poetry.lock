@@ -456,13 +456,13 @@ files = [
 
 [[package]]
 name = "ical"
-version = "9.0.1"
+version = "9.0.2"
 description = "Python iCalendar implementation (rfc 2445)"
 optional = false
 python-versions = ">=3.11"
 files = [
-    {file = "ical-9.0.1-py3-none-any.whl", hash = "sha256:c3eb5588d4ec901cacacdcc4fa00f22e7393fbe9a9bbce9dd896885b82d2ba8f"},
-    {file = "ical-9.0.1.tar.gz", hash = "sha256:7c06b1bf99ca6c51b6febc497af2c94e3bab1c89aa9ab38950ab0828856651d5"},
+    {file = "ical-9.0.2-py3-none-any.whl", hash = "sha256:6ce2cd279f4e7d22d3855cea34d9ed5d49debb4e79975fc094ee361dceb54393"},
+    {file = "ical-9.0.2.tar.gz", hash = "sha256:0f6e359d4b4628ecd2abe7a1e6655d46a11bd231c65552d638a7177e736c5230"},
 ]
 
 [package.dependencies]
