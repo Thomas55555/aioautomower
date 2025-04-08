@@ -201,6 +201,30 @@ class _MowerCommands:
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
+    async def set_datetime_new(
+        self, mower_id: str, current_time: datetime.datetime | None = None
+    ) -> None:
+        """Set the datetime of the mower.
+
+        If the current has not tz_info, the mower_tz will be used as tz_info.
+        """
+        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
+        if current_time.tzinfo is None:
+            current_time = current_time.replace(tzinfo=self.mower_tz)
+        body = {
+            "data": {
+                "type": "settings",
+                "attributes": {
+                    "timer": {
+                        "dateTime": int(current_time.timestamp()),
+                        "timeZone": str(self.mower_tz),
+                    },
+                },
+            }
+        }
+        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
+        await self.auth.post_json(url, json=body)
+
     async def workarea_settings(
         self,
         mower_id: str,
