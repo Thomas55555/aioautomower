@@ -94,12 +94,12 @@ async def main() -> None:
 
         cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
 
-        # print("cursor2", next(cursor2, None))
-        # print("program_event1", next(cursor2, None))
-        # print("program_event2", next(cursor2, None))
-        # print("program_event3", next(cursor2, None))
-        # print("program_event4", next(cursor2, None))
-        # print("program_event5", next(cursor2, None))
+        print("cursor2", next(cursor2, None))
+        print("program_event1", next(cursor2, None))
+        print("program_event2", next(cursor2, None))
+        print("program_event3", next(cursor2, None))
+        print("program_event4", next(cursor2, None))
+        print("program_event5", next(cursor2, None))
 
         # Uncomment one or more lines below to send this command to all the mowers
         # await automower_api.commands.set_datetime(mower_id, datetime.datetime.now())
@@ -109,9 +109,6 @@ async def main() -> None:
         # await automower_api.commands.pause_mowing(mower_id)
         # await automower_api.commands.start_in_workarea(
         #     mower_id, 0, datetime.timedelta(minutes=30)
-        # )
-        # await automower_api.commands.set_datetime(
-        #     "c0f400c6-e933-4215-831a-0dea58427df6", datetime.datetime(2025, 4, 9, 12, 0)
         # )
 
     await asyncio.sleep(3000)
