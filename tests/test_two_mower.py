@@ -23,7 +23,7 @@ async def test_two_mower(mock_automower_client_two_mowers: AbstractAuth) -> None
         b'{"id": "1234", "type": "battery-event-v2", "attributes": {"battery": {"batteryPercent": "99"}}}',
         None,
     )
-    automower_api._handle_text_message(msg2)  # noqa: SLF001
+    await automower_api._handle_text_message(msg2)  # noqa: SLF001
     assert automower_api.data[MOWER1_ID].battery.battery_percent == 100
     assert automower_api.data[MOWER2_ID].battery.battery_percent == 99
     msg1 = WSMessage(
@@ -31,7 +31,7 @@ async def test_two_mower(mock_automower_client_two_mowers: AbstractAuth) -> None
         b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "battery-event-v2", "attributes": {"battery": {"batteryPercent": "50"}}}',
         None,
     )
-    automower_api._handle_text_message(msg1)  # noqa: SLF001
+    await automower_api._handle_text_message(msg1)  # noqa: SLF001
     assert automower_api.data[MOWER1_ID].battery.battery_percent == 50
     assert automower_api.data[MOWER2_ID].battery.battery_percent == 99
 

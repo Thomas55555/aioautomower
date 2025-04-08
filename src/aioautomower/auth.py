@@ -31,6 +31,7 @@ STATUS = "status"
 MESSAGE = "message"
 
 _LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class AbstractAuth(ABC):

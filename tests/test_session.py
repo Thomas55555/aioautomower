@@ -380,7 +380,7 @@ async def test_battery_event(mock_automower_client: AbstractAuth):
     await automower_api.connect()
 
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/battery_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].battery.battery_percent == 77
 
     await automower_api.close()
@@ -397,7 +397,7 @@ async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
     msg = WSMessage(
         WSMsgType.TEXT, load_fixture("events/calendar_event_work_area.json"), None
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=time(hour=12),
@@ -427,7 +427,7 @@ async def test_cutting_height_event(mock_automower_client: AbstractAuth):
     msg = WSMessage(
         WSMsgType.TEXT, load_fixture("events/cutting_height_event.json"), None
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
     await automower_api.close()
@@ -445,7 +445,7 @@ async def test_headlights_event(mock_automower_client: AbstractAuth):
         == HeadlightModes.EVENING_ONLY
     )
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/headlights_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert (
         automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
     )
@@ -464,7 +464,7 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
         b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "mower-event-v2", "attributes": {"mower": {"mode": "DEMO"}}}',
         None,
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
 
     await automower_api.close()
@@ -494,7 +494,7 @@ async def test_single_planner_event(
         b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "planner-event-v2", "attributes": {"planner": {"restrictedReason": "ALL_WORK_AREAS_COMPLETED"}}}',
         None,
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
@@ -526,7 +526,7 @@ async def test_full_planner_event(
         == RestrictedReasons.WEEK_SCHEDULE
     )
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/planner_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.FORCE_MOW
     assert (
@@ -548,7 +548,7 @@ async def test_position_event(mock_automower_client: AbstractAuth):
         35.5402913, -82.5527055
     )
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/position_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     await automower_api.close()
     if TYPE_CHECKING:
