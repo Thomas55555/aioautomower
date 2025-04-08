@@ -209,31 +209,29 @@ class _MowerCommands:
         cutting_height: int | None = None,
         enabled: bool | None = None,
     ) -> None:
-        """Set the stettings for for a specific work area."""
+        """Set the settings for a specific work area.
+
+        Only parameters that are explicitly provided will be updated.
+        """
         if not self.data[mower_id].capabilities.work_areas:
             msg = "This mower does not support this command."
             raise FeatureNotSupportedError(msg)
-        current_mower = self.data[mower_id].work_areas
-        if TYPE_CHECKING:
-            assert current_mower is not None
-        current_work_area = current_mower[work_area_id]
-        effective_cutting_height = (
-            cutting_height
-            if cutting_height is not None
-            else current_work_area.cutting_height
-        )
-        effective_enabled = (
-            enabled if enabled is not None else current_work_area.enabled
-        )
+
+        attributes: dict[str, int | bool] = {}
+        if cutting_height is not None:
+            attributes["cuttingHeight"] = cutting_height
+        if enabled is not None:
+            attributes["enable"] = enabled
+
+        if not attributes:
+            msg = "Missing attribute."
+            raise ValueError(msg)
 
         body = {
             "data": {
                 "type": "workArea",
                 "id": work_area_id,
-                "attributes": {
-                    "cuttingHeight": effective_cutting_height,
-                    "enable": effective_enabled,
-                },
+                "attributes": attributes,
             }
         }
         url = AutomowerEndpoint.work_area_cutting_height.format(
