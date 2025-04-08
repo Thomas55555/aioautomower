@@ -454,7 +454,6 @@ class AutomowerSession:
         """
         self._schedule_data_callbacks()
         await self.get_status()
-        self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
 
         if self.poll:
@@ -520,6 +519,7 @@ class AutomowerSession:
         )
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        self.current_mowers = set(self.data.keys())
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
