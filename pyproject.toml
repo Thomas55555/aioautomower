@@ -388,6 +388,9 @@ enable = [
 # results.
 platform = "linux"
 python_version = "3.11"
+strict = true
+namespace_packages = true
+mypy_path = "src"
 
 # show error messages from unrelated files
 follow_imports = "normal"
