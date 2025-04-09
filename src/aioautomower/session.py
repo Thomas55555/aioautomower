@@ -383,6 +383,7 @@ class AutomowerSession:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task[None] | None = None
+        self.current_mowers: set[str] = set()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -457,18 +458,23 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    def _handle_text_message(self, msg: WSMessage) -> None:
+    async def _handle_text_message(self, msg: WSMessage) -> None:
         """Process a text message to data."""
         if not msg.data:
             self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
             _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
             self._schedule_pong_callbacks()
         if msg.data:
-            msg_dict = msg.json()
+            msg_dict: GenericEventData = msg.json()
             if "type" in msg_dict:
                 if msg_dict["type"] in set(EVENT_TYPES):
                     _LOGGER.debug("Received websocket V1 type %s", msg_dict["type"])
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
+                    _LOGGER.debug("Received websocket message %s", msg_dict)
+                    if msg_dict["id"] not in self.current_mowers:
+                        _LOGGER.debug("New mower detected %s", msg_dict["id"])
+                        self.current_mowers.add(msg_dict["id"])
+                        await self.get_status()
                     self._update_data(msg_dict)
                 else:
                     _LOGGER.debug("Received unknown ws type %s", msg_dict["type"])
@@ -491,7 +497,7 @@ class AutomowerSession:
                 ):
                     break
                 if msg.type == WSMsgType.TEXT:
-                    self._handle_text_message(msg)
+                    await self._handle_text_message(msg)
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:
@@ -511,6 +517,8 @@ class AutomowerSession:
         )
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        self.current_mowers = set(self.data.keys())
+        _LOGGER.debug("current_mowers: %s", self.current_mowers)
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
