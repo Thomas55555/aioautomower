@@ -1,6 +1,6 @@
 {
   "id": "c7233734-b219-4287-a173-08e3643f89f0",
-  "type": "headLights-event-v2",
+  "type": "headlights-event-v2",
   "attributes": {
     "headLight": {
       "mode": "ALWAYS_ON"
