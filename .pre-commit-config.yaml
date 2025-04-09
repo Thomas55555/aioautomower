@@ -93,8 +93,6 @@ repos:
         entry: poetry run mypy --explicit-package-bases -p aioautomower
         require_serial: true
         pass_filenames: false
-        env:
-          MYPYPATH: src
       - id: no-commit-to-branch
         name: 🛑 Don't commit to main branch
         language: system

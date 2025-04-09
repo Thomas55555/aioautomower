@@ -86,20 +86,20 @@ async def main() -> None:
     for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
         print("next start:", mower_data.planner.next_start_datetime)
 
-        cursor = mower_data.calendar.timeline.overlapping(
-            datetime.datetime.now(),
-            datetime.datetime.now() + datetime.timedelta(weeks=1),
-        )
-        print("cursor", cursor)
+        # cursor = mower_data.calendar.timeline.overlapping(
+        #     datetime.datetime.now(),
+        #     datetime.datetime.now() + datetime.timedelta(weeks=1),
+        # )
+        # print("cursor", cursor)
 
-        cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
+        # cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
 
-        print("cursor2", next(cursor2, None))
-        print("program_event1", next(cursor2, None))
-        print("program_event2", next(cursor2, None))
-        print("program_event3", next(cursor2, None))
-        print("program_event4", next(cursor2, None))
-        print("program_event5", next(cursor2, None))
+        # print("cursor2", next(cursor2, None))
+        # print("program_event1", next(cursor2, None))
+        # print("program_event2", next(cursor2, None))
+        # print("program_event3", next(cursor2, None))
+        # print("program_event4", next(cursor2, None))
+        # print("program_event5", next(cursor2, None))
 
         # Uncomment one or more lines below to send this command to all the mowers
         # await automower_api.commands.set_datetime(mower_id, datetime.datetime.now())
@@ -122,7 +122,7 @@ async def main() -> None:
 def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_data in ws_data.values():
-        pprint(mower_data)
+        pprint(mower_data.battery)
 
 
 def pong_callback(ws_data: datetime.datetime):
