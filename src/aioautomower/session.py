@@ -209,14 +209,16 @@ class _MowerCommands:
         If the current has not tz_info, the mower_tz will be used as tz_info.
         """
         current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
-        if current_time.tzinfo is None:
-            current_time = current_time.replace(tzinfo=self.mower_tz)
         body = {
             "data": {
                 "type": "settings",
                 "attributes": {
                     "timer": {
-                        "dateTime": int(current_time.timestamp()),
+                        "dateTime": int(
+                            current_time.astimezone(self.mower_tz)
+                            .replace(tzinfo=datetime.UTC)
+                            .timestamp()
+                        ),
                         "timeZone": str(self.mower_tz),
                     },
                 },
