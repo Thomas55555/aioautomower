@@ -29,7 +29,7 @@ class EventTypesV2(StrEnum):
     BATTERY = "battery-event-v2"
     CALENDAR = "calendar-event-v2"
     CUTTING_HEIGHT = "cuttingHeight-event-v2"
-    HEADLIGHTS = "headLights-event-v2"
+    HEADLIGHTS = "headlights-event-v2"
     MESSAGES = "message-event-v2"
     MOWER = "mower-event-v2"
     PLANNER = "planner-event-v2"
