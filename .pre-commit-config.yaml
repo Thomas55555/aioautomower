@@ -90,9 +90,11 @@ repos:
         name: 🆎 Static type checking using mypy
         language: system
         types: [python]
-        entry: poetry run mypy
+        entry: poetry run mypy --explicit-package-bases -p aioautomower
         require_serial: true
-        exclude: ^tests/
+        pass_filenames: false
+        env:
+          MYPYPATH: src
       - id: no-commit-to-branch
         name: 🛑 Don't commit to main branch
         language: system
