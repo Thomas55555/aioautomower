@@ -8,8 +8,6 @@ import zoneinfo
 from aioautomower.auth import AbstractAuth
 from aioautomower.session import AutomowerSession
 import asyncio
-
-
 import contextlib
 
 MOWER1_ID = "c7233734-b219-4287-a173-08e3643f89f0"
