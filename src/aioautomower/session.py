@@ -84,6 +84,14 @@ class AutomowerEndpoint:
     settings = "mowers/{mower_id}/settings"
     "Update the settings on the mower."
 
+    reset_cutting_blade_usage_time = (
+        "mowers/{mower_id}/statistics/resetCuttingBladeUsageTime"
+    )
+    """Reset the cutting blade usage time. Same function that is available in the
+    Automower Connect app. The statistics value cuttingBladeUsageTime will be reset.
+    Can be used when cutting blades are changed on the Automower to know when its time
+    to the blades next time."""
+
     stay_out_zones = "mowers/{mower_id}/stayOutZones/{stay_out_id}"
     "Enable or disable the stay-out zone."
 
@@ -113,6 +121,16 @@ class _MowerCommands:
         self.auth = auth
         self.data = data
         self.mower_tz = mower_tz
+
+    async def reset_cutting_blade_usage_time(self, mower_id: str) -> None:
+        """Reset the cutting blade usage time.
+
+        Same function that is available in the Automower Connect app. The statistics
+        value cuttingBladeUsageTime will be reset. Can be used when cutting blades are
+        changed on the Automower to know when its time to the blades next time.
+        """
+        url = AutomowerEndpoint.reset_cutting_blade_usage_time.format(mower_id=mower_id)
+        await self.auth.post_json(url)
 
     async def resume_schedule(self, mower_id: str) -> None:
         """Resume schedule.

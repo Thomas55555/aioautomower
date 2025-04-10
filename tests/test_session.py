@@ -88,6 +88,10 @@ async def test_post_commands(
                 }
             },
         )
+        await automower_api.commands.reset_cutting_blade_usage_time(MOWER_ID)
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/statistics/resetCuttingBladeUsageTime"
+        )
         await automower_api.commands.start_in_workarea(
             MOWER_ID, 0, timedelta(minutes=30)
         )
