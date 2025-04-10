@@ -348,9 +348,8 @@ class _MowerCommands:
         if not self.data[mower_id].capabilities.can_confirm_error:
             msg = "This mower does not support this command."
             raise FeatureNotSupportedError(msg)
-        body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        await self.auth.post_json(url)
 
 
 class AutomowerSession:
