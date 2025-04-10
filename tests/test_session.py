@@ -391,7 +391,7 @@ async def test_battery_event(mock_automower_client: AbstractAuth):
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].battery.battery_percent == 77
 
     await automower_api.close()
@@ -417,7 +417,7 @@ async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=time(hour=12),
@@ -456,7 +456,7 @@ async def test_cutting_height_event(mock_automower_client: AbstractAuth):
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
     await automower_api.close()
@@ -486,7 +486,7 @@ async def test_headlights_event(mock_automower_client: AbstractAuth):
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert (
         automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
     )
@@ -513,7 +513,7 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
 
     await automower_api.close()
@@ -551,7 +551,7 @@ async def test_single_planner_event(
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
@@ -595,7 +595,7 @@ async def test_full_planner_event(
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.FORCE_MOW
     assert (
@@ -629,7 +629,7 @@ async def test_position_event(mock_automower_client: AbstractAuth):
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     await automower_api.close()
     if TYPE_CHECKING:

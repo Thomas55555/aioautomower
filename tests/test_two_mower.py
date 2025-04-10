@@ -38,7 +38,7 @@ async def test_adding_mower(
     mock_automower_client.get_json.return_value = two_mower_data
     rest_task = asyncio.create_task(automower_api._rest_task())
     listening_task = asyncio.create_task(automower_api.start_listening())
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0)
     automower_api.auth.ws.closed = True
     await automower_api.close()
     assert len(automower_api.data) == 2, "Required mowers are not two."
