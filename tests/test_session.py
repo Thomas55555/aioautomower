@@ -237,7 +237,7 @@ async def test_post_commands(
         )
 
         await automower_api.commands.error_confirm(MOWER_ID)
-        mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
+        mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm")
         with pytest.raises(
             FeatureNotSupportedError,
             match="This mower does not support this command.",
