@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 import tzlocal
 from aiohttp import WSMessage, WSMsgType
-from colorlog import ColoredFormatter
 
 from .auth import AbstractAuth
 from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
@@ -21,6 +20,7 @@ from .exceptions import (
     NoDataAvailableError,
     WorkAreasDifferentError,
 )
+from .logging_config import setup_logging
 from .model import (
     HeadlightModes,
     MowerAttributes,
@@ -42,30 +42,9 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 HandlerType = Callable[[MowerDataItem, dict[str, Any]], None]
 
+
+setup_logging()
 _LOGGER = logging.getLogger(__name__)
-FORMAT_DATE = "%Y-%m-%d"
-FORMAT_TIME = "%H:%M:%S"
-FORMAT_DATETIME = f"{FORMAT_DATE} {FORMAT_TIME}"
-fmt = "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-
-log_handler = logging.StreamHandler()
-formatter = ColoredFormatter(
-    f"%(log_color)s{fmt}%(reset)s",
-    datefmt=FORMAT_DATETIME,
-    reset=True,
-    log_colors={
-        "DEBUG": "cyan",
-        "INFO": "green",
-        "WARNING": "yellow",
-        "ERROR": "red",
-        "CRITICAL": "red",
-    },
-)
-log_handler.setFormatter(formatter)
-
-# Füge den Handler zum Logger hinzu
-_LOGGER.addHandler(log_handler)
-_LOGGER.setLevel(logging.DEBUG)
 
 
 @dataclass
