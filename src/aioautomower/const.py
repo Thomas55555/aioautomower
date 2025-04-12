@@ -11,11 +11,6 @@ AUTH_HEADERS = {
     "Accept": "application/json",
 }
 AUTH_HEADER_FMT = "Bearer {}"
-EVENT_TYPES = [
-    "status-event",
-    "positions-event",
-    "settings-event",
-]
 HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
 REST_POLL_CYCLE = 300
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
