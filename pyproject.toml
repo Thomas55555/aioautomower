@@ -42,25 +42,26 @@ PyJWT = "^2.8.0"
 ical = ">=8.0.1"
 tzlocal = "^5.2"
 python-dateutil = "^2.9.0-post.0"
+colorlog = "^6.9.0"
 
 [tool.poetry.group.dev.dependencies]
 aioresponses = "0.7.8"
 codespell = "2.4.1"
 covdefaults = "2.3.0"
-coverage = {version = "7.6.12", extras = ["toml"]}
+coverage = {version = "7.8.0", extras = ["toml"]}
 mypy = "1.15.0"
-pre-commit = "4.1.0"
+pre-commit = "4.2.0"
 pre-commit-hooks = "5.0.0"
 pylint = "3.3.6"
 pytest = "8.3.5"
-pytest-asyncio = "0.25.3"
-pytest-cov = "6.0.0"
-ruff = "0.11.2"
-syrupy = "4.9.0"
+pytest-asyncio = "0.26.0"
+pytest-cov = "6.1.1"
+ruff = "0.11.4"
+syrupy = "4.9.1"
 time-machine = "2.16.0"
 types-python-dateutil = "^2.9.0.20240821"
 types-pyyaml = "^6.0.12.20241230"
-yamllint = "1.36.2"
+yamllint = "1.37.0"
 
 [tool.pytest.ini_options]
 addopts = "--cov=aioautomower --cov-report=term-missing -vv"
@@ -74,7 +75,7 @@ src = ["./src"]
 target-version = "py311"
 line-length = 88
 include = ["src/**/*.py"]
-exclude = ["tests"]
+
 
 [tool.ruff.lint]
 ignore = [
@@ -383,11 +384,11 @@ enable = [
 ]
 
 [tool.mypy]
-# Specify the target platform details in config, so your developers are
-# free to run mypy on Windows, Linux, or macOS and get consistent
-# results.
 platform = "linux"
 python_version = "3.11"
+strict = true
+namespace_packages = true
+mypy_path = "src"
 
 # show error messages from unrelated files
 follow_imports = "normal"

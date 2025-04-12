@@ -4,7 +4,7 @@ import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
-
+from aiohttp import ClientWebSocketResponse
 import pytest
 import time_machine
 import tzlocal
@@ -12,7 +12,7 @@ from aiohttp import (
     WSMessage,
     WSMsgType,
 )
-
+import asyncio
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
     FeatureNotSupportedError,
@@ -88,6 +88,10 @@ async def test_post_commands(
                 }
             },
         )
+        await automower_api.commands.reset_cutting_blade_usage_time(MOWER_ID)
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/statistics/resetCuttingBladeUsageTime"
+        )
         await automower_api.commands.start_in_workarea(
             MOWER_ID, 0, timedelta(minutes=30)
         )
@@ -156,6 +160,87 @@ async def test_post_commands(
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/settings",
             json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
+        )
+
+        # Test set_datetime_new with an aware datetime object in TZ UTC
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714816800,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new with an aware datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(
+                2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+            ),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new with a naive datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new without datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
         )
 
         await automower_api.commands.set_headlight_mode(
@@ -237,7 +322,7 @@ async def test_post_commands(
         )
 
         await automower_api.commands.error_confirm(MOWER_ID)
-        mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm", json={})
+        mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm")
         with pytest.raises(
             FeatureNotSupportedError,
             match="This mower does not support this command.",
@@ -374,9 +459,20 @@ async def test_battery_event(mock_automower_client: AbstractAuth):
     """Test automower websocket V2 battery update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/battery_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/battery_event.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
+    )
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].battery.battery_percent == 77
 
     await automower_api.close()
@@ -389,11 +485,20 @@ async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
     """Test automower websocket V2 calendar update with work area."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-
-    msg = WSMessage(
-        WSMsgType.TEXT, load_fixture("events/calendar_event_work_area.json"), None
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/calendar_event_work_area.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=time(hour=12),
@@ -419,11 +524,20 @@ async def test_cutting_height_event(mock_automower_client: AbstractAuth):
     """Test automower websocket V2 calendar update with work area."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-
-    msg = WSMessage(
-        WSMsgType.TEXT, load_fixture("events/cutting_height_event.json"), None
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/cutting_height_event.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
     await automower_api.close()
@@ -440,8 +554,20 @@ async def test_headlights_event(mock_automower_client: AbstractAuth):
         automower_api.data[MOWER_ID].settings.headlight.mode
         == HeadlightModes.EVENING_ONLY
     )
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/headlights_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/headlights_event.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
+    )
+    await asyncio.sleep(0)
     assert (
         automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
     )
@@ -455,12 +581,20 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
     """Test automower websocket V2 mower event update with just one change."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
-    msg = WSMessage(
-        WSMsgType.TEXT,
-        b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "mower-event-v2", "attributes": {"mower": {"mode": "DEMO"}}}',
-        None,
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "mower-event-v2", "attributes": {"mower": {"mode": "DEMO"}}}',
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
 
     await automower_api.close()
@@ -485,12 +619,20 @@ async def test_single_planner_event(
         automower_api.data[MOWER_ID].planner.restricted_reason
         == RestrictedReasons.WEEK_SCHEDULE
     )
-    msg = WSMessage(
-        WSMsgType.TEXT,
-        b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "planner-event-v2", "attributes": {"planner": {"restrictedReason": "ALL_WORK_AREAS_COMPLETED"}}}',
-        None,
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "planner-event-v2", "attributes": {"planner": {"restrictedReason": "ALL_WORK_AREAS_COMPLETED"}}}',
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
     )
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
@@ -521,8 +663,20 @@ async def test_full_planner_event(
         automower_api.data[MOWER_ID].planner.restricted_reason
         == RestrictedReasons.WEEK_SCHEDULE
     )
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/planner_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/planner_event.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
+    )
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.FORCE_MOW
     assert (
@@ -543,8 +697,20 @@ async def test_position_event(mock_automower_client: AbstractAuth):
     assert automower_api.data[MOWER_ID].positions[0] == Positions(
         35.5402913, -82.5527055
     )
-    msg = WSMessage(WSMsgType.TEXT, load_fixture("events/position_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/position_event.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
+    )
+    await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     await automower_api.close()
     if TYPE_CHECKING:

@@ -11,11 +11,6 @@ AUTH_HEADERS = {
     "Accept": "application/json",
 }
 AUTH_HEADER_FMT = "Bearer {}"
-EVENT_TYPES = [
-    "status-event",
-    "positions-event",
-    "settings-event",
-]
 HUSQVARNA_URL = "https://developer.husqvarnagroup.cloud/"
 REST_POLL_CYCLE = 300
 TOKEN_URL = f"{AUTH_API_BASE_URL}/token"
@@ -29,7 +24,7 @@ class EventTypesV2(StrEnum):
     BATTERY = "battery-event-v2"
     CALENDAR = "calendar-event-v2"
     CUTTING_HEIGHT = "cuttingHeight-event-v2"
-    HEADLIGHTS = "headLights-event-v2"
+    HEADLIGHTS = "headlights-event-v2"
     MESSAGES = "message-event-v2"
     MOWER = "mower-event-v2"
     PLANNER = "planner-event-v2"
