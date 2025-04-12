@@ -48,19 +48,6 @@ class AbstractAuth(ABC):
     @abstractmethod
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        json = (
-            {
-                "data": {
-                    "type": "settings",
-                    "attributes": {
-                        "timer": {
-                            "dateTime": 1714816800,
-                            "timeZone": "Europe/Berlin",
-                        },
-                    },
-                }
-            },
-        )
 
     async def request(self, method: str, url: str, **kwargs: Any) -> ClientResponse:
         """Make a request."""
