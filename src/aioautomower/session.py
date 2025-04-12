@@ -13,7 +13,7 @@ import tzlocal
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
-from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
+from .const import REST_POLL_CYCLE, EventTypesV2
 from .exceptions import (
     FeatureNotSupportedError,
     HusqvarnaTimeoutError,
@@ -463,8 +463,6 @@ class AutomowerSession:
         if msg.data:
             msg_dict: GenericEventData = msg.json()
             if "type" in msg_dict:
-                if msg_dict["type"] in set(EVENT_TYPES):
-                    _LOGGER.debug("Received websocket V1 type %s", msg_dict["type"])
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
                     _LOGGER.debug("Received websocket message %s", msg_dict)
                     if msg_dict["id"] not in self.current_mowers:
