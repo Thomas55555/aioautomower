@@ -98,7 +98,7 @@ async def test_daily_schedule(
     await automower_api.connect()
     # Test event of other mower doesn't overwrite the data
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/calendar_event.json"), None)
-    automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)  # noqa: SLF001
 
     mower_timeline = automower_api.data["1234"].calendar.timeline
     cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))

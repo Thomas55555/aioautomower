@@ -13,13 +13,14 @@ import tzlocal
 from aiohttp import WSMessage, WSMsgType
 
 from .auth import AbstractAuth
-from .const import EVENT_TYPES, REST_POLL_CYCLE, EventTypesV2
+from .const import REST_POLL_CYCLE, EventTypesV2
 from .exceptions import (
     FeatureNotSupportedError,
     HusqvarnaTimeoutError,
     NoDataAvailableError,
     WorkAreasDifferentError,
 )
+from .logging_config import setup_logging
 from .model import (
     HeadlightModes,
     MowerAttributes,
@@ -38,10 +39,12 @@ from .utils import mower_list_to_dictionary_dataclass, timedelta_to_minutes
 if TYPE_CHECKING:
     from .model import Calendar
 
-_LOGGER = logging.getLogger(__name__)
-
 T = TypeVar("T")
 HandlerType = Callable[[MowerDataItem, dict[str, Any]], None]
+
+
+setup_logging()
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -59,6 +62,14 @@ class AutomowerEndpoint:
 
     settings = "mowers/{mower_id}/settings"
     "Update the settings on the mower."
+
+    reset_cutting_blade_usage_time = (
+        "mowers/{mower_id}/statistics/resetCuttingBladeUsageTime"
+    )
+    """Reset the cutting blade usage time. Same function that is available in the
+    Automower Connect app. The statistics value cuttingBladeUsageTime will be reset.
+    Can be used when cutting blades are changed on the Automower to know when its time
+    to the blades next time."""
 
     stay_out_zones = "mowers/{mower_id}/stayOutZones/{stay_out_id}"
     "Enable or disable the stay-out zone."
@@ -89,6 +100,16 @@ class _MowerCommands:
         self.auth = auth
         self.data = data
         self.mower_tz = mower_tz
+
+    async def reset_cutting_blade_usage_time(self, mower_id: str) -> None:
+        """Reset the cutting blade usage time.
+
+        Same function that is available in the Automower Connect app. The statistics
+        value cuttingBladeUsageTime will be reset. Can be used when cutting blades are
+        changed on the Automower to know when its time to the blades next time.
+        """
+        url = AutomowerEndpoint.reset_cutting_blade_usage_time.format(mower_id=mower_id)
+        await self.auth.post_json(url)
 
     async def resume_schedule(self, mower_id: str) -> None:
         """Resume schedule.
@@ -350,9 +371,8 @@ class _MowerCommands:
         if not self.data[mower_id].capabilities.can_confirm_error:
             msg = "This mower does not support this command."
             raise FeatureNotSupportedError(msg)
-        body = {}  # type: dict[str, str]
         url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
+        await self.auth.post_json(url)
 
 
 class AutomowerSession:
@@ -385,6 +405,7 @@ class AutomowerSession:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task[None] | None = None
+        self.current_mowers: set[str] = set()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -459,18 +480,21 @@ class AutomowerSession:
             await self.get_status()
             self.rest_task = asyncio.create_task(self._rest_task())
 
-    def _handle_text_message(self, msg: WSMessage) -> None:
+    async def _handle_text_message(self, msg: WSMessage) -> None:
         """Process a text message to data."""
         if not msg.data:
             self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
             _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
             self._schedule_pong_callbacks()
         if msg.data:
-            msg_dict = msg.json()
+            msg_dict: GenericEventData = msg.json()
             if "type" in msg_dict:
-                if msg_dict["type"] in set(EVENT_TYPES):
-                    _LOGGER.debug("Received websocket V1 type %s", msg_dict["type"])
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
+                    _LOGGER.debug("Received websocket message %s", msg_dict)
+                    if msg_dict["id"] not in self.current_mowers:
+                        _LOGGER.debug("New mower detected %s", msg_dict["id"])
+                        self.current_mowers.add(msg_dict["id"])
+                        await self.get_status()
                     self._update_data(msg_dict)
                 else:
                     _LOGGER.debug("Received unknown ws type %s", msg_dict["type"])
@@ -493,7 +517,7 @@ class AutomowerSession:
                 ):
                     break
                 if msg.type == WSMsgType.TEXT:
-                    self._handle_text_message(msg)
+                    await self._handle_text_message(msg)
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError as exc:
@@ -513,6 +537,8 @@ class AutomowerSession:
         )
         self._data = mower_list
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        self.current_mowers = set(self.data.keys())
+        _LOGGER.debug("current_mowers: %s", self.current_mowers)
         self.commands = _MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
