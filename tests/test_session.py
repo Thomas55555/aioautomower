@@ -162,6 +162,87 @@ async def test_post_commands(
             json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
         )
 
+        # Test set_datetime_new with an aware datetime object in TZ UTC
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714816800,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new with an aware datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(
+                2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+            ),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new with a naive datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new without datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
         await automower_api.commands.set_headlight_mode(
             MOWER_ID, HeadlightModes.ALWAYS_OFF
         )

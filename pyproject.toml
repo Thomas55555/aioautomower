@@ -75,7 +75,7 @@ src = ["./src"]
 target-version = "py311"
 line-length = 88
 include = ["src/**/*.py"]
-exclude = ["tests"]
+
 
 [tool.ruff.lint]
 ignore = [
