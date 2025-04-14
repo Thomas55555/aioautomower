@@ -390,7 +390,6 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
                     "id": 0,
                     "attributes": {
                         "cuttingHeight": 9,
-                        "enable": False,
                     },
                 }
             },
@@ -405,7 +404,6 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
                     "type": "workArea",
                     "id": 0,
                     "attributes": {
-                        "cuttingHeight": 10,
                         "enable": True,
                     },
                 }
@@ -421,7 +419,6 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
                     "type": "workArea",
                     "id": 123456,
                     "attributes": {
-                        "cuttingHeight": 50,
                         "enable": False,
                     },
                 }
@@ -440,7 +437,6 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
                     "id": 123456,
                     "attributes": {
                         "cuttingHeight": 40,
-                        "enable": True,
                     },
                 }
             },
