@@ -396,7 +396,6 @@ class AutomowerSession:
         "pong_cbs",
         "rest_task",
     )
-    auth: AbstractAuth
 
     def __init__(
         self,
