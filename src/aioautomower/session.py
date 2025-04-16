@@ -382,6 +382,20 @@ class AutomowerSession:
     operations like getting a status or sending commands.
     """
 
+    __slots__ = (
+        "_data",
+        "auth",
+        "commands",
+        "current_mowers",
+        "data",
+        "data_update_cbs",
+        "last_ws_message",
+        "loop",
+        "mower_tz",
+        "poll",
+        "pong_cbs",
+        "rest_task",
+    )
     auth: AbstractAuth
 
     def __init__(
