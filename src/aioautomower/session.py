@@ -382,6 +382,8 @@ class AutomowerSession:
     operations like getting a status or sending commands.
     """
 
+    auth: AbstractAuth
+
     def __init__(
         self,
         auth: AbstractAuth,
