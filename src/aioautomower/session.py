@@ -84,6 +84,63 @@ class AutomowerEndpoint:
     "Confirm mower non-fatal error"
 
 
+class WorkAreaSettings:
+    """Namespace for work area settings commands."""
+
+    def __init__(
+        self,
+        client: "_MowerCommands",
+        mower_id: str,
+        work_area_id: int,
+    ) -> None:
+        """Initialize WorkAreaSettings for a mower's work area."""
+        self._client = client
+        self.mower_id = mower_id
+        self.work_area_id = work_area_id
+
+        # Verify capability
+        if not client.data[mower_id].capabilities.work_areas:
+            msg = "This mower does not support this command."
+            raise FeatureNotSupportedError(msg)
+
+    async def cutting_height(
+        self,
+        cutting_height: int,
+    ) -> None:
+        """Set the cutting height for this work area."""
+        payload = {
+            "data": {
+                "type": "workArea",
+                "id": self.work_area_id,
+                "attributes": {"cuttingHeight": cutting_height},
+            }
+        }
+        url = AutomowerEndpoint.work_area_cutting_height.format(
+            mower_id=self.mower_id,
+            work_area_id=self.work_area_id,
+        )
+        await self._client.auth.patch_json(url, json=payload)
+
+    async def enabled(
+        self,
+        *,
+        enabled: bool,
+    ) -> None:
+        """Enable or disable this work area."""
+        payload = {
+            "data": {
+                "type": "workArea",
+                "id": self.work_area_id,
+                "attributes": {"enable": enabled},
+            }
+        }
+        url = AutomowerEndpoint.work_area_cutting_height.format(
+            mower_id=self.mower_id,
+            work_area_id=self.work_area_id,
+        )
+        await self._client.auth.patch_json(url, json=payload)
+
+
 class _MowerCommands:
     """Sending commands."""
 
@@ -100,6 +157,23 @@ class _MowerCommands:
         self.auth = auth
         self.data = data
         self.mower_tz = mower_tz
+
+    def workarea_settings(
+        self,
+        mower_id: str,
+        work_area_id: int,
+    ) -> WorkAreaSettings:
+        """Return a settings helper for a specific work area.
+
+        :param mower_id: Identifier of the mower.
+        :param work_area_id: Identifier of the work area.
+        :returns: Configured WorkAreaSettings instance.
+        """
+        return WorkAreaSettings(
+            client=self,
+            mower_id=mower_id,
+            work_area_id=work_area_id,
+        )
 
     async def reset_cutting_blade_usage_time(self, mower_id: str) -> None:
         """Reset the cutting blade usage time.
@@ -247,46 +321,6 @@ class _MowerCommands:
         }
         url = AutomowerEndpoint.settings.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
-
-    async def workarea_settings(
-        self,
-        mower_id: str,
-        work_area_id: int,
-        *,
-        cutting_height: int | None = None,
-        enabled: bool | None = None,
-    ) -> None:
-        """Set the stettings for for a specific work area."""
-        if not self.data[mower_id].capabilities.work_areas:
-            msg = "This mower does not support this command."
-            raise FeatureNotSupportedError(msg)
-        current_mower = self.data[mower_id].work_areas
-        if TYPE_CHECKING:
-            assert current_mower is not None
-        current_work_area = current_mower[work_area_id]
-        effective_cutting_height = (
-            cutting_height
-            if cutting_height is not None
-            else current_work_area.cutting_height
-        )
-        effective_enabled = (
-            enabled if enabled is not None else current_work_area.enabled
-        )
-
-        body = {
-            "data": {
-                "type": "workArea",
-                "id": work_area_id,
-                "attributes": {
-                    "cuttingHeight": effective_cutting_height,
-                    "enable": effective_enabled,
-                },
-            }
-        }
-        url = AutomowerEndpoint.work_area_cutting_height.format(
-            mower_id=mower_id, work_area_id=work_area_id
-        )
-        await self.auth.patch_json(url, json=body)
 
     async def set_headlight_mode(
         self,
