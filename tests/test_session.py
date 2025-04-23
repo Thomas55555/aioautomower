@@ -380,7 +380,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
                 "1234", "vallhala", switch=True
             )
 
-        await automower_api.commands.workarea_settings(MOWER_ID, 0, cutting_height=9)
+        await automower_api.commands.workarea_settings(MOWER_ID, 0).cutting_height(9)
         assert mocked_method.call_count == 2
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/0",
@@ -395,7 +395,9 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             },
         )
 
-        await automower_api.commands.workarea_settings(MOWER_ID, 0, enabled=True)
+        await automower_api.commands.workarea_settings(MOWER_ID, 0).enabled(
+            enabled=True
+        )
         assert mocked_method.call_count == 3
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/0",
@@ -410,7 +412,9 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             },
         )
 
-        await automower_api.commands.workarea_settings(MOWER_ID, 123456, enabled=False)
+        await automower_api.commands.workarea_settings(MOWER_ID, 123456).enabled(
+            enabled=False
+        )
         assert mocked_method.call_count == 4
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/123456",
@@ -425,8 +429,8 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             },
         )
 
-        await automower_api.commands.workarea_settings(
-            MOWER_ID, 123456, cutting_height=40
+        await automower_api.commands.workarea_settings(MOWER_ID, 123456).cutting_height(
+            40
         )
         assert mocked_method.call_count == 5
         mocked_method.assert_called_with(
@@ -446,7 +450,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
             FeatureNotSupportedError,
             match="This mower does not support this command.",
         ):
-            await automower_api.commands.workarea_settings("1234", 0, cutting_height=50)
+            await automower_api.commands.workarea_settings("1234", 0).cutting_height(50)
 
         mocked_method.reset_mock()
         await automower_api.close()
