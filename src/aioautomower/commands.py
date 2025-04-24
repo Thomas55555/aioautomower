@@ -1,10 +1,10 @@
-"""Commands for the Automower"""
+"""Commands for the Automower."""
 
 import datetime
 import logging
 import zoneinfo
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from .auth import AbstractAuth
 from .exceptions import (
@@ -12,15 +12,12 @@ from .exceptions import (
     WorkAreasDifferentError,
 )
 from .model import (
+    Calendar,
     HeadlightModes,
     MowerAttributes,
     Tasks,
 )
 from .utils import timedelta_to_minutes
-
-if TYPE_CHECKING:
-    from .model import Calendar
-
 
 _LOGGER = logging.getLogger(__name__)
 

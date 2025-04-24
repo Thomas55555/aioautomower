@@ -2,6 +2,7 @@
 
 __all__ = [
     "auth",
+    "commands",
     "const",
     "exceptions",
     "model",
