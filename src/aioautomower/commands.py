@@ -1,4 +1,4 @@
-"""Module to connect to Automower with websocket."""
+"""Commands for the Automower"""
 
 import datetime
 import logging
