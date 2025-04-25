@@ -42,7 +42,6 @@ PyJWT = "^2.8.0"
 ical = ">=8.0.1"
 tzlocal = "^5.2"
 python-dateutil = "^2.9.0-post.0"
-colorlog = "^6.9.0"
 
 [tool.poetry.group.dev.dependencies]
 aioresponses = "0.7.8"
