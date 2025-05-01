@@ -184,7 +184,9 @@ class Mower(DataClassDictMixin):
         ),
     )
     inactive_reason: InactiveReasons = field(
-        metadata=field_options(deserialize=lambda x: x.lower(), alias="inactiveReason"),
+        metadata=field_options(
+            alias="inactiveReason", deserialize=lambda x: InactiveReasons(x.lower())
+        ),
     )
     is_error_confirmable: bool = field(
         metadata=field_options(alias="isErrorConfirmable"), default=False

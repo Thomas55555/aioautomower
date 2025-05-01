@@ -55,7 +55,7 @@
     'error_code': 0,
     'error_datetime': None,
     'error_key': None,
-    'inactive_reason': 'planning',
+    'inactive_reason': <InactiveReasons.PLANNING: 'planning'>,
     'is_error_confirmable': False,
     'mode': 'main_area',
     'state': 'restricted',
