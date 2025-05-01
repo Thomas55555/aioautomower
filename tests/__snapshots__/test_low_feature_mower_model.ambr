@@ -55,9 +55,9 @@
   dict({
     'next_start_datetime': datetime.datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'override': dict({
-      'action': 'not_active',
+      'action': <Actions.NOT_ACTIVE: 'not_active'>,
     }),
-    'restricted_reason': 'week_schedule',
+    'restricted_reason': <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
   })
 # ---
 # name: test_mower_snapshot[positions]
