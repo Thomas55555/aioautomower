@@ -225,6 +225,14 @@ def error_key_dict() -> dict[str, str]:
     return codes
 
 
+class InactiveReasons(StrEnum):
+    """Inactive reasons why the mower is not working."""
+
+    NONE = "none"
+    PLANNING = "planing"
+    SEARCHING_FOR_SATELLITES = "searching_for_satellites"
+
+
 class MowerActivities(StrEnum):
     """Mower activities of a lawn mower."""
 

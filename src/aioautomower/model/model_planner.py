@@ -68,11 +68,3 @@ class ExternalReasons(Enum):
     IFTT_FROST_AND_RAIN = 4002
     IFTT_CALENDAR_CONNECTION = 4003
     IFTT_APPLETS = range(100000, 199999)
-
-
-class InactiveReasons(Enum):
-    """Inactive reasons why the mower is not working."""
-
-    NONE = "none"
-    PLANNING = "planing"
-    SEARCHING_FOR_SATELLITES = "searching_for_satellites"

@@ -22,7 +22,7 @@
         "mower": {
           "mode": "MAIN_AREA",
           "activity": "PARKED_IN_CS",
-          "inactiveReason": "NONE",
+          "inactiveReason": "PLANNING",
           "state": "RESTRICTED",
           "workAreaId": 123456,
           "errorCode": 0,
