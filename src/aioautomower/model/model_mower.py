@@ -155,6 +155,14 @@ ERRORCODES = {
 }
 
 
+class InactiveReasons(StrEnum):
+    """Inactive reasons why the mower is not working."""
+
+    NONE = "none"
+    PLANNING = "planning"
+    SEARCHING_FOR_SATELLITES = "searching_for_satellites"
+
+
 @dataclass
 class Mower(DataClassDictMixin):
     """Information about the mowers current status."""
@@ -175,7 +183,7 @@ class Mower(DataClassDictMixin):
             alias="errorCodeTimestamp",
         ),
     )
-    inactive_reason: str = field(
+    inactive_reason: InactiveReasons = field(
         metadata=field_options(deserialize=lambda x: x.lower(), alias="inactiveReason"),
     )
     is_error_confirmable: bool = field(
@@ -223,14 +231,6 @@ def error_key_dict() -> dict[str, str]:
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text
     return codes
-
-
-class InactiveReasons(StrEnum):
-    """Inactive reasons why the mower is not working."""
-
-    NONE = "none"
-    PLANNING = "planning"
-    SEARCHING_FOR_SATELLITES = "searching_for_satellites"
 
 
 class MowerActivities(StrEnum):
