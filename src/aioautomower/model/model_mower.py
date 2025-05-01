@@ -229,7 +229,7 @@ class InactiveReasons(StrEnum):
     """Inactive reasons why the mower is not working."""
 
     NONE = "none"
-    PLANNING = "planing"
+    PLANNING = "planning"
     SEARCHING_FOR_SATELLITES = "searching_for_satellites"
 
 
