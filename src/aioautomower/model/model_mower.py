@@ -158,6 +158,7 @@ ERRORCODES = {
 class InactiveReasons(StrEnum):
     """Inactive reasons why the mower is not working."""
 
+    NONE = "none"
     PLANNING = "planning"
     SEARCHING_FOR_SATELLITES = "searching_for_satellites"
 
@@ -228,13 +229,10 @@ class Mower(DataClassDictMixin):
             alias="errorCodeTimestamp",
         ),
     )
-    inactive_reason: InactiveReasons | None = field(
+    inactive_reason: InactiveReasons = field(
         metadata=field_options(
-            deserialize=lambda x: None
-            if isinstance(x, str) and x.lower() == "none"
-            else InactiveReasons(x.lower()),
-            alias="inactiveReason",
-        )
+            alias="inactiveReason", deserialize=lambda x: InactiveReasons(x.lower())
+        ),
     )
     is_error_confirmable: bool = field(
         metadata=field_options(alias="isErrorConfirmable"), default=False
