@@ -24,6 +24,7 @@ from .model_calendar import (
 from .model_capabilities import Capabilities
 from .model_metadata import Metadata
 from .model_mower import (
+    InactiveReasons,
     Mower,
     MowerActivities,
     MowerModes,
@@ -34,7 +35,6 @@ from .model_mower import (
 from .model_planner import (
     Actions,
     ExternalReasons,
-    InactiveReasons,
     Override,
     Planner,
     RestrictedReasons,
