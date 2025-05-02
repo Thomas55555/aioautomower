@@ -162,14 +162,60 @@ class InactiveReasons(StrEnum):
     PLANNING = "planning"
     SEARCHING_FOR_SATELLITES = "searching_for_satellites"
 
+    
+class MowerActivities(StrEnum):
+    """Mower activities of a lawn mower."""
+
+    UNKNOWN = "unknown"
+    NOT_APPLICABLE = "not_applicable"
+    MOWING = "mowing"
+    GOING_HOME = "going_home"
+    CHARGING = "charging"
+    LEAVING = "leaving"
+    PARKED_IN_CS = "parked_in_cs"
+    STOPPED_IN_GARDEN = "stopped_in_garden"
+
+
+class MowerModes(StrEnum):
+    """Mower activities of a lawn mower."""
+
+    MAIN_AREA = "main_area"
+    DEMO = "demo"
+    SECONDARY_AREA = "secondary_area"
+    HOME = "home"
+    UNKNOWN = "unknown"
+
+
+class MowerStates(StrEnum):
+    """Mower states of a lawn mower."""
+
+    FATAL_ERROR = "fatal_error"
+    ERROR = "error"
+    ERROR_AT_POWER_UP = "error_at_power_up"
+    NOT_APPLICABLE = "not_applicable"
+    UNKNOWN = "unknown"
+    STOPPED = "stopped"
+    OFF = "off"
+    PAUSED = "paused"
+    IN_OPERATION = "in_operation"
+    WAIT_UPDATING = "wait_updating"
+    WAIT_POWER_UP = "wait_power_up"
+    RESTRICTED = "restricted"
+
 
 @dataclass
 class Mower(DataClassDictMixin):
     """Information about the mowers current status."""
 
-    mode: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-    activity: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-    state: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
+    mode: MowerModes = field(
+        metadata=field_options(deserialize=lambda x: MowerModes(x.lower()))
+    )
+    activity: MowerActivities = field(
+        metadata=field_options(deserialize=lambda x: MowerActivities(x.lower()))
+    )
+    state: MowerStates = field(
+        metadata=field_options(deserialize=lambda x: MowerStates(x.lower()))
+    )
     error_code: int = field(metadata=field_options(alias="errorCode"))
     error_key: str | None = field(
         metadata=field_options(
@@ -233,43 +279,3 @@ def error_key_dict() -> dict[str, str]:
     for error_text in ERRORCODES.values():
         codes[snake_case(error_text)] = error_text
     return codes
-
-
-class MowerActivities(StrEnum):
-    """Mower activities of a lawn mower."""
-
-    UNKNOWN = "unknown"
-    NOT_APPLICABLE = "not_applicable"
-    MOWING = "mowing"
-    GOING_HOME = "going_home"
-    CHARGING = "charging"
-    LEAVING = "leaving"
-    PARKED_IN_CS = "parked_in_cs"
-    STOPPED_IN_GARDEN = "stopped_in_garden"
-
-
-class MowerModes(StrEnum):
-    """Mower activities of a lawn mower."""
-
-    MAIN_AREA = "main_area"
-    DEMO = "demo"
-    SECONDARY_AREA = "secondary_area"
-    HOME = "home"
-    UNKNOWN = "unknown"
-
-
-class MowerStates(StrEnum):
-    """Mower states of a lawn mower."""
-
-    FATAL_ERROR = "fatal_error"
-    ERROR = "error"
-    ERROR_AT_POWER_UP = "error_at_power_up"
-    NOT_APPLICABLE = "not_applicable"
-    UNKNOWN = "unknown"
-    STOPPED = "stopped"
-    OFF = "off"
-    PAUSED = "paused"
-    IN_OPERATION = "in_operation"
-    WAIT_UPDATING = "wait_updating"
-    WAIT_POWER_UP = "wait_power_up"
-    RESTRICTED = "restricted"

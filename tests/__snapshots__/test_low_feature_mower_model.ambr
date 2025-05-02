@@ -39,14 +39,14 @@
 # ---
 # name: test_mower_snapshot[mower]
   dict({
-    'activity': 'parked_in_cs',
+    'activity': <MowerActivities.PARKED_IN_CS: 'parked_in_cs'>,
     'error_code': 1,
     'error_datetime': datetime.datetime(2024, 10, 18, 16, 37, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'error_key': 'outside_working_area',
     'inactive_reason': <InactiveReasons.NONE: 'none'>,
     'is_error_confirmable': False,
-    'mode': 'main_area',
-    'state': 'restricted',
+    'mode': <MowerModes.MAIN_AREA: 'main_area'>,
+    'state': <MowerStates.RESTRICTED: 'restricted'>,
     'work_area_id': None,
     'work_area_name': None,
   })
@@ -55,9 +55,9 @@
   dict({
     'next_start_datetime': datetime.datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'override': dict({
-      'action': 'not_active',
+      'action': <Actions.NOT_ACTIVE: 'not_active'>,
     }),
-    'restricted_reason': 'week_schedule',
+    'restricted_reason': <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
   })
 # ---
 # name: test_mower_snapshot[positions]

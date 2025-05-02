@@ -9,37 +9,21 @@ from mashumaro import DataClassDictMixin, field_options
 from .utils import convert_timestamp_to_aware_datetime
 
 
-@dataclass
-class Override(DataClassDictMixin):
-    """DataClass for Override values."""
-
-    action: str = field(metadata=field_options(deserialize=lambda x: x.lower()))
-
-
-@dataclass
-class Planner(DataClassDictMixin):
-    """DataClass for Planner values."""
-
-    next_start_datetime: datetime | None = field(
-        metadata=field_options(
-            deserialize=convert_timestamp_to_aware_datetime,
-            alias="nextStartTimestamp",
-        ),
-    )
-    override: Override
-    restricted_reason: str = field(
-        metadata=field_options(
-            deserialize=lambda x: x.lower(), alias="restrictedReason"
-        )
-    )
-
-
 class Actions(StrEnum):
     """Actions in the planner of lawn mower."""
 
     NOT_ACTIVE = "not_active"
     FORCE_PARK = "force_park"
     FORCE_MOW = "force_mow"
+
+
+@dataclass
+class Override(DataClassDictMixin):
+    """DataClass for Override values."""
+
+    action: Actions = field(
+        metadata=field_options(deserialize=lambda x: Actions(x.lower()))
+    )
 
 
 class RestrictedReasons(StrEnum):
@@ -55,6 +39,25 @@ class RestrictedReasons(StrEnum):
     ALL_WORK_AREAS_COMPLETED = "all_work_areas_completed"
     EXTERNAL = "external"
     NOT_APPLICABLE = "not_applicable"
+
+
+@dataclass
+class Planner(DataClassDictMixin):
+    """DataClass for Planner values."""
+
+    next_start_datetime: datetime | None = field(
+        metadata=field_options(
+            deserialize=convert_timestamp_to_aware_datetime,
+            alias="nextStartTimestamp",
+        ),
+    )
+    override: Override
+    restricted_reason: RestrictedReasons = field(
+        metadata=field_options(
+            deserialize=lambda x: RestrictedReasons(x.lower()),
+            alias="restrictedReason",
+        )
+    )
 
 
 class ExternalReasons(Enum):
