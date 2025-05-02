@@ -300,12 +300,7 @@ class MowerCommands:
     async def set_headlight_mode(
         self,
         mower_id: str,
-        headlight_mode: Literal[
-            HeadlightModes.ALWAYS_OFF,
-            HeadlightModes.ALWAYS_ON,
-            HeadlightModes.EVENING_AND_NIGHT,
-            HeadlightModes.EVENING_ONLY,
-        ],
+        headlight_mode: HeadlightModes,
     ) -> None:
         """Send headlight mode to the mower."""
         if not self.data[mower_id].capabilities.headlights:
