@@ -12,6 +12,7 @@ from typing import Any
 from aioresponses import aioresponses
 
 from aioautomower.const import API_BASE_URL
+from aioautomower.model_input import MowerDataResponse
 from aioautomower.session import AutomowerEndpoint, AutomowerSession
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 
@@ -34,7 +35,7 @@ def load_fixture_json(filename: str) -> Any:
 async def setup_connection(
     responses: aioresponses,
     automower_client: AutomowerSession,
-    mower_data,
+    mower_data: MowerDataResponse,
     mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Fixture for setting up the connection."""

@@ -4,7 +4,6 @@ import datetime
 import logging
 import zoneinfo
 from dataclasses import dataclass
-from typing import Literal
 
 from .auth import AbstractAuth
 from .exceptions import (

@@ -1,14 +1,15 @@
 """Tests for two mowers in aioautomower."""
 
-from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock
-from aiohttp import WSMessage, WSMsgType
-from aiohttp import ClientWebSocketResponse
-import zoneinfo
-from aioautomower.auth import AbstractAuth
-from aioautomower.session import AutomowerSession
 import asyncio
 import contextlib
+import zoneinfo
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock
+
+from aiohttp import ClientWebSocketResponse, WSMessage, WSMsgType
+
+from aioautomower.auth import AbstractAuth
+from aioautomower.session import AutomowerSession
 
 MOWER1_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 MOWER2_ID = "1234"
