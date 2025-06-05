@@ -20,7 +20,7 @@ async def test_decode_token() -> None:
     assert token_structered.user.last_name == "Mustermann"
 
 
-async def test_jwt_snapshot(snapshot: SnapshotAssertion):
+async def test_jwt_snapshot(snapshot: SnapshotAssertion) -> None:
     """Testing a snapshot of a JWT."""
     token_python = load_fixture_json("jwt.json")
     token_structered = structure_token(token_python["data"])
