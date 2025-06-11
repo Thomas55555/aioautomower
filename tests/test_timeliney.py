@@ -26,7 +26,7 @@ async def test_timeline(
     mock_automower_client: AbstractAuth,
     snapshot: SnapshotAssertion,
     mower_tz: zoneinfo.ZoneInfo,
-):
+) -> None:
     """Test automower timeline."""
     automower_api = AutomowerSession(mock_automower_client, mower_tz, poll=True)
     await automower_api.connect()
@@ -90,7 +90,7 @@ async def test_timeline(
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_daily_schedule(
     mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
-):
+) -> None:
     """Test automower timeline with low feature mower."""
     automower_api = AutomowerSession(
         mock_automower_client_two_mowers, mower_tz, poll=True
@@ -131,7 +131,7 @@ async def test_daily_schedule(
 
 
 @time_machine.travel("2024-05-04 8:00:00")
-async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
+async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth) -> None:
     """Test automower session patch commands."""
     automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
     await automower_api.connect()

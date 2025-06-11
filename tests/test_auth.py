@@ -2,21 +2,23 @@
 
 import zoneinfo
 from unittest.mock import AsyncMock, patch
-from unittest.mock import Mock
+
 import pytest
+from aiohttp import ClientError, ClientResponseError, RequestInfo
 from aioresponses import aioresponses
-from aiohttp import ClientResponseError, RequestInfo, ClientError
-from multidict import CIMultiDict
+from multidict import CIMultiDict, CIMultiDictProxy
+from yarl import URL
+
 from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from aioautomower.exceptions import (
-    ApiError,
     ApiBadRequestError,
+    ApiError,
     ApiForbiddenError,
     ApiUnauthorizedError,
 )
+from aioautomower.model_input import MowerDataResponse
 from aioautomower.session import AutomowerEndpoint, AutomowerSession
-from yarl import URL
-from multidict import CIMultiDictProxy
+
 from . import load_fixture_json, setup_connection
 from .const import MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS
 
@@ -24,7 +26,7 @@ from .const import MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS
 async def test_get_status_400(
     responses: aioresponses,
     automower_client: AutomowerSession,
-):
+) -> None:
     """Test get status with error."""
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
@@ -41,7 +43,7 @@ async def test_get_status_400(
 async def test_get_status_401(
     responses: aioresponses,
     automower_client: AutomowerSession,
-):
+) -> None:
     """Test get status with error."""
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
@@ -58,7 +60,7 @@ async def test_get_status_401(
 async def test_get_status_402(
     responses: aioresponses,
     automower_client: AutomowerSession,
-):
+) -> None:
     """Test get status with error."""
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
@@ -76,11 +78,8 @@ async def test_get_status_with_error_handling(
     responses: aioresponses,
     automower_client: AutomowerSession,
     jwt_token: str,
-):
+) -> None:
     """Test get status with error handling code covered."""
-
-    # Mock eine ClientResponseError (dies deckt den ersten Teil ab, wo detail.append(err.message) ausgeführt wird)
-
     request_info = RequestInfo(
         url=URL(f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"),
         method="GET",
@@ -117,8 +116,6 @@ async def test_get_status_with_error_handling(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
         exception=ClientError("Client error occurred"),
     )
-
-    # Test, ob ApiError geworfen wird, wenn der Fehler im ClientError Block gefangen wird
     with pytest.raises(ApiError, match="Client error occurred"):
         await automower_client.get_status()
 
@@ -126,10 +123,10 @@ async def test_get_status_with_error_handling(
 async def test_patch_request_success(
     responses: aioresponses,
     automower_client: AutomowerSession,
-    control_response,
-    mower_data,
+    control_response: dict,
+    mower_data: MowerDataResponse,
     mower_tz: zoneinfo.ZoneInfo,
-):
+) -> None:
     """Test patch request success."""
     await setup_connection(responses, automower_client, mower_data, mower_tz)
     endpoint = AutomowerEndpoint.stay_out_zones.format(
@@ -150,10 +147,10 @@ async def test_patch_request_success(
 async def test_post_request_success(
     responses: aioresponses,
     automower_client: AutomowerSession,
-    control_response,
-    mower_data,
+    control_response: dict,
+    mower_data: MowerDataResponse,
     mower_tz: zoneinfo.ZoneInfo,
-):
+) -> None:
     """Test get status."""
     await setup_connection(responses, automower_client, mower_data, mower_tz)
     endpoint = AutomowerEndpoint.actions.format(mower_id=MOWER_ID)
@@ -168,7 +165,9 @@ async def test_post_request_success(
 
 
 @pytest.mark.asyncio
-async def test_websocket_connect(automower_client: AutomowerSession, jwt_token: str):
+async def test_websocket_connect(
+    automower_client: AutomowerSession, jwt_token: str
+) -> None:
     """Test websocket connection."""
     with patch(
         "aiohttp.ClientSession.ws_connect", new_callable=AsyncMock
