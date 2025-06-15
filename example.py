@@ -36,6 +36,16 @@ CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 
 
+def configure_logging(level: int = logging.INFO) -> None:
+    """Configure logging with specified level."""
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s)"
+        "[%(name)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
 class AsyncTokenAuth(AbstractAuth):
     """Provide Automower authentication tied to an OAuth2 based config entry."""
 
@@ -73,6 +83,7 @@ class AsyncTokenAuth(AbstractAuth):
 
 async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
+    configure_logging(logging.DEBUG)
     websession = ClientSession()
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     await asyncio.sleep(1)
