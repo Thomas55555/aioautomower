@@ -31,12 +31,6 @@ from .model_input import (
 )
 from .utils import mower_list_to_dictionary_dataclass
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s)"
-    "[%(name)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 _LOGGER = logging.getLogger(__name__)
 
 
