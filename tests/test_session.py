@@ -1,18 +1,20 @@
 """Test automower session."""
 
+import asyncio
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
-from aiohttp import ClientWebSocketResponse
+
 import pytest
 import time_machine
 import tzlocal
 from aiohttp import (
+    ClientWebSocketResponse,
     WSMessage,
     WSMsgType,
 )
-import asyncio
+
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
     FeatureNotSupportedError,
@@ -34,7 +36,7 @@ from .conftest import TEST_TZ
 from .const import MOWER_ID, MOWER_ID_LOW_FEATURE
 
 
-async def test_connect_disconnect(mock_automower_client: AbstractAuth):
+async def test_connect_disconnect(mock_automower_client: AbstractAuth) -> None:
     """Test automower session post commands."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -45,10 +47,10 @@ async def test_connect_disconnect(mock_automower_client: AbstractAuth):
 
 
 @time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
-async def test_post_commands(
+async def test_post_commands_1(
     mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
-):
-    """Test automower session post commands."""
+) -> None:
+    """Test automower session post commands - Part 1."""
     automower_api = AutomowerSession(
         mock_automower_client_two_mowers, mower_tz=mower_tz, poll=True
     )
@@ -121,128 +123,24 @@ async def test_post_commands(
             json={"data": {"type": "settings", "attributes": {"cuttingHeight": 9}}},
         )
 
-        # Test set_datetime with an aware datetime object in TZ UTC
-        await automower_api.commands.set_datetime(
-            MOWER_ID,
-            datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={"data": {"type": "settings", "attributes": {"dateTime": 1714816800}}},
-        )
+        await automower_api.close()
+        if TYPE_CHECKING:
+            assert automower_api.rest_task is not None
+        assert automower_api.rest_task.cancelled()
 
-        # Test set_datetime with an aware datetime object
-        await automower_api.commands.set_datetime(
-            MOWER_ID,
-            datetime(
-                2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
-            ),
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
-        )
 
-        # Test set_datetime with a naive datetime object
-        await automower_api.commands.set_datetime(
-            MOWER_ID,
-            datetime(2024, 5, 4, 8),
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
-        )
-
-        # Test set_datetime without datetime object
-        await automower_api.commands.set_datetime(
-            MOWER_ID,
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
-        )
-
-        # Test set_datetime_new with an aware datetime object in TZ UTC
-        await automower_api.commands.set_datetime_new(
-            MOWER_ID,
-            datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={
-                "data": {
-                    "type": "settings",
-                    "attributes": {
-                        "timer": {
-                            "dateTime": 1714816800,
-                            "timeZone": "Europe/Berlin",
-                        },
-                    },
-                }
-            },
-        )
-
-        # Test set_datetime_new with an aware datetime object
-        await automower_api.commands.set_datetime_new(
-            MOWER_ID,
-            datetime(
-                2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
-            ),
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={
-                "data": {
-                    "type": "settings",
-                    "attributes": {
-                        "timer": {
-                            "dateTime": 1714809600,
-                            "timeZone": "Europe/Berlin",
-                        },
-                    },
-                }
-            },
-        )
-
-        # Test set_datetime_new with a naive datetime object
-        await automower_api.commands.set_datetime_new(
-            MOWER_ID,
-            datetime(2024, 5, 4, 8),
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={
-                "data": {
-                    "type": "settings",
-                    "attributes": {
-                        "timer": {
-                            "dateTime": 1714809600,
-                            "timeZone": "Europe/Berlin",
-                        },
-                    },
-                }
-            },
-        )
-
-        # Test set_datetime_new without datetime object
-        await automower_api.commands.set_datetime_new(
-            MOWER_ID,
-        )
-        mocked_method.assert_called_with(
-            f"mowers/{MOWER_ID}/settings",
-            json={
-                "data": {
-                    "type": "settings",
-                    "attributes": {
-                        "timer": {
-                            "dateTime": 1714809600,
-                            "timeZone": "Europe/Berlin",
-                        },
-                    },
-                }
-            },
-        )
-
+@time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
+async def test_post_commands_2(
+    mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+) -> None:
+    """Test automower session post commands - Part 2."""
+    automower_api = AutomowerSession(
+        mock_automower_client_two_mowers, mower_tz=mower_tz, poll=True
+    )
+    await automower_api.connect()
+    with patch.object(
+        mock_automower_client_two_mowers, "post_json", new_callable=AsyncMock
+    ) as mocked_method:
         await automower_api.commands.set_headlight_mode(
             MOWER_ID, HeadlightModes.ALWAYS_OFF
         )
@@ -352,7 +250,147 @@ async def test_post_commands(
         assert automower_api.rest_task.cancelled()
 
 
-async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
+@time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
+async def test_set_datetime(
+    mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+) -> None:
+    """Test automower session post commands."""
+    automower_api = AutomowerSession(
+        mock_automower_client_two_mowers, mower_tz=mower_tz, poll=True
+    )
+    await automower_api.connect()
+    with patch.object(
+        mock_automower_client_two_mowers, "post_json", new_callable=AsyncMock
+    ) as mocked_method:
+        # Test set_datetime with an aware datetime object in TZ UTC
+        await automower_api.commands.set_datetime(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={"data": {"type": "settings", "attributes": {"dateTime": 1714816800}}},
+        )
+
+        # Test set_datetime with an aware datetime object
+        await automower_api.commands.set_datetime(
+            MOWER_ID,
+            datetime(
+                2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+            ),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
+        )
+
+        # Test set_datetime with a naive datetime object
+        await automower_api.commands.set_datetime(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8),  # noqa:DTZ001
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
+        )
+
+        # Test set_datetime without datetime object
+        await automower_api.commands.set_datetime(
+            MOWER_ID,
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={"data": {"type": "settings", "attributes": {"dateTime": 1714809600}}},
+        )
+
+        # Test set_datetime_new with an aware datetime object in TZ UTC
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8, 0, 0, 1234, tzinfo=UTC),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714816800,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new with an aware datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(
+                2024, 5, 4, 8, 0, 0, 1234, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+            ),
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new with a naive datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+            datetime(2024, 5, 4, 8),  # noqa:DTZ001
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        # Test set_datetime_new without datetime object
+        await automower_api.commands.set_datetime_new(
+            MOWER_ID,
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/settings",
+            json={
+                "data": {
+                    "type": "settings",
+                    "attributes": {
+                        "timer": {
+                            "dateTime": 1714809600,
+                            "timeZone": "Europe/Berlin",
+                        },
+                    },
+                }
+            },
+        )
+
+        await automower_api.close()
+        if TYPE_CHECKING:
+            assert automower_api.rest_task is not None
+        assert automower_api.rest_task.cancelled()
+
+
+async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth) -> None:
     """Test automower session patch commands."""
     automower_api = AutomowerSession(mock_automower_client_two_mowers, poll=True)
     await automower_api.connect()
@@ -459,7 +497,7 @@ async def test_patch_commands(mock_automower_client_two_mowers: AbstractAuth):
         assert automower_api.rest_task.cancelled()
 
 
-async def test_battery_event(mock_automower_client: AbstractAuth):
+async def test_battery_event(mock_automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 battery update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -478,14 +516,14 @@ async def test_battery_event(mock_automower_client: AbstractAuth):
     )
     await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].battery.battery_percent == 77
-
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
 
 
-async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
+async def test_calendar_event_work_area(mock_automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 calendar update with work area."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -518,13 +556,14 @@ async def test_calendar_event_work_area(mock_automower_client: AbstractAuth):
         )
     ]
 
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
 
 
-async def test_cutting_height_event(mock_automower_client: AbstractAuth):
+async def test_cutting_height_event(mock_automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 calendar update with work area."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -544,13 +583,14 @@ async def test_cutting_height_event(mock_automower_client: AbstractAuth):
     await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
 
 
-async def test_headlights_event(mock_automower_client: AbstractAuth):
+async def test_headlights_event(mock_automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 headlight update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -575,13 +615,14 @@ async def test_headlights_event(mock_automower_client: AbstractAuth):
     assert (
         automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
     )
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
 
 
-async def test_single_mower_event(mock_automower_client: AbstractAuth):
+async def test_single_mower_event(mock_automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 mower event update with just one change."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -592,7 +633,13 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
         side_effect=[
             WSMessage(
                 WSMsgType.TEXT,
-                b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "mower-event-v2", "attributes": {"mower": {"mode": "DEMO"}}}',
+                (
+                    b"{"
+                    b'"id": "c7233734-b219-4287-a173-08e3643f89f0", '
+                    b'"type": "mower-event-v2", '
+                    b'"attributes": {"mower": {"mode": "DEMO"}}'
+                    b"}"
+                ),
                 None,
             ),
             asyncio.CancelledError(),
@@ -601,6 +648,7 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
     await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
 
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
@@ -609,7 +657,7 @@ async def test_single_mower_event(mock_automower_client: AbstractAuth):
 
 async def test_single_planner_event(
     mock_automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
-):
+) -> None:
     """Test automower websocket V2 planner event update with just one change."""
     automower_api = AutomowerSession(
         mock_automower_client, mower_tz=mower_tz, poll=True
@@ -630,7 +678,12 @@ async def test_single_planner_event(
         side_effect=[
             WSMessage(
                 WSMsgType.TEXT,
-                b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", "type": "planner-event-v2", "attributes": {"planner": {"restrictedReason": "ALL_WORK_AREAS_COMPLETED"}}}',
+                b'{"id": "c7233734-b219-4287-a173-08e3643f89f0", '
+                b'"type": "planner-event-v2", '
+                b'"attributes": {'
+                b'"planner": {'
+                b'"restrictedReason": "ALL_WORK_AREAS_COMPLETED"'
+                b"}}}",
                 None,
             ),
             asyncio.CancelledError(),
@@ -646,6 +699,7 @@ async def test_single_planner_event(
         == RestrictedReasons.ALL_WORK_AREAS_COMPLETED
     )
     await automower_api.close()
+    listening_task.cancel()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
@@ -653,7 +707,7 @@ async def test_single_planner_event(
 
 async def test_full_planner_event(
     mock_automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
-):
+) -> None:
     """Test automower websocket V2 planner event full update."""
     automower_api = AutomowerSession(
         mock_automower_client, mower_tz=mower_tz, poll=True
@@ -669,7 +723,8 @@ async def test_full_planner_event(
     )
     automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
     automower_api.auth.ws.closed = False
-    asyncio.create_task(automower_api.start_listening())
+
+    listening_task = asyncio.create_task(automower_api.start_listening())
     automower_api.auth.ws.receive = AsyncMock(
         side_effect=[
             WSMessage(
@@ -688,13 +743,14 @@ async def test_full_planner_event(
         == RestrictedReasons.PARK_OVERRIDE
     )
 
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
 
 
-async def test_position_event(mock_automower_client: AbstractAuth):
+async def test_position_event(mock_automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 positions update."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -703,7 +759,7 @@ async def test_position_event(mock_automower_client: AbstractAuth):
     )
     automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
     automower_api.auth.ws.closed = False
-    asyncio.create_task(automower_api.start_listening())
+    listening_task = asyncio.create_task(automower_api.start_listening())
     automower_api.auth.ws.receive = AsyncMock(
         side_effect=[
             WSMessage(
@@ -716,20 +772,21 @@ async def test_position_event(mock_automower_client: AbstractAuth):
     )
     await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
+    listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
 
 
-async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth):
+async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth) -> None:
     """Test automower empty task."""
     automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].calendar.tasks == []
 
 
-async def test_timezone_default(mock_automower_client: AbstractAuth):
+async def test_timezone_default(mock_automower_client: AbstractAuth) -> None:
     """Test setting system timezone automatically if not defined."""
     automower_api = AutomowerSession(mock_automower_client, poll=True)
     await automower_api.connect()
@@ -741,7 +798,7 @@ async def test_timezone_default(mock_automower_client: AbstractAuth):
     assert automower_api.rest_task.cancelled()
 
 
-async def test_timzeone_overwrite(mock_automower_client: AbstractAuth):
+async def test_timzeone_overwrite(mock_automower_client: AbstractAuth) -> None:
     """Test overwriting timezone."""
     automower_api = AutomowerSession(
         mock_automower_client, mower_tz=zoneinfo.ZoneInfo("Europe/Stockholm"), poll=True

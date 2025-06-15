@@ -1,5 +1,6 @@
 """Tests for asynchronous Python client for aioautomower."""
 
+import zoneinfo
 from dataclasses import fields
 
 import time_machine
@@ -11,7 +12,7 @@ from tests import load_fixture_json
 MOWER_ID = "1234"
 
 
-async def test_low_feature_mower(mower_tz) -> None:
+async def test_low_feature_mower(mower_tz: zoneinfo.ZoneInfo) -> None:
     """Test converting a low feature mower."""
     mower_python = load_fixture_json("low_feature_mower.json")
     mowers = mower_list_to_dictionary_dataclass(mower_python, mower_tz)
@@ -23,7 +24,9 @@ async def test_low_feature_mower(mower_tz) -> None:
 
 
 @time_machine.travel("2024-05-06 02:50:00")
-def test_mower_snapshot(snapshot: SnapshotAssertion, mower_tz) -> None:
+def test_mower_snapshot(
+    snapshot: SnapshotAssertion, mower_tz: zoneinfo.ZoneInfo
+) -> None:
     """Testing a snapshot of a high feature mower."""
     mower_python = load_fixture_json("low_feature_mower.json")
     mowers = mower_list_to_dictionary_dataclass(mower_python, mower_tz)
