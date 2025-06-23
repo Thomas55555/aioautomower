@@ -5,7 +5,8 @@ import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 from typing import Any
-
+from aiohttp import ContentTypeError
+from json import JSONDecodeError
 from aiohttp import (
     ClientError,
     ClientResponse,
@@ -56,7 +57,7 @@ class AbstractAuth(ABC):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
         if method != "get" and "json" in kwargs:
-            _LOGGER.debug("request[post json]=%s", kwargs["json"])
+            _LOGGER.debug("request[%s json]=%s", method, kwargs["json"])
         return await self._websession.request(method, url, **kwargs, headers=headers)
 
     async def get(self, url: str, **kwargs: Any) -> ClientResponse:
@@ -146,13 +147,14 @@ class AbstractAuth(ABC):
         try:
             resp.raise_for_status()
         except ClientResponseError as err:
+            if detail:
+                _LOGGER.debug("%s", " | ".join(detail))
             if err.status == HTTPStatus.BAD_REQUEST:
                 raise ApiBadRequestError(err) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise ApiUnauthorizedError(err) from err
             if err.status == HTTPStatus.FORBIDDEN:
                 raise ApiForbiddenError(err) from err
-            detail.append(err.message)
             raise ApiError(": ".join(detail)) from err
         except ClientError as err:
             raise ApiError(err) from err
@@ -160,19 +162,42 @@ class AbstractAuth(ABC):
 
     @staticmethod
     async def _error_detail(resp: ClientResponse) -> list[str]:
-        """Return an error message string from the API response."""
+        """Extract concise error message from API response for debug logging."""
         if resp.status < 400:
             return []
+
         try:
             result = await resp.json()
-            error = result.get(ERROR, {})
-        except ClientError:
-            return []
-        message = ["Error from API", f"{resp.status}"]
-        if STATUS in error:
-            message.append(f"{error[STATUS]}")
-        if MESSAGE in error:
-            message.append(error[MESSAGE])
+        except (ContentTypeError, JSONDecodeError, ValueError):
+            body = await resp.text()
+            return [f"{resp.status}", body.strip() or "<empty>"]
+
+        message = [str(resp.status)]
+
+        errors = result.get("errors")
+        if isinstance(errors, list) and errors:
+            error = errors[0]
+            title = error.get("title")
+            detail = error.get("detail")
+
+            if title and detail:
+                message.append(f"{title}: {detail}")
+            elif title:
+                message.append(title)
+            elif detail:
+                message.append(detail)
+        else:
+            error = result.get("error")
+            if isinstance(error, dict):
+                status = error.get("status")
+                msg = error.get("message")
+                if status:
+                    message.append(str(status))
+                if msg:
+                    message.append(msg)
+            elif error:
+                message.append(str(error))
+
         return message
 
     async def websocket_connect(self) -> None:
