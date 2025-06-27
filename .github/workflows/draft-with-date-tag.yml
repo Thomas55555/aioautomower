@@ -1,0 +1,38 @@
+---
+name: 📝 Draft Release with date tag
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tag_and_draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute release tag
+        id: compute_tag
+        run: |
+          # berechnet z.B. 2025.6.0 (ohne führende Null im Monat)
+          MONTH=$(date -u +'%m' | sed 's/^0//')
+          echo "tag=$(date -u +'%Y').${MONTH}.0" >> $GITHUB_OUTPUT
+
+      - name: Create and push Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.compute_tag.outputs.tag }}"
+          git push origin "${{ steps.compute_tag.outputs.tag }}"
+
+      - name: Update Release Draft
+        uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

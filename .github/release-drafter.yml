@@ -2,11 +2,10 @@
 template: |
   $CHANGES
 
-version-template: "{{date 'YYYY.M'}}.0"
-tag-template: "$NEXT_PATCH_VERSION"
+version-template: "$NEXT_TAG"
+tag-template: "$NEXT_TAG"
+name-template: "Release $NEXT_TAG"
 tag-prefix: ""
-
-name-template: "Release $NEXT_PATCH_VERSION"
 
 change-template: "- $TITLE (#$NUMBER)"
 no-changes-template: "* No changes"
