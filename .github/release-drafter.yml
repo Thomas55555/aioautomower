@@ -2,10 +2,29 @@
 template: |
   $CHANGES
 
-version-template: "$NEXT_TAG"
-tag-template: "$NEXT_TAG"
-name-template: "Release $NEXT_TAG"
-tag-prefix: ""
+version-resolver:
+  major:
+    labels: ["breaking-change", "major"]
+  minor:
+    labels: ["new-feature", "minor"]
+  patch:
+    labels:
+      [
+        "bugfix",
+        "security",
+        "performance",
+        "refactor",
+        "documentation",
+        "maintenance",
+        "ci",
+        "dependencies",
+        "enhancement",
+      ]
+  default: patch
+
+tag-prefix: "v"
+tag-template: "v$NEXT_PATCH_VERSION"
+name-template: "Release $NEXT_PATCH_VERSION"
 
 change-template: "- $TITLE (#$NUMBER)"
 no-changes-template: "* No changes"
