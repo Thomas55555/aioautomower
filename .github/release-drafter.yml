@@ -2,22 +2,13 @@
 template: |
   $CHANGES
 
-name-template: "Release $NEXT_PATCH_VERSION"
+version-template: "{{date 'YYYY.M'}}.0"
 tag-template: "$NEXT_PATCH_VERSION"
 tag-prefix: ""
 
-version-template: "{{date 'YYYY.M'}}.0"
-version-resolver:
-  major:
-    labels: []
-  minor:
-    labels: []
-  patch:
-    labels: []
-  default: patch
+name-template: "Release $NEXT_PATCH_VERSION"
 
 change-template: "- $TITLE (#$NUMBER)"
-change-title-escapes: ""
 no-changes-template: "* No changes"
 
 categories:
@@ -38,18 +29,8 @@ categories:
   - title: "📦 Other Changes"
     labels: ["enhancement"]
 
-exclude-labels: []
-include-labels: []
-include-paths: []
-exclude-contributors: []
-no-contributors-template: "No contributors"
-
-replacers: []
-autolabeler: []
-
 sort-by: merged_at
 sort-direction: descending
-
 prerelease: false
 include-pre-releases: false
 latest: "true"
