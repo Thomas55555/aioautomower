@@ -1,31 +1,37 @@
 ---
+name-template: "Release $NEXT_PATCH_VERSION"
+tag-template: "{{date 'YYYY.M'}}.0"
+version-template: "{{date 'YYYY.M'}}.0"
 
 categories:
-  - title: "🚨 Breaking changes"
+  - title: "🚨 Breaking Changes"
     labels:
       - "breaking-change"
-  - title: "✨ New features"
+      - "major"
+  - title: "🚀 New Features"
     labels:
       - "new-feature"
-  - title: "🐛 Bug fixes"
+      - "minor"
+  - title: "🐛 Bug Fixes"
     labels:
       - "bugfix"
-  - title: "🚀 Enhancements"
+      - "security"
+  - title: "📈 Performance Improvements"
     labels:
-      - "enhancement"
-      - "refactor"
       - "performance"
-  - title: "🧰 Maintenance"
+  - title: "🧹 Refactorings"
+    labels:
+      - "refactor"
+  - title: "📝 Documentation"
+    labels:
+      - "documentation"
+  - title: "🛠 Maintenance"
     labels:
       - "maintenance"
       - "ci"
-  - title: "📚 Documentation"
-    labels:
-      - "documentation"
-  - title: "⬆️ Dependency updates"
-    labels:
       - "dependencies"
+  - title: "📦 Other Changes"
+    labels:
+      - "enhancement"
 
-template: |
-  ## What’s Changed
-  $CHANGES
+change-template: "- $TITLE (#$NUMBER)"
