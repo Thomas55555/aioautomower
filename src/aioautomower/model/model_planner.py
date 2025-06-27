@@ -49,7 +49,7 @@ class ExternalReasons(StrEnum):
     HOME_ASSISTANT = "home_assistant"
     IFTTT = "ifttt"
     IFTTT_WILDLIFE = "ifttt_wildlife"
-    IFTTT_FROST_AND_RAIN_GUARD = "ifttt_frost_and_rain"
+    IFTTT_FROST_AND_RAIN_GUARD = "ifttt_frost_and_rain_guard"
     IFTTT_CALENDAR_CONNECTION = "ifttt_calendar_connection"
     GARDENA_SMART_SYSTEM = "gardena_smart_system"
     IFTTT_APPLETS = "ifttt_applets"
