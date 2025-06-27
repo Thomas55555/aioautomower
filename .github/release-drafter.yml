@@ -52,7 +52,7 @@ sort-direction: descending
 
 prerelease: false
 include-pre-releases: false
-latest: true
+latest: "true"
 filter-by-commitish: false
 pull-request-limit: 5
 category-template: "## $TITLE"
