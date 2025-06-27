@@ -53,6 +53,7 @@
 # ---
 # name: test_mower_snapshot[planner]
   dict({
+    'external_reason': None,
     'next_start_datetime': datetime.datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'override': dict({
       'action': <Actions.NOT_ACTIVE: 'not_active'>,
