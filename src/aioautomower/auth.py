@@ -56,7 +56,7 @@ class AbstractAuth(ABC):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
         if method != "get" and "json" in kwargs:
-            _LOGGER.debug("request[post json]=%s", kwargs["json"])
+            _LOGGER.debug("request[%s json]=%s", method, kwargs["json"])
         return await self._websession.request(method, url, **kwargs, headers=headers)
 
     async def get(self, url: str, **kwargs: Any) -> ClientResponse:
