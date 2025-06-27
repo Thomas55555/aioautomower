@@ -1,37 +1,60 @@
 ---
+template: |
+  $CHANGES
+
 name-template: "Release $NEXT_PATCH_VERSION"
 tag-template: "{{date 'YYYY.M'}}.0"
+tag-prefix: ""
+
 version-template: "{{date 'YYYY.M'}}.0"
+version-resolver:
+  major:
+    labels: []
+  minor:
+    labels: []
+  patch:
+    labels: []
+  default: patch
+
+change-template: "- $TITLE (#$NUMBER)"
+change-title-escapes: ""
+no-changes-template: "* No changes"
 
 categories:
   - title: "🚨 Breaking Changes"
-    labels:
-      - "breaking-change"
-      - "major"
+    labels: ["breaking-change", "major"]
   - title: "🚀 New Features"
-    labels:
-      - "new-feature"
-      - "minor"
+    labels: ["new-feature", "minor"]
   - title: "🐛 Bug Fixes"
-    labels:
-      - "bugfix"
-      - "security"
+    labels: ["bugfix", "security"]
   - title: "📈 Performance Improvements"
-    labels:
-      - "performance"
+    labels: ["performance"]
   - title: "🧹 Refactorings"
-    labels:
-      - "refactor"
+    labels: ["refactor"]
   - title: "📝 Documentation"
-    labels:
-      - "documentation"
+    labels: ["documentation"]
   - title: "🛠 Maintenance"
-    labels:
-      - "maintenance"
-      - "ci"
-      - "dependencies"
+    labels: ["maintenance", "ci", "dependencies"]
   - title: "📦 Other Changes"
-    labels:
-      - "enhancement"
+    labels: ["enhancement"]
 
-change-template: "- $TITLE (#$NUMBER)"
+exclude-labels: []
+include-labels: []
+include-paths: []
+exclude-contributors: []
+no-contributors-template: "No contributors"
+
+replacers: []
+autolabeler: []
+
+sort-by: merged_at
+sort-direction: descending
+
+prerelease: false
+include-pre-releases: false
+latest: true
+filter-by-commitish: false
+pull-request-limit: 5
+category-template: "## $TITLE"
+header: ""
+footer: ""
