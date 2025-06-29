@@ -22,6 +22,7 @@ from .model_calendar import (
     make_name_string,
 )
 from .model_capabilities import Capabilities
+from .model_message import Message
 from .model_metadata import Metadata
 from .model_mower import (
     InactiveReasons,
@@ -69,6 +70,7 @@ __all__ = [
     "Headlight",
     "HeadlightModes",
     "InactiveReasons",
+    "Message",
     "Metadata",
     "Mower",
     "MowerActivities",

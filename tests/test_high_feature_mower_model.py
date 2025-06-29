@@ -1,13 +1,11 @@
 """Tests for asynchronous Python client for aioautomower."""
 
-import zoneinfo
 from dataclasses import fields
 from typing import TYPE_CHECKING, cast
 
 import time_machine
 from syrupy.assertion import SnapshotAssertion
 
-from aioautomower.auth import AbstractAuth
 from aioautomower.session import AutomowerSession
 
 if TYPE_CHECKING:
@@ -16,10 +14,10 @@ if TYPE_CHECKING:
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-async def test_high_feature_mower(mock_automower_client: AutomowerSession) -> None:
+async def test_high_feature_mower(automower_api: AutomowerSession) -> None:
     """Test converting a high feature mower."""
-    await mock_automower_client.connect()
-    mowers = mock_automower_client.data
+    await automower_api.connect()
+    mowers = automower_api.data
     assert mowers[MOWER_ID].battery.battery_percent == 100
     assert mowers[MOWER_ID].stay_out_zones.dirty is False  # type: ignore[union-attr]
     assert mowers[MOWER_ID].stay_out_zones.zones is not None  # type: ignore[union-attr]
@@ -46,14 +44,14 @@ async def test_high_feature_mower(mock_automower_client: AutomowerSession) -> No
 
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_mower_snapshot(
-    mock_automower_client: AutomowerSession, snapshot: SnapshotAssertion
+    automower_api: AutomowerSession, snapshot: SnapshotAssertion
 ) -> None:
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
-    await mock_automower_client.connect()
-    mowers = mock_automower_client.data
-    mock_automower_client.data[MOWER_ID]
-    for field in fields(mock_automower_client.data[MOWER_ID]):
+    await automower_api.connect()
+    mowers = automower_api.data
+    automower_api.data[MOWER_ID]
+    for field in fields(automower_api.data[MOWER_ID]):
         field_name = field.name
-        field_value = getattr(mock_automower_client.data[MOWER_ID], field_name)
+        field_value = getattr(automower_api.data[MOWER_ID], field_name)
         assert field_value == snapshot(name=f"{field_name}")

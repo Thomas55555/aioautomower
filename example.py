@@ -96,7 +96,8 @@ async def main() -> None:
     automower_api.register_pong_callback(pong_callback)
     for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
         print("next start:", mower_data.planner.next_start_datetime)
-
+        if mower_data.messages:
+            pprint(mower_data.messages)
         # cursor = mower_data.calendar.timeline.overlapping(
         #     datetime.datetime.now(),
         #     datetime.datetime.now() + datetime.timedelta(weeks=1),
@@ -121,8 +122,11 @@ async def main() -> None:
         # await automower_api.commands.start_in_workarea(
         #     mower_id, 0, datetime.timedelta(minutes=30)
         # )
-        await automower_api.async_get_message(mower_id)
+        # await automower_api.async_get_message(mower_id)
 
+    await asyncio.sleep(10)
+    await automower_api.get_status()
+    print("self._data", automower_api._data)
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()

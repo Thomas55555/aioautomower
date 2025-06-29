@@ -23,12 +23,11 @@ MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
     tick=False,
 )
 async def test_timeline(
-    mock_automower_client: AbstractAuth,
+    automower_api: AutomowerSession,
     snapshot: SnapshotAssertion,
     mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Test automower timeline."""
-    automower_api = AutomowerSession(mock_automower_client, mower_tz, poll=True)
     await automower_api.connect()
     mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
     if TYPE_CHECKING:
@@ -131,11 +130,10 @@ async def test_daily_schedule(
 
 
 @time_machine.travel("2024-05-04 8:00:00")
-async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth) -> None:
+async def test_empty_tasks(automower_api_without_tasks: AutomowerSession) -> None:
     """Test automower session patch commands."""
-    automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
-    await automower_api.connect()
-    mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
+    await automower_api_without_tasks.connect()
+    mower_timeline = automower_api_without_tasks.data[MOWER_ID].calendar.timeline
     cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))
     active_after = next(cursor, None)
     assert active_after is None

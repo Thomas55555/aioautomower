@@ -11,6 +11,7 @@ from mashumaro import DataClassDictMixin, field_options
 from .model_battery import Battery  # noqa:TC001
 from .model_calendar import Tasks  # noqa:TC001
 from .model_capabilities import Capabilities  # noqa:TC001
+from .model_message import Message
 from .model_metadata import Metadata  # noqa:TC001
 from .model_mower import Mower  # noqa:TC001
 from .model_planner import Planner  # noqa:TC001
@@ -55,26 +56,6 @@ def get_work_area_name(name: str) -> str:
 
 
 @dataclass
-class Messages(DataClassDictMixin):
-    """DataClass representing a mower message entry."""
-
-    time: int = field(metadata=field_options(alias="time"))
-    """Unix timestamp (seconds) of the message."""
-
-    code: int = field(metadata=field_options(alias="code"))
-    """Internal error or warning code."""
-
-    severity: str = field(metadata=field_options(alias="severity"))
-    """Severity of the message, e.g. 'ERROR', 'WARNING', or 'FATAL'."""
-
-    latitude: float = field(metadata=field_options(alias="latitude"))
-    """Latitude where the message occurred."""
-
-    longitude: float = field(metadata=field_options(alias="longitude"))
-    """Longitude where the message occurred."""
-
-
-@dataclass
 class MowerAttributes(DataClassDictMixin):
     """DataClass for MowerAttributes."""
 
@@ -88,7 +69,7 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions]
     settings: Settings
     statistics: Statistics
-    messages: list[Messages] | None = field(
+    messages: list[Message] | None = field(
         metadata=field_options(alias="messages"),
         default=None,
     )
