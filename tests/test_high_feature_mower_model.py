@@ -13,15 +13,10 @@ from aioautomower.session import AutomowerSession
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-async def test_high_feature_mower(
-    mock_automower_client: AbstractAuth, mower_tz
-) -> None:
+async def test_high_feature_mower(mock_automower_client: AutomowerSession) -> None:
     """Test converting a high feature mower."""
-    automower_api = AutomowerSession(
-        mock_automower_client, mower_tz=mower_tz, poll=True
-    )
-    await automower_api.connect()
-    mowers = automower_api.data
+    await mock_automower_client.connect()
+    mowers = mock_automower_client.data
     assert mowers[MOWER_ID].battery.battery_percent == 100
     assert mowers[MOWER_ID].stay_out_zones.dirty is False  # type: ignore[union-attr]
     assert mowers[MOWER_ID].stay_out_zones.zones is not None  # type: ignore[union-attr]
@@ -48,16 +43,14 @@ async def test_high_feature_mower(
 
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_mower_snapshot(
-    mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion, mower_tz
+    mock_automower_client: AutomowerSession, snapshot: SnapshotAssertion
 ):
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
-    automower_api = AutomowerSession(
-        mock_automower_client, mower_tz=mower_tz, poll=True
-    )
-    await automower_api.connect()
-    automower_api.data[MOWER_ID]
-    for field in fields(automower_api.data[MOWER_ID]):
+    await mock_automower_client.connect()
+    mowers = mock_automower_client.data
+    mock_automower_client.data[MOWER_ID]
+    for field in fields(mock_automower_client.data[MOWER_ID]):
         field_name = field.name
-        field_value = getattr(automower_api.data[MOWER_ID], field_name)
+        field_value = getattr(mock_automower_client.data[MOWER_ID], field_name)
         assert field_value == snapshot(name=f"{field_name}")

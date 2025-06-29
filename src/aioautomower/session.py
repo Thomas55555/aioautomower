@@ -25,6 +25,7 @@ from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
+    MessageResponse,
     MowerDataItem,
     MowerDataResponse,
     PositionAttributes,
@@ -215,6 +216,22 @@ class AutomowerSession:
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
+
+    async def async_get_message(self, mower_id: str) -> None:
+        """Get mower status via Rest."""
+        messages: MessageResponse = await self.auth.get_json(
+            AutomowerEndpoint.messages.format(mower_id=mower_id)
+        )
+        _LOGGER.debug("messages: %s", messages)
+        message_list = (
+            messages.get("data", {}).get("attributes", {}).get("messages", [])
+        )
+        for mower in self._data["data"]:
+            if mower["id"] == mower_id:
+                mower["attributes"]["messages"] = message_list
+                _LOGGER.debug("Messages added to mower %s", mower_id)
+                break
+        _LOGGER.debug("self._data: %s", self._data)
 
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""

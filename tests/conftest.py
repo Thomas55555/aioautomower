@@ -3,12 +3,12 @@
 import zoneinfo
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
-
+import json
 import aiohttp
 import pytest
 from aioresponses import aioresponses
 from syrupy import SnapshotAssertion
-
+from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerSession
@@ -59,15 +59,20 @@ def mock_two_mower_data() -> dict:
 
 
 @pytest.fixture
-def mock_automower_client() -> Generator[AsyncMock, None, None]:
+def mock_automower_client(mower_tz) -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
-    with patch(
-        "aioautomower.auth.AbstractAuth",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.get_json.return_value = load_fixture_json("high_feature_mower.json")
-        yield client
+    mock = AsyncMock()
+
+    data = mower_list_to_dictionary_dataclass(
+        load_fixture_json("high_feature_mower.json"),
+        mower_tz,
+    )
+
+    mock.get_status.return_value = data
+    mock.async_get_message.return_value = None
+    mock.data = data
+
+    return mock
 
 
 @pytest.fixture

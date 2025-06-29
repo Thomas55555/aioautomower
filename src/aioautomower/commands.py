@@ -34,6 +34,9 @@ class AutomowerEndpoint:
     calendar = "mowers/{mower_id}/calendar"
     "Update the calendar on the mower."
 
+    messages = "mowers/{mower_id}/messages"
+    "List data for all mowers linked to a user."
+
     settings = "mowers/{mower_id}/settings"
     "Update the settings on the mower."
 
