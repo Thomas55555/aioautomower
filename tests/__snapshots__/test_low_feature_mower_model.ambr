@@ -31,6 +31,9 @@
     'work_areas': False,
   })
 # ---
+# name: test_mower_snapshot[messages]
+  None
+# ---
 # name: test_mower_snapshot[metadata]
   dict({
     'connected': True,
