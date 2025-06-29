@@ -1,14 +1,17 @@
 """Tests for asynchronous Python client for aioautomower."""
 
+import zoneinfo
 from dataclasses import fields
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import time_machine
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.model import WorkArea
 from aioautomower.session import AutomowerSession
+
+if TYPE_CHECKING:
+    from aioautomower.model import WorkArea
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
@@ -33,7 +36,7 @@ async def test_high_feature_mower(mock_automower_client: AutomowerSession) -> No
         is True
     )
     assert mowers[MOWER_ID].work_areas is not None
-    workarea = cast(dict[int, WorkArea], mowers[MOWER_ID].work_areas)
+    workarea = cast("dict[int, WorkArea]", mowers[MOWER_ID].work_areas)
     assert workarea[123456] is not None
     assert workarea[123456].name == "Front lawn"
     assert workarea[123456].cutting_height == 50
@@ -44,7 +47,7 @@ async def test_high_feature_mower(mock_automower_client: AutomowerSession) -> No
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_mower_snapshot(
     mock_automower_client: AutomowerSession, snapshot: SnapshotAssertion
-):
+) -> None:
     """Testing a snapshot of a high feature mower."""
     # pylint: disable=duplicate-code
     await mock_automower_client.connect()

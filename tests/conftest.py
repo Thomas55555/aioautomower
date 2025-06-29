@@ -2,6 +2,8 @@
 
 import zoneinfo
 from collections.abc import AsyncGenerator, Generator
+from types import TracebackType
+from typing import Self
 from unittest.mock import AsyncMock, patch
 import json
 import aiohttp
@@ -52,7 +54,6 @@ def mock_mower_data() -> dict:
 @pytest.fixture(name="two_mower_data")
 def mock_two_mower_data() -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
-
     mower1_python = load_fixture_json("high_feature_mower.json")
     mower2_python = load_fixture_json("low_feature_mower.json")
     return {"data": mower1_python["data"] + mower2_python["data"]}
@@ -114,13 +115,19 @@ async def aio_client(
         async def async_get_access_token(self) -> str:
             return jwt_token
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> Self:
             # Perform any setup needed for MyAuth
             return self
 
-        async def __aexit__(self, exc_type, exc_value, traceback):
+        async def __aexit__(
+            self,
+            exc_type: None | type[BaseException],
+            exc_value: None | BaseException,
+            traceback: None | TracebackType,
+        ) -> bool:
             # Perform any cleanup needed for MyAuth
             await self._websession.close()
+            return False
 
     async with (
         aiohttp.ClientSession() as session,

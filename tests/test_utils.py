@@ -21,7 +21,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
 
     @patch("aiohttp.ClientSession.post")
     @patch("time.time", return_value=1733953391.0)  # Mock time to return a fixed value
-    async def test_async_get_access_token_success(self, mock_time, mock_post):
+    async def test_async_get_access_token_success(self, mock_time, mock_post) -> None:
         """Test the success case of async_get_access_token function."""
         # Prepare mock response data
         mock_response_data = {"access_token": "mock_token", "expires_in": 3600}
@@ -50,7 +50,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
         assert result["status"] == 200
 
     @patch("aiohttp.ClientSession.post")
-    async def test_async_get_access_token_failure(self, mock_post):
+    async def test_async_get_access_token_failure(self, mock_post) -> None:
         """Test the failure case of async_get_access_token function."""
         # Prepare mock error response data
         mock_response_data = {"error": "invalid_grant"}
@@ -71,7 +71,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
             await async_get_access_token(client_id, client_secret)
 
     @aioresponses()
-    async def test_async_invalidate_access_token_success(self, mock_post):
+    async def test_async_invalidate_access_token_success(self, mock_post) -> None:
         """Test the success case of async_invalidate_access_token function."""
         # Mock the response data for token invalidation
         mock_response_data = {"message": "Token revoked successfully"}
@@ -95,7 +95,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
         assert result["message"] == "Token revoked successfully"
 
     @aioresponses()
-    async def test_async_invalidate_access_token_failure(self, mock_post):
+    async def test_async_invalidate_access_token_failure(self, mock_post) -> None:
         """Test the failure case of async_invalidate_access_token function."""
         # Mock the response data for token invalidation error
         mock_response_data = {"error": "invalid_token"}
