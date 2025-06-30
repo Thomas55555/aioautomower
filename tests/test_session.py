@@ -46,17 +46,20 @@ async def test_connect_disconnect(automower_client: AbstractAuth) -> None:
     assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
 @time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
 async def test_post_commands_1(
-    automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+    automower_client: AbstractAuth, mower_data: dict, mower_tz: zoneinfo.ZoneInfo
 ) -> None:
     """Test automower session post commands - Part 1."""
-    automower_api = AutomowerSession(
-        automower_client_two_mowers, mower_tz=mower_tz, poll=True
-    )
+    automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
     await automower_api.connect()
     with patch.object(
-        automower_client_two_mowers, "post_json", new_callable=AsyncMock
+        automower_client, "post_json", new_callable=AsyncMock
     ) as mocked_method:
         await automower_api.commands.resume_schedule(MOWER_ID)
         mocked_method.assert_called_with(
@@ -129,17 +132,22 @@ async def test_post_commands_1(
         assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
 @time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
 async def test_post_commands_2(
-    automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+    automower_client: AbstractAuth,
+    mower_data: dict,
+    mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Test automower session post commands - Part 2."""
-    automower_api = AutomowerSession(
-        automower_client_two_mowers, mower_tz=mower_tz, poll=True
-    )
+    automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
     await automower_api.connect()
     with patch.object(
-        automower_client_two_mowers, "post_json", new_callable=AsyncMock
+        automower_client, "post_json", new_callable=AsyncMock
     ) as mocked_method:
         await automower_api.commands.set_headlight_mode(
             MOWER_ID, HeadlightModes.ALWAYS_OFF
@@ -250,17 +258,22 @@ async def test_post_commands_2(
         assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
 @time_machine.travel(datetime(2024, 5, 4, 8, tzinfo=TEST_TZ))
 async def test_set_datetime(
-    automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+    automower_client: AbstractAuth,
+    mower_data: dict,
+    mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Test automower session post commands."""
-    automower_api = AutomowerSession(
-        automower_client_two_mowers, mower_tz=mower_tz, poll=True
-    )
+    automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
     await automower_api.connect()
     with patch.object(
-        automower_client_two_mowers, "post_json", new_callable=AsyncMock
+        automower_client, "post_json", new_callable=AsyncMock
     ) as mocked_method:
         # Test set_datetime with an aware datetime object in TZ UTC
         await automower_api.commands.set_datetime(
@@ -390,12 +403,17 @@ async def test_set_datetime(
         assert automower_api.rest_task.cancelled()
 
 
-async def test_patch_commands(automower_client_two_mowers: AbstractAuth) -> None:
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
+async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) -> None:
     """Test automower session patch commands."""
-    automower_api = AutomowerSession(automower_client_two_mowers, poll=True)
+    automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
     with patch.object(
-        automower_client_two_mowers, "patch_json", new_callable=AsyncMock
+        automower_client, "patch_json", new_callable=AsyncMock
     ) as mocked_method:
         await automower_api.commands.switch_stay_out_zone(MOWER_ID, "fake", switch=True)
         assert mocked_method.call_count == 1

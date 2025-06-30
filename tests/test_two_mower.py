@@ -7,6 +7,7 @@ import zoneinfo
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
+import pytest
 from aiohttp import ClientWebSocketResponse, WSMessage, WSMsgType
 
 from aioautomower.auth import AbstractAuth
@@ -52,9 +53,14 @@ async def test_adding_mower(
             await asyncio.wait_for(t, timeout=1.0)
 
 
-async def test_two_mower(automower_client_two_mowers: AbstractAuth) -> None:
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
+async def test_two_mower(automower_client: AbstractAuth, mower_data: dict) -> None:
     """Test converting a high feature mower."""
-    automower_api = AutomowerSession(automower_client_two_mowers, poll=True)
+    automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER1_ID].battery.battery_percent == 100
     assert automower_api.data[MOWER2_ID].battery.battery_percent == 50

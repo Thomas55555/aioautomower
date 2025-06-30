@@ -4,6 +4,7 @@ import zoneinfo
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import pytest
 import time_machine
 from aiohttp import WSMessage, WSMsgType
 from syrupy.assertion import SnapshotAssertion
@@ -87,12 +88,19 @@ async def test_timeline(
     assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_daily_schedule(
-    automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+    automower_client: AbstractAuth,
+    mower_data: dict,
+    mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Test automower timeline with low feature mower."""
-    automower_api = AutomowerSession(automower_client_two_mowers, mower_tz, poll=True)
+    automower_api = AutomowerSession(automower_client, mower_tz, poll=True)
     await automower_api.connect()
     # Test event of other mower doesn't overwrite the data
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/calendar_event.json"), None)

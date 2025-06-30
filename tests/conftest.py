@@ -162,41 +162,6 @@ def mock_automower_client_without_tasks(
         yield client
 
 
-@pytest.fixture(name="automower_client_two_mowers")
-def mock_automower_client_two_mowers(
-    mower_tz: zoneinfo.ZoneInfo,
-) -> Generator[AsyncMock, None, None]:
-    """Mock a Auth Automower client."""
-
-    def get_json_side_effect_factory(
-        mower_data: dict, message_data: dict
-    ) -> Callable[[str], dict]:
-        def side_effect(url: str) -> dict:
-            if "messages" in url:
-                return message_data
-            if "mowers" in url:
-                return mower_data
-            msg = f"Unexpected URL in get_json: {url}"
-            raise ValueError(msg)
-
-        return side_effect
-
-    with patch(
-        "aioautomower.auth.AbstractAuth",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        mower1_python = load_fixture_json("high_feature_mower.json")
-        mower2_python = load_fixture_json("low_feature_mower.json")
-        mowers_python = {"data": mower1_python["data"] + mower2_python["data"]}
-        message_data = load_fixture_json("message.json")
-        client.get_json.side_effect = get_json_side_effect_factory(
-            mower_data=mowers_python,
-            message_data=message_data,
-        )
-        yield client
-
-
 @pytest.fixture(name="aio_client")
 async def mock_aio_client(
     jwt_token: str, mower_tz: zoneinfo.ZoneInfo
