@@ -94,10 +94,13 @@ async def main() -> None:
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
     automower_api.register_pong_callback(pong_callback)
+    await asyncio.gather(
+        *(automower_api.async_get_message(mower_id) for mower_id in automower_api.data)
+    )
     for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
-        print("next start:", mower_data.planner.next_start_datetime)
         if mower_data.messages:
-            pprint(mower_data.messages)
+            pprint(mower_data.messages[0].code)
+            pprint(mower_data.statistics)
         # cursor = mower_data.calendar.timeline.overlapping(
         #     datetime.datetime.now(),
         #     datetime.datetime.now() + datetime.timedelta(weeks=1),

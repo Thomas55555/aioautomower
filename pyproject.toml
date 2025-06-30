@@ -95,12 +95,13 @@ select = ["ALL"]
 [tool.ruff.lint.per-file-ignores]
 "example.py" = ["T201", "T203"] # Allow for main entry & scripts to write to stdout
 "tests/**/*.py" = [
-    # at least this three should be fine in tests:
+    "SLF001", #access to private members
     "S101", # asserts allowed in tests...
     "ARG", # Unused function args -> fixtures nevertheless are functionally relevant...
     "FBT", # Don't care about booleans as positional arguments in tests, e.g. via @pytest.mark.parametrize()
     "PLR2004", # Magic value used in comparison, ...
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "S105", # needed in tests (hardcoded password)
 ]
 
 [tool.pylint.FORMAT]

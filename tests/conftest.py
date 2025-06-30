@@ -1,8 +1,7 @@
 """Test helpers for Husqvarna Automower."""
 
-import asyncio
 import zoneinfo
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from types import TracebackType
 from typing import Self
 from unittest.mock import AsyncMock, patch
@@ -15,7 +14,6 @@ from syrupy import SnapshotAssertion
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.session import AutomowerSession
-from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture_json
 
 from .syrupy import AutomowerSnapshotExtension
@@ -53,6 +51,12 @@ def mock_mower_data() -> dict:
     return load_fixture_json("high_feature_mower.json")
 
 
+@pytest.fixture(name="message_data")
+def mock_message_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return load_fixture_json("message.json")
+
+
 @pytest.fixture(name="two_mower_data")
 def mock_two_mower_data() -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
@@ -61,57 +65,89 @@ def mock_two_mower_data() -> dict:
     return {"data": mower1_python["data"] + mower2_python["data"]}
 
 
-@pytest.fixture(name="automower_api")
-def automower_api(
-    mower_tz: zoneinfo.ZoneInfo,
-    monkeypatch: pytest.MonkeyPatch,
-) -> AutomowerSession:
+@pytest.fixture(name="automower_client")
+def mock_automower_client(mower_data: dict) -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
-    raw = load_fixture_json("high_feature_mower.json")
-    parsed = mower_list_to_dictionary_dataclass(raw, mower_tz)
 
-    mock_auth = AsyncMock()
+    def get_json_side_effect_factory(
+        mower_data: dict, message_data: dict
+    ) -> Callable[[str], dict]:
+        async def side_effect(url: str) -> dict:
+            if "messages" in url:
+                return message_data
+            if "mowers" in url:
+                return mower_data
+            msg = f"Unexpected URL in get_json: {url}"
+            raise ValueError(msg)
 
-    loop = asyncio.new_event_loop()
-    monkeypatch.setattr(asyncio, "get_running_loop", lambda: loop)
+        return side_effect
 
-    session = AutomowerSession(mock_auth, mower_tz, poll=True)
-
-    # Methode get_status patchen
-    async def _fake_get_status() -> dict:
-        session._data = raw  # noqa: SLF001
-        session.data = parsed
-        session.current_mowers = set(parsed.keys())
-        return parsed
-
-    # async_get_message patchen
-    session.get_status = _fake_get_status  # type: ignore[method-assign]
-    session.async_get_message = AsyncMock(return_value=None)  # type: ignore[attr-defined]
-
-    return session
+    with patch(
+        "aioautomower.auth.AbstractAuth",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        message_data = load_fixture_json("message.json")
+        client.get_json = AsyncMock()  # Wichtig!
+        client.get_json.side_effect = get_json_side_effect_factory(
+            mower_data=mower_data,
+            message_data=message_data,
+        )
+        yield client
 
 
-@pytest.fixture(name="automower_api_without_tasks")
+@pytest.fixture(name="automower_client_without_tasks")
 def mock_automower_client_without_tasks(
     mower_tz: zoneinfo.ZoneInfo,
 ) -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
-    mock = AsyncMock()
-    data = mower_list_to_dictionary_dataclass(
-        load_fixture_json("high_feature_mower_without_tasks.json"),
-        mower_tz,
-    )
-    mock.get_status.return_value = data
-    mock.async_get_message.return_value = None
-    mock.data = data
-    return mock
+
+    def get_json_side_effect_factory(
+        mower_data: dict, message_data: dict
+    ) -> Callable[[str], dict]:
+        def side_effect(url: str) -> dict:
+            if "messages" in url:
+                return message_data
+            if "mowers" in url:
+                return mower_data
+            msg = f"Unexpected URL in get_json: {url}"
+            raise ValueError(msg)
+
+        return side_effect
+
+    with patch(
+        "aioautomower.auth.AbstractAuth",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        mower_data = load_fixture_json("high_feature_mower_without_tasks.json")
+        message_data = load_fixture_json("message.json")
+        client.get_json.side_effect = get_json_side_effect_factory(
+            mower_data=mower_data,
+            message_data=message_data,
+        )
+        yield client
 
 
-@pytest.fixture
+@pytest.fixture(name="automower_client_two_mowers")
 def mock_automower_client_two_mowers(
     mower_tz: zoneinfo.ZoneInfo,
 ) -> Generator[AsyncMock, None, None]:
     """Mock a Auth Automower client."""
+
+    def get_json_side_effect_factory(
+        mower_data: dict, message_data: dict
+    ) -> Callable[[str], dict]:
+        def side_effect(url: str) -> dict:
+            if "messages" in url:
+                return message_data
+            if "mowers" in url:
+                return mower_data
+            msg = f"Unexpected URL in get_json: {url}"
+            raise ValueError(msg)
+
+        return side_effect
+
     with patch(
         "aioautomower.auth.AbstractAuth",
         autospec=True,
@@ -120,24 +156,16 @@ def mock_automower_client_two_mowers(
         mower1_python = load_fixture_json("high_feature_mower.json")
         mower2_python = load_fixture_json("low_feature_mower.json")
         mowers_python = {"data": mower1_python["data"] + mower2_python["data"]}
-        client.get_json.return_value = mowers_python
+        message_data = load_fixture_json("message.json")
+        client.get_json.side_effect = get_json_side_effect_factory(
+            mower_data=mowers_python,
+            message_data=message_data,
+        )
         yield client
-    # mock = AsyncMock()
-    # mower1_python = load_fixture_json("high_feature_mower.json")
-    # mower2_python = load_fixture_json("low_feature_mower.json")
-    # mowers_python = {"data": mower1_python["data"] + mower2_python["data"]}
-    # data = mower_list_to_dictionary_dataclass(
-    #     mowers_python,
-    #     mower_tz,
-    # )
-    # mock.get_status.return_value = data
-    # mock.async_get_message.return_value = None
-    # mock.data = data
-    # return mock
 
 
-@pytest.fixture(name="automower_client")
-async def aio_client(
+@pytest.fixture(name="aio_client")
+async def mock_aio_client(
     jwt_token: str, mower_tz: zoneinfo.ZoneInfo
 ) -> AsyncGenerator[AutomowerSession, None]:
     """Return an Automower session client."""

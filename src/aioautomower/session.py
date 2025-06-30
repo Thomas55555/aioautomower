@@ -140,7 +140,6 @@ class AutomowerSession:
         if self.poll:
             await self.get_status()
             for mower_id in self.current_mowers:
-                await asyncio.sleep(1)
                 await self.async_get_message(mower_id)
             self.rest_task = asyncio.create_task(self._rest_task())
 
@@ -231,12 +230,12 @@ class AutomowerSession:
         message_list = (
             messages.get("data", {}).get("attributes", {}).get("messages", [])
         )
-
-        async with self._lock:
-            for mower in self._data.get("data", []):
-                if mower["id"] == mower_id:
-                    mower["attributes"]["messages"] = message_list
-                    break
+        if self._data is not None:
+            async with self._lock:
+                for mower in self._data["data"]:
+                    if mower["id"] == mower_id:
+                        mower["attributes"]["messages"] = message_list
+                        break
 
             self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
 

@@ -2,6 +2,8 @@
 
 from typing import Any, TypedDict
 
+from .model_message import Message
+
 
 class SystemAttributes(TypedDict):
     """Represents system attributes of the mower."""
@@ -131,6 +133,7 @@ class MowerDataAttributes(TypedDict):
     statistics: StatisticsAttributes
     stayOutZones: StayOutZonesAttributes
     settings: SettingsAttributes
+    messages: list[Message] | None
 
 
 class MowerDataItem(TypedDict):
