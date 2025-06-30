@@ -793,9 +793,14 @@ async def test_position_event(automower_client: AbstractAuth) -> None:
     assert automower_api.rest_task.cancelled()
 
 
-async def test_empty_tasks(automower_client_without_tasks: AbstractAuth) -> None:
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("mower_data_without_tasks")],
+    indirect=True,
+)
+async def test_empty_tasks(automower_client: AbstractAuth, mower_data: dict) -> None:
     """Test automower empty task."""
-    automower_api = AutomowerSession(automower_client_without_tasks, poll=True)
+    automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].calendar.tasks == []
 

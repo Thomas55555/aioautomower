@@ -66,6 +66,20 @@ def mock_low_feature_mower_data() -> dict:
     return load_fixture_json("low_feature_mower.json")
 
 
+@pytest.fixture(name="two_mower_data")
+def mock_two_mower_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    mower1_python = load_fixture_json("high_feature_mower.json")
+    mower2_python = load_fixture_json("low_feature_mower.json")
+    return {"data": mower1_python["data"] + mower2_python["data"]}
+
+
+@pytest.fixture(name="mower_data_without_tasks")
+def mock_mower_data_without_tasks() -> dict:
+    """Return a fixture for a high feature mower without tasks."""
+    return load_fixture_json("high_feature_mower_without_tasks.json")
+
+
 @pytest.fixture(name="message_data")
 def mock_message_data_fixture(request: pytest.FixtureRequest) -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
@@ -85,14 +99,6 @@ def mock_message_data() -> dict:
 def mock_empty_message_data() -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
     return load_fixture_json("empty_message.json")
-
-
-@pytest.fixture(name="two_mower_data")
-def mock_two_mower_data() -> dict:
-    """Return snapshot assertion fixture with the Automower extension."""
-    mower1_python = load_fixture_json("high_feature_mower.json")
-    mower2_python = load_fixture_json("low_feature_mower.json")
-    return {"data": mower1_python["data"] + mower2_python["data"]}
 
 
 @pytest.fixture(name="automower_client")
@@ -122,39 +128,6 @@ def mock_automower_client(
     ) as mock_client:
         client = mock_client.return_value
         client.get_json = AsyncMock()
-        client.get_json.side_effect = get_json_side_effect_factory(
-            mower_data=mower_data,
-            message_data=message_data,
-        )
-        yield client
-
-
-@pytest.fixture(name="automower_client_without_tasks")
-def mock_automower_client_without_tasks(
-    mower_tz: zoneinfo.ZoneInfo,
-) -> Generator[AsyncMock, None, None]:
-    """Mock a Auth Automower client."""
-
-    def get_json_side_effect_factory(
-        mower_data: dict, message_data: dict
-    ) -> Callable[[str], dict]:
-        def side_effect(url: str) -> dict:
-            if "messages" in url:
-                return message_data
-            if "mowers" in url:
-                return mower_data
-            msg = f"Unexpected URL in get_json: {url}"
-            raise ValueError(msg)
-
-        return side_effect
-
-    with patch(
-        "aioautomower.auth.AbstractAuth",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        mower_data = load_fixture_json("high_feature_mower_without_tasks.json")
-        message_data = load_fixture_json("message.json")
         client.get_json.side_effect = get_json_side_effect_factory(
             mower_data=mower_data,
             message_data=message_data,

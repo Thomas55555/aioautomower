@@ -136,10 +136,15 @@ async def test_daily_schedule(
     assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("mower_data_without_tasks")],
+    indirect=True,
+)
 @time_machine.travel("2024-05-04 8:00:00")
-async def test_empty_tasks(automower_client_without_tasks: AbstractAuth) -> None:
+async def test_empty_tasks(automower_client: AbstractAuth, mower_data: dict) -> None:
     """Test automower session patch commands."""
-    automower_api = AutomowerSession(automower_client_without_tasks, poll=True)
+    automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
     mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
     cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))  # noqa: DTZ001
