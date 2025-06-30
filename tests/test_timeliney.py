@@ -4,6 +4,7 @@ import zoneinfo
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import pytest
 import time_machine
 from aiohttp import WSMessage, WSMsgType
 from syrupy.assertion import SnapshotAssertion
@@ -23,19 +24,19 @@ MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
     tick=False,
 )
 async def test_timeline(
-    mock_automower_client: AbstractAuth,
+    automower_client: AbstractAuth,
     snapshot: SnapshotAssertion,
     mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Test automower timeline."""
-    automower_api = AutomowerSession(mock_automower_client, mower_tz, poll=True)
+    automower_api = AutomowerSession(automower_client, mower_tz, poll=True)
     await automower_api.connect()
     mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
     if TYPE_CHECKING:
         assert mower_timeline is not None
     cursor = mower_timeline.overlapping(
-        datetime(year=2024, month=5, day=4),
-        datetime(year=2024, month=9, day=8),
+        datetime(year=2024, month=5, day=4),  # noqa: DTZ001
+        datetime(year=2024, month=9, day=8),  # noqa: DTZ001
     )
     overlapping = next(cursor, None)
     if TYPE_CHECKING:
@@ -58,7 +59,7 @@ async def test_timeline(
         == "my_lawn schedule 1"
     )
 
-    cursor = mower_timeline.active_after(datetime.now())
+    cursor = mower_timeline.active_after(datetime.now())  # noqa: DTZ005
     active_after = next(cursor, None)
     if TYPE_CHECKING:
         assert active_after is not None
@@ -87,21 +88,26 @@ async def test_timeline(
     assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("two_mower_data")],
+    indirect=True,
+)
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_daily_schedule(
-    mock_automower_client_two_mowers: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
+    automower_client: AbstractAuth,
+    mower_data: dict,
+    mower_tz: zoneinfo.ZoneInfo,
 ) -> None:
     """Test automower timeline with low feature mower."""
-    automower_api = AutomowerSession(
-        mock_automower_client_two_mowers, mower_tz, poll=True
-    )
+    automower_api = AutomowerSession(automower_client, mower_tz, poll=True)
     await automower_api.connect()
     # Test event of other mower doesn't overwrite the data
     msg = WSMessage(WSMsgType.TEXT, load_fixture("events/calendar_event.json"), None)
-    await automower_api._handle_text_message(msg)  # noqa: SLF001
+    await automower_api._handle_text_message(msg)
 
     mower_timeline = automower_api.data["1234"].calendar.timeline
-    cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))
+    cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))  # noqa: DTZ001
     active_after = next(cursor, None)
     if TYPE_CHECKING:
         assert active_after is not None
@@ -130,12 +136,17 @@ async def test_daily_schedule(
     assert automower_api.rest_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("mower_data"),
+    [("mower_data_without_tasks")],
+    indirect=True,
+)
 @time_machine.travel("2024-05-04 8:00:00")
-async def test_empty_tasks(mock_automower_client_without_tasks: AbstractAuth) -> None:
+async def test_empty_tasks(automower_client: AbstractAuth, mower_data: dict) -> None:
     """Test automower session patch commands."""
-    automower_api = AutomowerSession(mock_automower_client_without_tasks, poll=True)
+    automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
     mower_timeline = automower_api.data[MOWER_ID].calendar.timeline
-    cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))
+    cursor = mower_timeline.active_after(datetime(year=2024, month=5, day=4))  # noqa: DTZ001
     active_after = next(cursor, None)
     assert active_after is None

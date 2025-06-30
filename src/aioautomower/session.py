@@ -25,6 +25,8 @@ from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
+    Message,
+    MessageResponse,
     MowerDataItem,
     MowerDataResponse,
     PositionAttributes,
@@ -43,6 +45,7 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
+        "_lock",
         "auth",
         "commands",
         "current_mowers",
@@ -80,6 +83,7 @@ class AutomowerSession:
         self.poll = poll
         self.rest_task: asyncio.Task[None] | None = None
         self.current_mowers: set[str] = set()
+        self._lock = asyncio.Lock()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -152,6 +156,8 @@ class AutomowerSession:
 
         if self.poll:
             await self.get_status()
+            for mower_id in self.current_mowers:
+                await self.async_get_message(mower_id)
             self.rest_task = asyncio.create_task(self._rest_task())
 
     async def _handle_text_message(self, msg: WSMessage) -> None:
@@ -205,16 +211,53 @@ class AutomowerSession:
             await self.auth.ws.send_str("")
 
     async def get_status(self) -> dict[str, MowerAttributes]:
-        """Get mower status via Rest."""
-        mower_list: MowerDataResponse = await self.auth.get_json(
-            AutomowerEndpoint.mowers
+        """Get mower status via REST."""
+        async with self._lock:
+            existing_messages: dict[str, list[Message]] = {}
+            if self._data:
+                existing_messages = {
+                    mower["id"]: mower["attributes"].get("messages") or []
+                    for mower in self._data.get("data", [])
+                    if "messages" in mower["attributes"]
+                }
+
+            mower_list: MowerDataResponse = await self.auth.get_json(
+                AutomowerEndpoint.mowers
+            )
+
+            for mower in mower_list.get("data", []):
+                mower_id = mower.get("id")
+                if mower_id in existing_messages:
+                    mower["attributes"]["messages"] = existing_messages[mower_id]
+
+            self._data = mower_list
+            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+            self.current_mowers = set(self.data.keys())
+            _LOGGER.debug("current_mowers: %s", self.current_mowers)
+            self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
+
+            return self.data
+
+    async def async_get_message(self, mower_id: str) -> None:
+        """Fetch messages for one mower and merge into self._data."""
+        messages: MessageResponse = await self.auth.get_json(
+            AutomowerEndpoint.messages.format(mower_id=mower_id)
         )
-        self._data = mower_list
-        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-        self.current_mowers = set(self.data.keys())
-        _LOGGER.debug("current_mowers: %s", self.current_mowers)
-        self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
-        return self.data
+
+        data = messages.get("data")
+        attributes = data.get("attributes") if data else None
+
+        message_list: list[Message] = []
+        if attributes is not None:
+            message_list = attributes.get("messages", [])
+        if self._data is not None:
+            async with self._lock:
+                for mower in self._data["data"]:
+                    if mower["id"] == mower_id:
+                        mower["attributes"]["messages"] = message_list
+                        break
+
+            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
 
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""

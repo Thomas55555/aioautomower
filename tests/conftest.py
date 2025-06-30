@@ -1,7 +1,7 @@
 """Test helpers for Husqvarna Automower."""
 
 import zoneinfo
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from types import TracebackType
 from typing import Self
 from unittest.mock import AsyncMock, patch
@@ -46,9 +46,24 @@ def mock_control_response() -> dict:
 
 
 @pytest.fixture(name="mower_data")
-def mock_mower_data() -> dict:
+def mower_data_fixture(request: pytest.FixtureRequest) -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    param = getattr(request, "param", None)
+    if param is None:
+        param = "high_feature_mower_data"
+    return request.getfixturevalue(param)
+
+
+@pytest.fixture(name="high_feature_mower_data")
+def mock_high_feature_mower_data() -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
     return load_fixture_json("high_feature_mower.json")
+
+
+@pytest.fixture(name="low_feature_mower_data")
+def mock_low_feature_mower_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return load_fixture_json("low_feature_mower.json")
 
 
 @pytest.fixture(name="two_mower_data")
@@ -59,49 +74,69 @@ def mock_two_mower_data() -> dict:
     return {"data": mower1_python["data"] + mower2_python["data"]}
 
 
-@pytest.fixture
-def mock_automower_client() -> Generator[AsyncMock, None, None]:
-    """Mock a Auth Automower client."""
+@pytest.fixture(name="mower_data_without_tasks")
+def mock_mower_data_without_tasks() -> dict:
+    """Return a fixture for a high feature mower without tasks."""
+    return load_fixture_json("high_feature_mower_without_tasks.json")
+
+
+@pytest.fixture(name="message_data")
+def mock_message_data_fixture(request: pytest.FixtureRequest) -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    param = getattr(request, "param", None)
+    if param is None:
+        param = "high_feature_message_data"
+    return request.getfixturevalue(param)
+
+
+@pytest.fixture(name="high_feature_message_data")
+def mock_message_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return load_fixture_json("message.json")
+
+
+@pytest.fixture(name="low_feature_message_data")
+def mock_empty_message_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return load_fixture_json("empty_message.json")
+
+
+@pytest.fixture(name="automower_client")
+def mock_automower_client(
+    mower_data: dict,
+    message_data: dict,
+) -> Generator[AsyncMock, None, None]:
+    """Mock a Auth Automower client with variable mower and message data."""
+
+    def get_json_side_effect_factory(
+        mower_data: dict,
+        message_data: dict,
+    ) -> Callable[[str], dict]:
+        async def side_effect(url: str) -> dict:
+            if "messages" in url:
+                return message_data
+            if "mowers" in url:
+                return mower_data
+            msg = f"Unexpected URL in get_json: {url}"
+            raise ValueError(msg)
+
+        return side_effect
+
     with patch(
         "aioautomower.auth.AbstractAuth",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.get_json.return_value = load_fixture_json("high_feature_mower.json")
-        yield client
-
-
-@pytest.fixture
-def mock_automower_client_without_tasks() -> Generator[AsyncMock, None, None]:
-    """Mock a Auth Automower client."""
-    with patch(
-        "aioautomower.auth.AbstractAuth",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.get_json.return_value = load_fixture_json(
-            "high_feature_mower_without_tasks.json"
+        client.get_json = AsyncMock()
+        client.get_json.side_effect = get_json_side_effect_factory(
+            mower_data=mower_data,
+            message_data=message_data,
         )
         yield client
 
 
-@pytest.fixture
-def mock_automower_client_two_mowers() -> Generator[AsyncMock, None, None]:
-    """Mock a Auth Automower client."""
-    with patch(
-        "aioautomower.auth.AbstractAuth",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        mower1_python = load_fixture_json("high_feature_mower.json")
-        mower2_python = load_fixture_json("low_feature_mower.json")
-        mowers_python = {"data": mower1_python["data"] + mower2_python["data"]}
-        client.get_json.return_value = mowers_python
-        yield client
-
-
-@pytest.fixture(name="automower_client")
-async def aio_client(
+@pytest.fixture(name="aio_client")
+async def mock_aio_client(
     jwt_token: str, mower_tz: zoneinfo.ZoneInfo
 ) -> AsyncGenerator[AutomowerSession, None]:
     """Return an Automower session client."""

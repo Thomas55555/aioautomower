@@ -8,17 +8,18 @@ from typing import TYPE_CHECKING, Any
 
 from mashumaro import DataClassDictMixin, field_options
 
-from .model_battery import Battery  # noqa:TC001
-from .model_calendar import Tasks  # noqa:TC001
-from .model_capabilities import Capabilities  # noqa:TC001
-from .model_metadata import Metadata  # noqa:TC001
-from .model_mower import Mower  # noqa:TC001
-from .model_planner import Planner  # noqa:TC001
-from .model_positions import Positions  # noqa:TC001
-from .model_settings import Settings  # noqa:TC001
-from .model_statistics import Statistics  # noqa:TC001
-from .model_stay_out_zones import StayOutZones  # noqa:TC001
-from .model_system import System  # noqa:TC001
+from .model_battery import Battery  # noqa: TC001
+from .model_calendar import Tasks  # noqa: TC001
+from .model_capabilities import Capabilities  # noqa: TC001
+from .model_message import Message  # noqa: TC001
+from .model_metadata import Metadata  # noqa: TC001
+from .model_mower import Mower  # noqa: TC001
+from .model_planner import Planner  # noqa: TC001
+from .model_positions import Positions  # noqa: TC001
+from .model_settings import Settings  # noqa: TC001
+from .model_statistics import Statistics  # noqa: TC001
+from .model_stay_out_zones import StayOutZones  # noqa: TC001
+from .model_system import System  # noqa: TC001
 from .model_work_areas import WorkArea
 
 if TYPE_CHECKING:
@@ -68,6 +69,10 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions]
     settings: Settings
     statistics: Statistics
+    messages: list[Message] | None = field(
+        metadata=field_options(alias="messages"),
+        default=None,
+    )
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )

@@ -43,6 +43,59 @@
     'work_areas': True,
   })
 # ---
+# name: test_mower_snapshot[messages]
+  list([
+    dict({
+      'code': 'no_loop_signal',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'ERROR',
+      'time': datetime.datetime(2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+    dict({
+      'code': 'upside_down',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'FATAL',
+      'time': datetime.datetime(2025, 6, 28, 14, 22, 56, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+    dict({
+      'code': 'no_loop_signal',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'ERROR',
+      'time': datetime.datetime(2025, 6, 27, 20, 15, 22, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+    dict({
+      'code': 'no_loop_signal',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'ERROR',
+      'time': datetime.datetime(2025, 6, 26, 20, 15, 22, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+    dict({
+      'code': 'connection_not_changed',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'WARNING',
+      'time': datetime.datetime(2025, 6, 21, 16, 25, 6, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+    dict({
+      'code': 'collision_sensor_error',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'FATAL',
+      'time': datetime.datetime(2025, 4, 10, 13, 54, 19, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+    dict({
+      'code': 'no_loop_signal',
+      'latitude': 49.0,
+      'longitude': 10.0,
+      'severity': 'ERROR',
+      'time': datetime.datetime(2025, 4, 10, 13, 54, 15, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+    }),
+  ])
+# ---
 # name: test_mower_snapshot[metadata]
   dict({
     'connected': True,
