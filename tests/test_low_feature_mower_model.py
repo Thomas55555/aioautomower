@@ -3,9 +3,11 @@
 import zoneinfo
 from dataclasses import fields
 
-import time_machine
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from aioautomower.auth import AbstractAuth
+from aioautomower.session import AutomowerSession
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from tests import load_fixture_json
 
@@ -23,14 +25,22 @@ async def test_low_feature_mower(mower_tz: zoneinfo.ZoneInfo) -> None:
     assert isinstance(mowers[MOWER_ID].calendar.tasks, list)
 
 
-@time_machine.travel("2024-05-06 02:50:00")
-def test_mower_snapshot(
-    snapshot: SnapshotAssertion, mower_tz: zoneinfo.ZoneInfo
+@pytest.mark.parametrize(
+    ("mower_data", "message_data"),
+    [("low_feature_mower_data", "low_feature_message_data")],
+    indirect=True,
+)
+async def test_mower_snapshot(
+    automower_client: AbstractAuth,
+    snapshot: SnapshotAssertion,
+    mower_tz: zoneinfo.ZoneInfo,
+    mower_data: dict,
+    message_data: dict,
 ) -> None:
-    """Testing a snapshot of a high feature mower."""
-    mower_python = load_fixture_json("low_feature_mower.json")
-    mowers = mower_list_to_dictionary_dataclass(mower_python, mower_tz)
-    for field in fields(mowers[MOWER_ID]):
+    """Testing a snapshot of a low feature mower."""
+    automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
+    await automower_api.connect()
+    for field in fields(automower_api.data[MOWER_ID]):
         field_name = field.name
-        field_value = getattr(mowers[MOWER_ID], field_name)
-        assert field_value == snapshot(name=f"{field_name}")
+        field_value = getattr(automower_api.data[MOWER_ID], field_name)
+        assert field_value == snapshot(name=field_name)

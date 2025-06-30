@@ -133,7 +133,7 @@ class MowerDataAttributes(TypedDict):
     statistics: StatisticsAttributes
     stayOutZones: StayOutZonesAttributes
     settings: SettingsAttributes
-    messages: list[Message] | None
+    messages: list[Message]
 
 
 class MowerDataItem(TypedDict):

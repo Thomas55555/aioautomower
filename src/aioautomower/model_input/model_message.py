@@ -24,7 +24,7 @@ class Data(TypedDict):
 
     type: Literal["messages"]
     id: Literal["messages"]
-    attributes: Attributes
+    attributes: Attributes | None
 
 
 class MessageResponse(TypedDict):

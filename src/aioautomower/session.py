@@ -25,6 +25,7 @@ from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
+    Message,
     MessageResponse,
     MowerDataItem,
     MowerDataResponse,
@@ -196,10 +197,10 @@ class AutomowerSession:
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via REST."""
         async with self._lock:
-            existing_messages = {}
+            existing_messages: dict[str, list[Message]] = {}
             if self._data:
                 existing_messages = {
-                    mower["id"]: mower["attributes"].get("messages")
+                    mower["id"]: mower["attributes"].get("messages") or []
                     for mower in self._data.get("data", [])
                     if "messages" in mower["attributes"]
                 }
@@ -227,9 +228,12 @@ class AutomowerSession:
             AutomowerEndpoint.messages.format(mower_id=mower_id)
         )
 
-        message_list = (
-            messages.get("data", {}).get("attributes", {}).get("messages", [])
-        )
+        data = messages.get("data")
+        attributes = data.get("attributes") if data else None
+
+        message_list: list[Message] = []
+        if attributes is not None:
+            message_list = attributes.get("messages", [])
         if self._data is not None:
             async with self._lock:
                 for mower in self._data["data"]:
