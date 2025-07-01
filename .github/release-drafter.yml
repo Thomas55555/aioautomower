@@ -1,59 +1,45 @@
 ---
-template: |
-  $CHANGES
-
+name-template: "$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+categories:
+  - title: "🚨 Breaking changes"
+    labels: ["breaking-change", "major"]
+  - title: "✨ New features"
+    labels: ["new-feature", "minor"]
+  - title: "🐛 Bug fixes"
+    labels: ["bugfix"]
+  - title: "🚀 Enhancements"
+    labels: ["enhancement", "refactor", "performance"]
+  - title: "🧰 Maintenance"
+    labels: ["maintenance", "ci", "security"]
+  - title: "📚 Documentation"
+    labels: ["documentation"]
+  - title: "⬆️ Dependency updates"
+    labels: ["dependencies"]
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
   major:
-    labels: ["breaking-change", "major"]
+    labels:
+      - "breaking-change"
+      - "major"
   minor:
-    labels: ["new-feature", "minor"]
+    labels:
+      - "new-feature"
+      - "minor"
   patch:
     labels:
-      [
-        "bugfix",
-        "security",
-        "performance",
-        "refactor",
-        "documentation",
-        "maintenance",
-        "ci",
-        "dependencies",
-        "enhancement",
-      ]
+      - "bugfix"
+      - "enhancement"
+      - "refactor"
+      - "performance"
+      - "maintenance"
+      - "ci"
+      - "documentation"
+      - "dependencies"
+      - "security"
   default: patch
 
-tag-prefix: "v"
-tag-template: "v$NEXT_PATCH_VERSION"
-name-template: "Release $NEXT_PATCH_VERSION"
-
-change-template: "- $TITLE (#$NUMBER)"
-no-changes-template: "* No changes"
-
-categories:
-  - title: "🚨 Breaking Changes"
-    labels: ["breaking-change", "major"]
-  - title: "🚀 New Features"
-    labels: ["new-feature", "minor"]
-  - title: "🐛 Bug Fixes"
-    labels: ["bugfix", "security"]
-  - title: "📈 Performance Improvements"
-    labels: ["performance"]
-  - title: "🧹 Refactorings"
-    labels: ["refactor"]
-  - title: "📝 Documentation"
-    labels: ["documentation"]
-  - title: "🛠 Maintenance"
-    labels: ["maintenance", "ci", "dependencies"]
-  - title: "📦 Other Changes"
-    labels: ["enhancement"]
-
-sort-by: merged_at
-sort-direction: descending
-prerelease: false
-include-pre-releases: false
-latest: "true"
-filter-by-commitish: false
-pull-request-limit: 5
-category-template: "## $TITLE"
-header: ""
-footer: ""
+template: |
+  ## What’s Changed
+  $CHANGES
