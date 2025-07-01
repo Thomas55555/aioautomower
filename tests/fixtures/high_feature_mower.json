@@ -63,7 +63,7 @@
             "action": "NOT_ACTIVE"
           },
           "restrictedReason": "WEEK_SCHEDULE",
-          "externalReason": 4000
+          "externalReason": 6500
         },
         "metadata": {
           "connected": true,

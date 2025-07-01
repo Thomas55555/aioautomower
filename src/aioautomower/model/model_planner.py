@@ -47,10 +47,12 @@ class ExternalReasons(StrEnum):
     GOOGLE_ASSISTANT = "google_assistant"
     AMAZON_ALEXA = "amazon_alexa"
     HOME_ASSISTANT = "home_assistant"
-    IFTTT = "ifttt"
-    IFTTT_WILDLIFE = "ifttt_wildlife"
-    IFTTT_FROST_AND_RAIN_GUARD = "ifttt_frost_and_rain_guard"
     IFTTT_CALENDAR_CONNECTION = "ifttt_calendar_connection"
+    IFTTT = "ifttt"
+    SMART_ROUTINE_RAIN_GUARD = "smart_routine_rain_guard"
+    SMART_ROUTINE_WILDLIFE_PROTECTION = "smart_routine_wildlife_protection"
+    SMART_ROUTINE_FROST_GUARD = "smart_routine_frost_guard"
+    SMART_ROUTINE = "smart_routine"
     GARDENA_SMART_SYSTEM = "gardena_smart_system"
     IFTTT_APPLETS = "ifttt_applets"
     DEVELOPER_PORTAL = "developer_portal"
@@ -64,16 +66,20 @@ def resolve_external_reason(reason_id: int) -> ExternalReasons | None:  # noqa: 
         return ExternalReasons.AMAZON_ALEXA
     if 3000 <= reason_id <= 3999:
         return ExternalReasons.HOME_ASSISTANT
-    if reason_id == 4000:
-        return ExternalReasons.IFTTT_WILDLIFE
-    if reason_id == 4001:
-        return ExternalReasons.IFTTT_FROST_AND_RAIN_GUARD
     if reason_id == 4002:
         return ExternalReasons.IFTTT_CALENDAR_CONNECTION
-    if 4003 <= reason_id <= 4999:
+    if 4000 <= reason_id <= 4999:
         return ExternalReasons.IFTTT
     if 5000 <= reason_id <= 5999:
         return ExternalReasons.GARDENA_SMART_SYSTEM
+    if reason_id == 6000:
+        return ExternalReasons.SMART_ROUTINE_RAIN_GUARD
+    if reason_id == 6001:
+        return ExternalReasons.SMART_ROUTINE_FROST_GUARD
+    if reason_id == 6500:
+        return ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION
+    if 6000 <= reason_id <= 6999:
+        return ExternalReasons.SMART_ROUTINE
     if 100000 <= reason_id <= 199999:
         return ExternalReasons.IFTTT_APPLETS
     if 200000 <= reason_id <= 299999:
