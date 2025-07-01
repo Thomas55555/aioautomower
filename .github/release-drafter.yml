@@ -1,7 +1,35 @@
 ---
+tag-prefix: "v"
 style: simple
-name-template: "$RESOLVED_VERSION"
+
+version-resolver:
+  major:
+    labels: ["breaking-change", "major"]
+  minor:
+    labels: ["new-feature", "minor"]
+  patch:
+    labels:
+      - "bugfix"
+      - "security"
+      - "performance"
+      - "refactor"
+      - "documentation"
+      - "maintenance"
+      - "ci"
+      - "dependencies"
+      - "enhancement"
+  default: patch
+
 tag-template: "v$RESOLVED_VERSION"
+name-template: "v$RESOLVED_VERSION"
+
+sort-by: merged_at
+sort-direction: descending
+prerelease: false
+include-pre-releases: false
+latest: "true"
+filter-by-commitish: false
+pull-request-limit: 5
 categories:
   - title: "🚨 Breaking changes"
     labels: ["breaking-change", "major"]
@@ -19,27 +47,6 @@ categories:
     labels: ["dependencies"]
 change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
-version-resolver:
-  major:
-    labels:
-      - "breaking-change"
-      - "major"
-  minor:
-    labels:
-      - "new-feature"
-      - "minor"
-  patch:
-    labels:
-      - "bugfix"
-      - "enhancement"
-      - "refactor"
-      - "performance"
-      - "maintenance"
-      - "ci"
-      - "documentation"
-      - "dependencies"
-      - "security"
-  default: patch
 
 template: |
   ## What’s Changed
