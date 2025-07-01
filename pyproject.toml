@@ -65,7 +65,9 @@ yamllint = "1.37.1"
 [tool.poetry-dynamic-versioning]
 enable = true
 vcs = "git"
+style = "semver"
 metadata = false
+tag-pattern = "^v(?P<version>.*)$"
 
 [tool.pytest.ini_options]
 addopts = "--cov=aioautomower --cov-report=term-missing -vv"
