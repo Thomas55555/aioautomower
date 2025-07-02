@@ -2,6 +2,8 @@
 
 from typing import Any, TypedDict
 
+from .model_message import Message
+
 
 class GenericEventData(TypedDict):
     """Generic websocket event."""
@@ -21,6 +23,12 @@ class CuttingHeightAttributes(TypedDict):
     """Cutting height attributes."""
 
     cuttingHeight: CuttingHeight
+
+
+class MessageAttributes(TypedDict):
+    """Position attributes."""
+
+    message: Message
 
 
 class Position(TypedDict):
