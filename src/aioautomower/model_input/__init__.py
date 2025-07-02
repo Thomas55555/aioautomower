@@ -4,6 +4,7 @@ from .model_event import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
+    MessageAttributes,
     PositionAttributes,
 )
 from .model_message import Message, MessageResponse
@@ -18,6 +19,7 @@ __all__ = [
     "GenericEventData",
     "HeadLightAttributes",
     "Message",
+    "MessageAttributes",
     "MessageResponse",
     "MowerDataAttributes",
     "MowerDataItem",

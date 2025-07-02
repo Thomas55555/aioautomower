@@ -8,12 +8,12 @@ class Message(TypedDict):
 
     time: int
     code: int
-    severity: Literal["ERROR", "WARNING", "FATAL"]
+    severity: Literal["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "SW", "UNKNOWN"]
     latitude: float
     longitude: float
 
 
-class Attributes(TypedDict):
+class MesssageAttributes(TypedDict):
     """Container for a list of diagnostic messages."""
 
     messages: list[Message]
@@ -24,7 +24,7 @@ class Data(TypedDict):
 
     type: Literal["messages"]
     id: Literal["messages"]
-    attributes: Attributes | None
+    attributes: MesssageAttributes | None
 
 
 class MessageResponse(TypedDict):

@@ -24,6 +24,7 @@ from aioautomower.model import (
     Actions,
     Calendar,
     HeadlightModes,
+    Message,
     MowerModes,
     Positions,
     RestrictedReasons,
@@ -786,6 +787,49 @@ async def test_position_event(automower_client: AbstractAuth) -> None:
     )
     await asyncio.sleep(0)
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
+    listening_task.cancel()
+    await automower_api.close()
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_message_event(automower_client: AbstractAuth) -> None:
+    """Test automower websocket V2 message update."""
+    automower_api = AutomowerSession(automower_client, poll=True)
+    await automower_api.connect()
+    assert automower_api.data[MOWER_ID].messages[0] == Message(
+        time=datetime(
+            2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
+        ),
+        code="no_loop_signal",
+        severity="ERROR",
+        latitude=49.0,
+        longitude=10.0,
+    )
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/message_event.json"),
+                None,
+            ),
+            asyncio.CancelledError(),
+        ]
+    )
+    await asyncio.sleep(0)
+    assert automower_api.data[MOWER_ID].messages[0] == Message(
+        time=datetime(
+            2024, 10, 4, 9, 43, 16, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
+        ),
+        code="wrong_loop_signal",
+        severity="WARNING",
+        latitude=57.7086409,
+        longitude=14.1678988,
+    )
     listening_task.cancel()
     await automower_api.close()
     if TYPE_CHECKING:

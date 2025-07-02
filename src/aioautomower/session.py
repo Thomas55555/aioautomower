@@ -26,6 +26,7 @@ from .model_input import (
     GenericEventData,
     HeadLightAttributes,
     Message,
+    MessageAttributes,
     MessageResponse,
     MowerDataItem,
     MowerDataResponse,
@@ -280,6 +281,7 @@ class AutomowerSession:
         handlers: dict[str, Callable[[MowerDataItem, Any], None]] = {
             "cuttingHeight": self._handle_cutting_height_event,
             "headLight": self._handle_headlight_event,
+            "message": self._handle_message_event,
             "position": self._handle_position_event,
         }
 
@@ -307,6 +309,11 @@ class AutomowerSession:
         mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headLight"][
             "mode"
         ]
+
+    def _handle_message_event(
+        self, mower: MowerDataItem, attributes: MessageAttributes
+    ) -> None:
+        mower["attributes"]["messages"].insert(0, attributes["message"])
 
     def _handle_position_event(
         self, mower: MowerDataItem, attributes: PositionAttributes
