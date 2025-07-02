@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime  # noqa:TC003
+from enum import StrEnum
 
 from mashumaro import DataClassDictMixin, field_options
 
@@ -12,6 +13,18 @@ from .model_mower import (
     snake_case,
 )
 from .utils import convert_timestamp_to_aware_datetime
+
+
+class Severity(StrEnum):
+    """Severity level of a diagnostic message."""
+
+    FATAL = "fatal"
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
+    DEBUG = "debug"
+    SW = "sw"
+    UNKNOWN = "unknown"
 
 
 @dataclass
@@ -30,6 +43,11 @@ class Message(DataClassDictMixin):
             alias="code",
         )
     )
-    severity: str = field(metadata=field_options(alias="severity"))
+    severity: Severity = field(
+        metadata=field_options(
+            alias="severity",
+            deserialize=lambda x: Severity(x.lower()),
+        )
+    )
     latitude: float = field(metadata=field_options(alias="latitude"))
     longitude: float = field(metadata=field_options(alias="longitude"))

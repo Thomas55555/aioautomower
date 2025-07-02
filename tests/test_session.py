@@ -28,6 +28,7 @@ from aioautomower.model import (
     MowerModes,
     Positions,
     RestrictedReasons,
+    Severity,
     Tasks,
 )
 from aioautomower.session import AutomowerSession
@@ -803,7 +804,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
             2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
         ),
         code="no_loop_signal",
-        severity="ERROR",
+        severity=Severity.ERROR,
         latitude=49.0,
         longitude=10.0,
     )
@@ -826,7 +827,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
             2024, 10, 4, 9, 43, 16, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
         ),
         code="wrong_loop_signal",
-        severity="WARNING",
+        severity=Severity.WARNING,
         latitude=57.7086409,
         longitude=14.1678988,
     )
