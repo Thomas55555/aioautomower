@@ -69,9 +69,9 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions]
     settings: Settings
     statistics: Statistics
-    messages: list[Message] | None = field(
+    messages: list[Message] = field(
+        default_factory=list,
         metadata=field_options(alias="messages"),
-        default=None,
     )
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
