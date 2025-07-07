@@ -22,6 +22,7 @@ from .model import (
     MowerAttributes,
 )
 from .model_input import (
+    CalendarAttributes,
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
@@ -46,6 +47,7 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
+        "_get_status_task",
         "_lock",
         "auth",
         "commands",
@@ -83,6 +85,7 @@ class AutomowerSession:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.poll = poll
         self.rest_task: asyncio.Task[None] | None = None
+        self._get_status_task: asyncio.Task[None] | None = None
         self.current_mowers: set[str] = set()
         self._lock = asyncio.Lock()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
@@ -279,6 +282,7 @@ class AutomowerSession:
     def _process_event(self, mower: MowerDataItem, new_data: GenericEventData) -> None:
         """Process a specific event type."""
         handlers: dict[str, Callable[[MowerDataItem, Any], None]] = {
+            "calendar": self._handle_calendar_event,
             "cuttingHeight": self._handle_cutting_height_event,
             "headLight": self._handle_headlight_event,
             "message": self._handle_message_event,
@@ -290,9 +294,25 @@ class AutomowerSession:
             if key in attributes:
                 handler(mower, attributes)  # Pass the specific attribute
                 return
-        mower_attributes = mower["attributes"]
         # General handling for other attributes
-        self._update_nested_dict(cast("dict[str, Any]", mower_attributes), attributes)
+        self._update_nested_dict(
+            cast("dict[str, Any]", mower["attributes"]), attributes
+        )
+
+    def _handle_calendar_event(
+        self, mower: MowerDataItem, attributes: CalendarAttributes
+    ) -> None:
+        """Handle cuttingHeight-specific updates."""
+        for task in attributes["calendar"]["tasks"]:
+            work_area_id = task.get("workAreaId")
+            if work_area_id is not None:
+                for work_area in mower["attributes"]["workAreas"]:
+                    if work_area_id is not work_area["workAreaId"]:
+                        self._get_status_task = asyncio.create_task(self.get_status())
+                        return
+                    self._update_nested_dict(
+                        cast("dict[str, Any]", mower["attributes"]), attributes
+                    )
 
     def _handle_cutting_height_event(
         self, mower: MowerDataItem, attributes: CuttingHeightAttributes

@@ -1,6 +1,7 @@
 """Models for inputs from the Autcomower Connect API."""
 
 from .model_event import (
+    CalendarAttributes,
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
@@ -15,6 +16,7 @@ from .model_rest import (
 )
 
 __all__ = [
+    "CalendarAttributes",
     "CuttingHeightAttributes",
     "GenericEventData",
     "HeadLightAttributes",
