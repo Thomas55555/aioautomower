@@ -22,6 +22,7 @@ from .exceptions import (
     ApiForbiddenError,
     ApiUnauthorizedError,
     AuthError,
+    HusqvarnaWSClientError,
     HusqvarnaWSServerHandshakeError,
 )
 from .utils import structure_token
@@ -186,3 +187,5 @@ class AbstractAuth(ABC):
             )
         except WSServerHandshakeError as err:
             raise HusqvarnaWSServerHandshakeError(err) from err
+        except ClientError as err:
+            raise HusqvarnaWSClientError(err) from err
