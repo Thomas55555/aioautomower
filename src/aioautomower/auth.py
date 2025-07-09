@@ -1,6 +1,7 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
 import asyncio
+import json
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
@@ -77,7 +78,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", result)
+        _LOGGER.debug("response=%s", json.dumps(result))
         return result
 
     async def post(self, url: str, **kwargs: Any) -> ClientResponse:
@@ -97,7 +98,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", result)
+        _LOGGER.debug("response=%s", json.dumps(result))
         return result
 
     async def patch(self, url: str, **kwargs: Any) -> ClientResponse:
@@ -117,7 +118,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", result)
+        _LOGGER.debug("response=%s", json.dumps(result))
         return result
 
     async def _async_get_access_token(self) -> str:
