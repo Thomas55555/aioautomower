@@ -47,4 +47,4 @@ class PositionAttributes(TypedDict):
 class HeadLightAttributes(TypedDict):
     """Head light attributes."""
 
-    headLight: dict[str, str]
+    headlights: dict[str, str]

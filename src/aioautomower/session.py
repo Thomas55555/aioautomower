@@ -280,7 +280,7 @@ class AutomowerSession:
         """Process a specific event type."""
         handlers: dict[str, Callable[[MowerDataItem, Any], None]] = {
             "cuttingHeight": self._handle_cutting_height_event,
-            "headLight": self._handle_headlight_event,
+            "headlights": self._handle_headlight_event,
             "message": self._handle_message_event,
             "position": self._handle_position_event,
         }
@@ -306,7 +306,7 @@ class AutomowerSession:
         self, mower: MowerDataItem, attributes: HeadLightAttributes
     ) -> None:
         """Handle headLight-specific updates."""
-        mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headLight"][
+        mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headlights"][
             "mode"
         ]
 
