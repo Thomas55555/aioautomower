@@ -31,10 +31,6 @@
     'work_areas': False,
   })
 # ---
-# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][messages]
-  list([
-  ])
-# ---
 # name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][metadata]
   dict({
     'connected': True,

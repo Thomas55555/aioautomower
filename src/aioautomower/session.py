@@ -18,16 +18,11 @@ from .exceptions import (
     HusqvarnaTimeoutError,
     NoDataAvailableError,
 )
-from .model import (
-    MowerAttributes,
-)
+from .model import Message, MessageData, MowerAttributes
 from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
-    Message,
-    MessageAttributes,
-    MessageResponse,
     MowerDataItem,
     MowerDataResponse,
     PositionAttributes,
@@ -54,6 +49,7 @@ class AutomowerSession:
         "data_update_cbs",
         "last_ws_message",
         "loop",
+        "messages",
         "mower_tz",
         "poll",
         "pong_cbs",
@@ -85,6 +81,7 @@ class AutomowerSession:
         self.rest_task: asyncio.Task[None] | None = None
         self.current_mowers: set[str] = set()
         self._lock = asyncio.Lock()
+        self.messages: dict[str, MessageData] = {}
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -213,52 +210,25 @@ class AutomowerSession:
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via REST."""
-        async with self._lock:
-            existing_messages: dict[str, list[Message]] = {}
-            if self._data:
-                existing_messages = {
-                    mower["id"]: mower["attributes"].get("messages") or []
-                    for mower in self._data.get("data", [])
-                    if "messages" in mower["attributes"]
-                }
+        mower_list: MowerDataResponse = await self.auth.get_json(
+            AutomowerEndpoint.mowers
+        )
+        self._data = mower_list
+        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        self.current_mowers = set(self.data.keys())
+        _LOGGER.debug("current_mowers: %s", self.current_mowers)
+        self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
+        return self.data
 
-            mower_list: MowerDataResponse = await self.auth.get_json(
-                AutomowerEndpoint.mowers
-            )
-
-            for mower in mower_list.get("data", []):
-                mower_id = mower.get("id")
-                if mower_id in existing_messages:
-                    mower["attributes"]["messages"] = existing_messages[mower_id]
-
-            self._data = mower_list
-            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-            self.current_mowers = set(self.data.keys())
-            _LOGGER.debug("current_mowers: %s", self.current_mowers)
-            self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
-
-            return self.data
-
-    async def async_get_message(self, mower_id: str) -> None:
-        """Fetch messages for one mower and merge into self._data."""
-        messages: MessageResponse = await self.auth.get_json(
+    async def async_get_message(self, mower_id: str) -> dict[str, MessageData]:
+        """Fetch messages for one mower and merge into self._messages."""
+        raw_data = await self.auth.get_json(
             AutomowerEndpoint.messages.format(mower_id=mower_id)
         )
-
-        data = messages.get("data")
-        attributes = data.get("attributes") if data else None
-
-        message_list: list[Message] = []
-        if attributes is not None:
-            message_list = attributes.get("messages", [])
-        if self._data is not None:
-            async with self._lock:
-                for mower in self._data["data"]:
-                    if mower["id"] == mower_id:
-                        mower["attributes"]["messages"] = message_list
-                        break
-
-            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        msg_resp = MessageData.from_dict(raw_data["data"])
+        msg_resp.id = mower_id
+        self.messages[mower_id] = msg_resp
+        return self.messages
 
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
@@ -284,7 +254,6 @@ class AutomowerSession:
             "message": self._handle_message_event,
             "position": self._handle_position_event,
         }
-
         attributes = new_data.get("attributes", {})
         for key, handler in handlers.items():
             if key in attributes:
@@ -311,9 +280,10 @@ class AutomowerSession:
         ]
 
     def _handle_message_event(
-        self, mower: MowerDataItem, attributes: MessageAttributes
+        self, mower: MowerDataItem, attributes: dict[str, Any]
     ) -> None:
-        mower["attributes"]["messages"].insert(0, attributes["message"])
+        new_msg = Message.from_dict(attributes["message"])
+        self.messages[mower["id"]].attributes.messages.insert(0, new_msg)
 
     def _handle_position_event(
         self, mower: MowerDataItem, attributes: PositionAttributes
