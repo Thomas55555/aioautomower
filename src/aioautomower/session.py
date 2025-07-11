@@ -49,6 +49,7 @@ class AutomowerSession:
         "data_update_cbs",
         "last_ws_message",
         "loop",
+        "message_update_cbs",
         "messages",
         "mower_tz",
         "poll",
@@ -82,6 +83,7 @@ class AutomowerSession:
         self.current_mowers: set[str] = set()
         self._lock = asyncio.Lock()
         self.messages: dict[str, MessageData] = {}
+        self.message_update_cbs: list[Callable[[str, Message], None]] = []
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -103,6 +105,31 @@ class AutomowerSession:
         """Schedule a data callbacks."""
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
+
+    def register_message_callback(
+        self, callback: Callable[[str, Message], None]
+    ) -> None:
+        """Register a callback that is triggered when a new message arrives."""
+        if callback not in self.message_update_cbs:
+            self.message_update_cbs.append(callback)
+
+    def unregister_message_callback(
+        self, callback: Callable[[str, Message], None]
+    ) -> None:
+        """Unregister a previously registered message callback."""
+        if callback in self.message_update_cbs:
+            self.message_update_cbs.remove(callback)
+
+    def _schedule_message_callback(
+        self, mower_id: str, message: Message, cb: Callable[[str, Message], None]
+    ) -> None:
+        """Schedule a single message callback (thread-safe)."""
+        self.loop.call_soon_threadsafe(cb, mower_id, message)
+
+    def _schedule_message_callbacks(self, mower_id: str, message: Message) -> None:
+        """Schedule all registered message callbacks."""
+        for cb in self.message_update_cbs:
+            self._schedule_message_callback(mower_id, message, cb)
 
     def unregister_data_callback(
         self, callback: Callable[[dict[str, MowerAttributes]], None]
@@ -232,6 +259,12 @@ class AutomowerSession:
 
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
+        if new_data["type"] == EventTypesV2.MESSAGES:
+            new_msg = Message.from_dict(new_data["attributes"]["message"])
+            mower_id = new_data["id"]
+            self.messages[mower_id].attributes.messages.insert(0, new_msg)
+            self._schedule_message_callbacks(mower_id, new_msg)
+
         if self._data is None:
             raise NoDataAvailableError
 
@@ -251,7 +284,6 @@ class AutomowerSession:
         handlers: dict[str, Callable[[MowerDataItem, Any], None]] = {
             "cuttingHeight": self._handle_cutting_height_event,
             "headlights": self._handle_headlight_event,
-            "message": self._handle_message_event,
             "position": self._handle_position_event,
         }
         attributes = new_data.get("attributes", {})
@@ -278,12 +310,6 @@ class AutomowerSession:
         mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headlights"][
             "mode"
         ]
-
-    def _handle_message_event(
-        self, mower: MowerDataItem, attributes: dict[str, Any]
-    ) -> None:
-        new_msg = Message.from_dict(attributes["message"])
-        self.messages[mower["id"]].attributes.messages.insert(0, new_msg)
 
     def _handle_position_event(
         self, mower: MowerDataItem, attributes: PositionAttributes
