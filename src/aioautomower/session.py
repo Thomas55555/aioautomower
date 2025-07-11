@@ -220,7 +220,7 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
-    async def async_get_message(self, mower_id: str) -> dict[str, MessageData]:
+    async def async_get_message(self, mower_id: str) -> MessageData:
         """Fetch messages for one mower and merge into self._messages."""
         raw_data = await self.auth.get_json(
             AutomowerEndpoint.messages.format(mower_id=mower_id)
@@ -228,7 +228,7 @@ class AutomowerSession:
         msg_resp = MessageData.from_dict(raw_data["data"])
         msg_resp.id = mower_id
         self.messages[mower_id] = msg_resp
-        return self.messages
+        return msg_resp
 
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
