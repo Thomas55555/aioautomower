@@ -5,7 +5,8 @@ import json
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
-from typing import Any
+from json import JSONDecodeError
+from typing import Any, cast
 
 from aiohttp import (
     ClientError,
@@ -13,6 +14,7 @@ from aiohttp import (
     ClientResponseError,
     ClientSession,
     ClientWebSocketResponse,
+    ContentTypeError,
     WSServerHandshakeError,
 )
 
@@ -148,34 +150,54 @@ class AbstractAuth(ABC):
         try:
             resp.raise_for_status()
         except ClientResponseError as err:
+            if detail:
+                _LOGGER.debug("%s", " | ".join(detail))
             if err.status == HTTPStatus.BAD_REQUEST:
                 raise ApiBadRequestError(err) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise ApiUnauthorizedError(err) from err
             if err.status == HTTPStatus.FORBIDDEN:
                 raise ApiForbiddenError(err) from err
-            detail.append(err.message)
             raise ApiError(": ".join(detail)) from err
         except ClientError as err:
             raise ApiError(err) from err
         return resp
 
     @staticmethod
-    async def _error_detail(resp: ClientResponse) -> list[str]:
-        """Return an error message string from the API response."""
-        if resp.status < 400:
-            return []
+    async def parse_json(resp: ClientResponse) -> dict[str, Any]:
+        """Try to parse response as JSON."""
         try:
             result = await resp.json()
-            error = result.get(ERROR, {})
-        except ClientError:
-            return []
-        message = ["Error from API", f"{resp.status}"]
-        if STATUS in error:
-            message.append(f"{error[STATUS]}")
-        if MESSAGE in error:
-            message.append(error[MESSAGE])
+            return cast("dict[str, Any]", result)
+        except (ContentTypeError, JSONDecodeError):
+            return {}
+
+    @staticmethod
+    def extract_error_details(result: dict[str, Any]) -> list[str]:
+        """Extract error messages from JSON result."""
+        message = [f"{result.get('status', '<no status>')}"]
+        error = result.get("error", {})
+        if isinstance(error, dict):
+            message.append(str(error.get("status", "<no status>")))
+            message.append(str(error.get("message", "<no message>")))
+        else:
+            message.append(str(error))
         return message
+
+    @staticmethod
+    async def _error_detail(resp: ClientResponse) -> list[str]:
+        """
+        Extract error details from an HTTP response.
+
+        Returns a list of error messages or empty if no error.
+        """
+        if resp.status < 400:
+            return []
+        result = await AbstractAuth.parse_json(resp)
+        if not result:
+            body = await resp.text()
+            return [f"{resp.status}", body.strip() or "<empty>"]
+        return AbstractAuth.extract_error_details(result)
 
     async def websocket_connect(self) -> None:
         """Start a websocket connection."""
