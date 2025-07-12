@@ -83,7 +83,7 @@ class AutomowerSession:
         self.current_mowers: set[str] = set()
         self._lock = asyncio.Lock()
         self.messages: dict[str, MessageData] = {}
-        self.message_update_cbs: list[Callable[[str, Message], None]] = []
+        self.message_update_cbs: list[Callable[[str, MessageData], None]] = []
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -107,29 +107,32 @@ class AutomowerSession:
             self._schedule_data_callback(cb)
 
     def register_message_callback(
-        self, callback: Callable[[str, Message], None]
+        self, callback: Callable[[str, MessageData], None]
     ) -> None:
-        """Register a callback that is triggered when a new message arrives."""
+        """Register a callback triggered when new message data arrives."""
         if callback not in self.message_update_cbs:
             self.message_update_cbs.append(callback)
 
     def unregister_message_callback(
-        self, callback: Callable[[str, Message], None]
+        self, callback: Callable[[str, MessageData], None]
     ) -> None:
         """Unregister a previously registered message callback."""
         if callback in self.message_update_cbs:
             self.message_update_cbs.remove(callback)
 
     def _schedule_message_callback(
-        self, mower_id: str, message: Message, cb: Callable[[str, Message], None]
+        self,
+        mower_id: str,
+        msg_data: MessageData,
+        cb: Callable[[str, MessageData], None],
     ) -> None:
-        """Schedule a single message callback (thread-safe)."""
-        self.loop.call_soon_threadsafe(cb, mower_id, message)
+        """Schedule a single message data callback (thread-safe)."""
+        self.loop.call_soon_threadsafe(cb, mower_id, msg_data)
 
-    def _schedule_message_callbacks(self, mower_id: str, message: Message) -> None:
-        """Schedule all registered message callbacks."""
+    def _schedule_message_callbacks(self, mower_id: str) -> None:
+        """Schedule all registered message data callbacks."""
         for cb in self.message_update_cbs:
-            self._schedule_message_callback(mower_id, message, cb)
+            self._schedule_message_callback(mower_id, self.messages[mower_id], cb)
 
     def unregister_data_callback(
         self, callback: Callable[[dict[str, MowerAttributes]], None]
@@ -263,7 +266,7 @@ class AutomowerSession:
             new_msg = Message.from_dict(new_data["attributes"]["message"])
             mower_id = new_data["id"]
             self.messages[mower_id].attributes.messages.insert(0, new_msg)
-            self._schedule_message_callbacks(mower_id, new_msg)
+            self._schedule_message_callbacks(mower_id)
 
         if self._data is None:
             raise NoDataAvailableError
