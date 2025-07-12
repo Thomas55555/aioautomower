@@ -799,7 +799,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 message update."""
     automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
-    assert automower_api.data[MOWER_ID].messages[0] == Message(
+    assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
         ),
@@ -822,7 +822,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
         ]
     )
     await asyncio.sleep(0)
-    assert automower_api.data[MOWER_ID].messages[0] == Message(
+    assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2024, 10, 4, 9, 43, 16, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
         ),

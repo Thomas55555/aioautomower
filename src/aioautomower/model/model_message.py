@@ -51,3 +51,21 @@ class Message(DataClassDictMixin):
     )
     latitude: float = field(metadata=field_options(alias="latitude"))
     longitude: float = field(metadata=field_options(alias="longitude"))
+
+
+@dataclass
+class MessageAttributes(DataClassDictMixin):
+    """Message attribute container."""
+
+    messages: list[Message] = field(
+        metadata=field_options(alias="messages"), default_factory=list
+    )
+
+
+@dataclass
+class MessageData(DataClassDictMixin):
+    """Top-level message data node."""
+
+    type: str
+    id: str
+    attributes: MessageAttributes = field(metadata=field_options(alias="attributes"))

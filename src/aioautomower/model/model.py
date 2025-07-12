@@ -11,7 +11,6 @@ from mashumaro import DataClassDictMixin, field_options
 from .model_battery import Battery  # noqa: TC001
 from .model_calendar import Tasks  # noqa: TC001
 from .model_capabilities import Capabilities  # noqa: TC001
-from .model_message import Message  # noqa: TC001
 from .model_metadata import Metadata  # noqa: TC001
 from .model_mower import Mower  # noqa: TC001
 from .model_planner import Planner  # noqa: TC001
@@ -69,10 +68,6 @@ class MowerAttributes(DataClassDictMixin):
     positions: list[Positions]
     settings: Settings
     statistics: Statistics
-    messages: list[Message] = field(
-        default_factory=list,
-        metadata=field_options(alias="messages"),
-    )
     stay_out_zones: StayOutZones | None = field(
         metadata=field_options(alias="stayOutZones"), default=None
     )

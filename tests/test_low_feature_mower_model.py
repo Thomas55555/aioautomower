@@ -40,7 +40,14 @@ async def test_mower_snapshot(
     """Testing a snapshot of a low feature mower."""
     automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
     await automower_api.connect()
-    for field in fields(automower_api.data[MOWER_ID]):
+    mower_data = automower_api.data[MOWER_ID]
+    for field in fields(mower_data):
         field_name = field.name
-        field_value = getattr(automower_api.data[MOWER_ID], field_name)
-        assert field_value == snapshot(name=field_name)
+        field_value = getattr(mower_data, field_name)
+        assert field_value == snapshot(name=f"status.{field_name}")
+
+    message_data = automower_api.messages[MOWER_ID]
+    assert message_data == snapshot(name="message_data")
+
+    await automower_api.close()
+    assert automower_api._rest_task is not None
