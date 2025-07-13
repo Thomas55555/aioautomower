@@ -93,6 +93,16 @@ class AutomowerSession:
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
 
+    def unregister_data_callback(
+        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
+        """Unregister a data update callback.
+
+        :param func callback: Takes one function, which should be unregistered.
+        """
+        if callback in self.data_update_cbs:
+            self.data_update_cbs.remove(callback)
+
     def _schedule_data_callback(
         self, cb: Callable[[dict[str, MowerAttributes]], None]
     ) -> None:
@@ -107,14 +117,14 @@ class AutomowerSession:
             self._schedule_data_callback(cb)
 
     def register_message_callback(
-        self, callback: Callable[[str, MessageData], None]
+        self, callback: Callable[[MessageData], None]
     ) -> None:
         """Register a callback triggered when new message data arrives."""
         if callback not in self.message_update_cbs:
             self.message_update_cbs.append(callback)
 
     def unregister_message_callback(
-        self, callback: Callable[[str, MessageData], None]
+        self, callback: Callable[[MessageData], None]
     ) -> None:
         """Unregister a previously registered message callback."""
         if callback in self.message_update_cbs:
@@ -122,27 +132,15 @@ class AutomowerSession:
 
     def _schedule_message_callback(
         self,
-        mower_id: str,
         msg_data: MessageData,
-        cb: Callable[[str, MessageData], None],
+        cb: Callable[[MessageData], None],
     ) -> None:
         """Schedule a single message data callback (thread-safe)."""
-        self.loop.call_soon_threadsafe(cb, mower_id, msg_data)
+        self.loop.call_soon_threadsafe(cb, msg_data)
 
-    def _schedule_message_callbacks(self, mower_id: str) -> None:
-        """Schedule all registered message data callbacks."""
+    def _schedule_message_callbacks(self, msg_data: MessageData) -> None:
         for cb in self.message_update_cbs:
-            self._schedule_message_callback(mower_id, self.messages[mower_id], cb)
-
-    def unregister_data_callback(
-        self, callback: Callable[[dict[str, MowerAttributes]], None]
-    ) -> None:
-        """Unregister a data update callback.
-
-        :param func callback: Takes one function, which should be unregistered.
-        """
-        if callback in self.data_update_cbs:
-            self.data_update_cbs.remove(callback)
+            self._schedule_message_callback(msg_data, cb)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
