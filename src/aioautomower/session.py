@@ -348,3 +348,5 @@ class AutomowerSession:
                 self.rest_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await asyncio.gather(self.rest_task)
+        for mower_id, cb in self.message_update_cbs[:]:
+            self.unregister_message_callback(cb, mower_id)
