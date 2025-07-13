@@ -41,7 +41,6 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
-        "_lock",
         "auth",
         "commands",
         "current_mowers",
@@ -67,23 +66,24 @@ class AutomowerSession:
         """Create a session.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
+        :param class mower_tz: The ZoneInfo object for the mower, default is None
         :param bool poll: Poll data with rest if True.
         """
         self._data: MowerDataResponse | None = None
         self.auth = auth
-        self.data: dict[str, MowerAttributes] = {}
         self.mower_tz = mower_tz or tzlocal.get_localzone()
+        self.data: dict[str, MowerAttributes] = {}
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
-        self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
+        self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self.poll = poll
-        self.rest_task: asyncio.Task[None] | None = None
-        self.current_mowers: set[str] = set()
-        self._lock = asyncio.Lock()
+        self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
         self.messages: dict[str, MessageData] = {}
-        self.message_update_cbs: list[Callable[[str, MessageData], None]] = []
+        self.poll = poll
+        self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
+        self.rest_task: asyncio.Task[None] | None = None
+
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -117,18 +117,20 @@ class AutomowerSession:
             self._schedule_data_callback(cb)
 
     def register_message_callback(
-        self, callback: Callable[[MessageData], None]
+        self,
+        callback: Callable[[MessageData], None],
+        mower_id: str,
     ) -> None:
-        """Register a callback triggered when new message data arrives."""
-        if callback not in self.message_update_cbs:
-            self.message_update_cbs.append(callback)
+        """Register a callback triggered when new messages arrive for specific mower."""
+        self.message_update_cbs.append((mower_id, callback))
 
     def unregister_message_callback(
-        self, callback: Callable[[MessageData], None]
+        self,
+        callback: Callable[[MessageData], None],
+        mower_id: str,
     ) -> None:
         """Unregister a previously registered message callback."""
-        if callback in self.message_update_cbs:
-            self.message_update_cbs.remove(callback)
+        self.message_update_cbs.remove((mower_id, callback))
 
     def _schedule_message_callback(
         self,
@@ -139,8 +141,10 @@ class AutomowerSession:
         self.loop.call_soon_threadsafe(cb, msg_data)
 
     def _schedule_message_callbacks(self, msg_data: MessageData) -> None:
-        for cb in self.message_update_cbs:
-            self._schedule_message_callback(msg_data, cb)
+        """Schedule all registered message data callbacks for the given mower."""
+        for mower_id, cb in self.message_update_cbs:
+            if mower_id == msg_data.id:
+                self._schedule_message_callback(msg_data, cb)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -264,7 +268,7 @@ class AutomowerSession:
             new_msg = Message.from_dict(new_data["attributes"]["message"])
             mower_id = new_data["id"]
             self.messages[mower_id].attributes.messages.insert(0, new_msg)
-            self._schedule_message_callbacks(mower_id)
+            self._schedule_message_callbacks(self.messages[mower_id])
 
         if self._data is None:
             raise NoDataAvailableError
