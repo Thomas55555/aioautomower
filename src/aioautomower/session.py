@@ -9,7 +9,7 @@ from collections.abc import Callable
 from typing import Any, cast
 
 import tzlocal
-from aiohttp import WSMessage, WSMsgType
+from aiohttp import ClientError, WSMessage, WSMsgType
 
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
@@ -41,6 +41,7 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
+        "_on_ws_ready",
         "auth",
         "commands",
         "current_mowers",
@@ -83,7 +84,7 @@ class AutomowerSession:
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
-
+        self._on_ws_ready: Callable[[], None] | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -145,6 +146,10 @@ class AutomowerSession:
         for mower_id, cb in self.message_update_cbs:
             if mower_id == msg_data.id:
                 self._schedule_message_callback(msg_data, cb)
+
+    def register_ws_ready_callback(self, callback: Callable[[], None]) -> None:
+        """Register a callback that is called when WebSocket is ready."""
+        self._on_ws_ready = callback
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -214,6 +219,7 @@ class AutomowerSession:
                     msg_dict["ready"],
                     msg_dict["connectionId"],
                 )
+                self._on_ws_ready()
 
     async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
@@ -233,12 +239,22 @@ class AutomowerSession:
             except TimeoutError as exc:
                 raise HusqvarnaTimeoutError from exc
 
-    async def send_empty_message(self) -> None:
-        """Send an empty message every 60s."""
-        while True:
-            await asyncio.sleep(60)
-            _LOGGER.debug("ping:%s", datetime.datetime.now(tz=datetime.UTC))
-            await self.auth.ws.send_str("")
+    async def send_empty_message(self, ping_timeout: int = 5) -> bool:
+        """Send a single ping with timeout (in seconds)."""
+        ws = getattr(self.auth, "ws", None)
+        if ws is None:
+            _LOGGER.debug("WebSocket not connected—skipping ping")
+            return False
+
+        try:
+            await asyncio.wait_for(ws.send_str(""), timeout=ping_timeout)
+        except TimeoutError:
+            return False
+        except ClientError as err:
+            _LOGGER.warning("Ping failed due to client error: %s", err)
+            return False
+
+        return True
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via REST."""
