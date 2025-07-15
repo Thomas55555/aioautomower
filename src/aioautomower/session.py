@@ -18,16 +18,11 @@ from .exceptions import (
     HusqvarnaTimeoutError,
     NoDataAvailableError,
 )
-from .model import (
-    MowerAttributes,
-)
+from .model import Message, MessageData, MowerAttributes
 from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
     HeadLightAttributes,
-    Message,
-    MessageAttributes,
-    MessageResponse,
     MowerDataItem,
     MowerDataResponse,
     PositionAttributes,
@@ -46,7 +41,6 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
-        "_lock",
         "auth",
         "commands",
         "current_mowers",
@@ -54,6 +48,8 @@ class AutomowerSession:
         "data_update_cbs",
         "last_ws_message",
         "loop",
+        "message_update_cbs",
+        "messages",
         "mower_tz",
         "poll",
         "pong_cbs",
@@ -70,21 +66,24 @@ class AutomowerSession:
         """Create a session.
 
         :param class auth: The AbstractAuth class from aioautomower.auth.
+        :param class mower_tz: The ZoneInfo object for the mower, default is None
         :param bool poll: Poll data with rest if True.
         """
         self._data: MowerDataResponse | None = None
         self.auth = auth
-        self.data: dict[str, MowerAttributes] = {}
         self.mower_tz = mower_tz or tzlocal.get_localzone()
+        self.data: dict[str, MowerAttributes] = {}
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
-        self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
+        self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
+        self.messages: dict[str, MessageData] = {}
         self.poll = poll
+        self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
-        self.current_mowers: set[str] = set()
-        self._lock = asyncio.Lock()
+
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -93,6 +92,16 @@ class AutomowerSession:
         """Register a data update callback."""
         if callback not in self.data_update_cbs:
             self.data_update_cbs.append(callback)
+
+    def unregister_data_callback(
+        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    ) -> None:
+        """Unregister a data update callback.
+
+        :param func callback: Takes one function, which should be unregistered.
+        """
+        if callback in self.data_update_cbs:
+            self.data_update_cbs.remove(callback)
 
     def _schedule_data_callback(
         self, cb: Callable[[dict[str, MowerAttributes]], None]
@@ -107,15 +116,35 @@ class AutomowerSession:
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
 
-    def unregister_data_callback(
-        self, callback: Callable[[dict[str, MowerAttributes]], None]
+    def register_message_callback(
+        self,
+        callback: Callable[[MessageData], None],
+        mower_id: str,
     ) -> None:
-        """Unregister a data update callback.
+        """Register a callback triggered when new messages arrive for specific mower."""
+        self.message_update_cbs.append((mower_id, callback))
 
-        :param func callback: Takes one function, which should be unregistered.
-        """
-        if callback in self.data_update_cbs:
-            self.data_update_cbs.remove(callback)
+    def unregister_message_callback(
+        self,
+        callback: Callable[[MessageData], None],
+        mower_id: str,
+    ) -> None:
+        """Unregister a previously registered message callback."""
+        self.message_update_cbs.remove((mower_id, callback))
+
+    def _schedule_message_callback(
+        self,
+        msg_data: MessageData,
+        cb: Callable[[MessageData], None],
+    ) -> None:
+        """Schedule a single message data callback (thread-safe)."""
+        self.loop.call_soon_threadsafe(cb, msg_data)
+
+    def _schedule_message_callbacks(self, msg_data: MessageData) -> None:
+        """Schedule all registered message data callbacks for the given mower."""
+        for mower_id, cb in self.message_update_cbs:
+            if mower_id == msg_data.id:
+                self._schedule_message_callback(msg_data, cb)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -213,55 +242,34 @@ class AutomowerSession:
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via REST."""
-        async with self._lock:
-            existing_messages: dict[str, list[Message]] = {}
-            if self._data:
-                existing_messages = {
-                    mower["id"]: mower["attributes"].get("messages") or []
-                    for mower in self._data.get("data", [])
-                    if "messages" in mower["attributes"]
-                }
+        mower_list: MowerDataResponse = await self.auth.get_json(
+            AutomowerEndpoint.mowers
+        )
+        self._data = mower_list
+        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        self.current_mowers = set(self.data.keys())
+        _LOGGER.debug("current_mowers: %s", self.current_mowers)
+        self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
+        return self.data
 
-            mower_list: MowerDataResponse = await self.auth.get_json(
-                AutomowerEndpoint.mowers
-            )
-
-            for mower in mower_list.get("data", []):
-                mower_id = mower.get("id")
-                if mower_id in existing_messages:
-                    mower["attributes"]["messages"] = existing_messages[mower_id]
-
-            self._data = mower_list
-            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
-            self.current_mowers = set(self.data.keys())
-            _LOGGER.debug("current_mowers: %s", self.current_mowers)
-            self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
-
-            return self.data
-
-    async def async_get_message(self, mower_id: str) -> None:
-        """Fetch messages for one mower and merge into self._data."""
-        messages: MessageResponse = await self.auth.get_json(
+    async def async_get_message(self, mower_id: str) -> MessageData:
+        """Fetch messages for one mower and merge into self._messages."""
+        raw_data = await self.auth.get_json(
             AutomowerEndpoint.messages.format(mower_id=mower_id)
         )
-
-        data = messages.get("data")
-        attributes = data.get("attributes") if data else None
-
-        message_list: list[Message] = []
-        if attributes is not None:
-            message_list = attributes.get("messages", [])
-        if self._data is not None:
-            async with self._lock:
-                for mower in self._data["data"]:
-                    if mower["id"] == mower_id:
-                        mower["attributes"]["messages"] = message_list
-                        break
-
-            self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+        msg_resp = MessageData.from_dict(raw_data["data"])
+        msg_resp.id = mower_id
+        self.messages[mower_id] = msg_resp
+        return msg_resp
 
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
+        if new_data["type"] == EventTypesV2.MESSAGES:
+            new_msg = Message.from_dict(new_data["attributes"]["message"])
+            mower_id = new_data["id"]
+            self.messages[mower_id].attributes.messages.insert(0, new_msg)
+            self._schedule_message_callbacks(self.messages[mower_id])
+
         if self._data is None:
             raise NoDataAvailableError
 
@@ -281,10 +289,8 @@ class AutomowerSession:
         handlers: dict[str, Callable[[MowerDataItem, Any], None]] = {
             "cuttingHeight": self._handle_cutting_height_event,
             "headlights": self._handle_headlight_event,
-            "message": self._handle_message_event,
             "position": self._handle_position_event,
         }
-
         attributes = new_data.get("attributes", {})
         for key, handler in handlers.items():
             if key in attributes:
@@ -309,11 +315,6 @@ class AutomowerSession:
         mower["attributes"]["settings"]["headlight"]["mode"] = attributes["headlights"][
             "mode"
         ]
-
-    def _handle_message_event(
-        self, mower: MowerDataItem, attributes: MessageAttributes
-    ) -> None:
-        mower["attributes"]["messages"].insert(0, attributes["message"])
 
     def _handle_position_event(
         self, mower: MowerDataItem, attributes: PositionAttributes
@@ -347,3 +348,5 @@ class AutomowerSession:
                 self.rest_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await asyncio.gather(self.rest_task)
+        for mower_id, cb in self.message_update_cbs[:]:
+            self.unregister_message_callback(cb, mower_id)
