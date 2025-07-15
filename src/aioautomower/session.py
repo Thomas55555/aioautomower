@@ -192,7 +192,7 @@ class AutomowerSession:
         if self.poll:
             await self.get_status()
             for mower_id in self.current_mowers:
-                await self.async_get_message(mower_id)
+                await self.async_get_messages(mower_id)
             self.rest_task = asyncio.create_task(self._rest_task())
 
     async def _handle_text_message(self, msg: WSMessage) -> None:
@@ -268,7 +268,7 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
-    async def async_get_message(self, mower_id: str) -> MessageData:
+    async def async_get_messages(self, mower_id: str) -> MessageData:
         """Fetch messages for one mower and merge into self._messages."""
         raw_data = await self.auth.get_json(
             AutomowerEndpoint.messages.format(mower_id=mower_id)

@@ -889,7 +889,7 @@ async def test_async_get_messages(automower_client: AbstractAuth) -> None:
         assert True
 
     automower_api.register_message_callback(handle_websocket_updates, mower_id)
-    messages = await automower_api.async_get_message(mower_id)
+    messages = await automower_api.async_get_messages(mower_id)
     assert messages.attributes.messages[0] == Message(
         time=datetime(
             2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
