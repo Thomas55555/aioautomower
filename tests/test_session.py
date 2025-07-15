@@ -25,6 +25,7 @@ from aioautomower.model import (
     Calendar,
     HeadlightModes,
     Message,
+    MessageData,
     MowerModes,
     Positions,
     RestrictedReasons,
@@ -799,7 +800,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 message update."""
     automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
-    assert automower_api.data[MOWER_ID].messages[0] == Message(
+    assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
         ),
@@ -822,7 +823,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
         ]
     )
     await asyncio.sleep(0)
-    assert automower_api.data[MOWER_ID].messages[0] == Message(
+    assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2024, 10, 4, 9, 43, 16, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
         ),
@@ -871,6 +872,34 @@ async def test_timzeone_overwrite(automower_client: AbstractAuth) -> None:
     await automower_api.close()
 
     assert automower_api.mower_tz == zoneinfo.ZoneInfo(key="Europe/Stockholm")
+    if TYPE_CHECKING:
+        assert automower_api.rest_task is not None
+    assert automower_api.rest_task.cancelled()
+
+
+async def test_async_get_messages(automower_client: AbstractAuth) -> None:
+    """Test automower session post commands."""
+    automower_api = AutomowerSession(automower_client, poll=True)
+    await automower_api.connect()
+    await automower_api.get_status()
+    mower_id = next(iter(automower_api.data))
+
+    def handle_websocket_updates(msg_data: MessageData) -> None:
+        """Handle updates from websocket."""
+        assert True
+
+    automower_api.register_message_callback(handle_websocket_updates, mower_id)
+    messages = await automower_api.async_get_message(mower_id)
+    assert messages.attributes.messages[0] == Message(
+        time=datetime(
+            2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        ),
+        code="no_loop_signal",
+        severity=Severity.ERROR,
+        latitude=49.0,
+        longitude=10.0,
+    )
+    await automower_api.close()
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
