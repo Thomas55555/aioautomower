@@ -47,6 +47,7 @@ class AutomowerSession:
     __slots__ = (
         "_data",
         "_lock",
+        "_on_ws_ready",
         "auth",
         "commands",
         "current_mowers",
@@ -85,6 +86,7 @@ class AutomowerSession:
         self.rest_task: asyncio.Task[None] | None = None
         self.current_mowers: set[str] = set()
         self._lock = asyncio.Lock()
+        self._on_ws_ready: Callable[[], None] | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -116,6 +118,10 @@ class AutomowerSession:
         """
         if callback in self.data_update_cbs:
             self.data_update_cbs.remove(callback)
+
+    def register_ws_ready_callback(self, callback: Callable[[], None]) -> None:
+        """Register a callback that is called when WebSocket is ready."""
+        self._on_ws_ready = callback
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -185,6 +191,7 @@ class AutomowerSession:
                     msg_dict["ready"],
                     msg_dict["connectionId"],
                 )
+                self._on_ws_ready()
 
     async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
@@ -204,12 +211,20 @@ class AutomowerSession:
             except TimeoutError as exc:
                 raise HusqvarnaTimeoutError from exc
 
-    async def send_empty_message(self) -> None:
-        """Send an empty message every 60s."""
-        while True:
-            await asyncio.sleep(60)
-            _LOGGER.debug("ping:%s", datetime.datetime.now(tz=datetime.UTC))
-            await self.auth.ws.send_str("")
+    async def send_empty_message(self, timeout: int = 5) -> bool:
+        """Send a single ping with timeout."""
+        try:
+            coro = self.auth.ws.send_str("")  # nur der potentielle Fehler-Auslöser
+        except AttributeError:
+            _LOGGER.warning("Ping skipped: WebSocket not connected")
+            return False
+
+        try:
+            await asyncio.wait_for(coro, timeout=timeout)
+        except TimeoutError:
+            return False
+
+        return True
 
     async def get_status(self) -> dict[str, MowerAttributes]:
         """Get mower status via REST."""
