@@ -9,7 +9,7 @@ from collections.abc import Callable
 from typing import Any, cast
 
 import tzlocal
-from aiohttp import WSMessage, WSMsgType
+from aiohttp import ClientError, WSMessage, WSMsgType
 
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
@@ -84,7 +84,6 @@ class AutomowerSession:
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
-        self.current_mowers: set[str] = set()
         self._on_ws_ready: Callable[[], None] | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
@@ -240,17 +239,19 @@ class AutomowerSession:
             except TimeoutError as exc:
                 raise HusqvarnaTimeoutError from exc
 
-    async def send_empty_message(self, timeout: int = 5) -> bool:
-        """Send a single ping with timeout."""
-        try:
-            coro = self.auth.ws.send_str("")  # nur der potentielle Fehler-Auslöser
-        except AttributeError:
-            _LOGGER.warning("Ping skipped: WebSocket not connected")
+    async def send_empty_message(self, ping_timeout: int = 5) -> bool:
+        """Send a single ping with timeout (in seconds)."""
+        ws = getattr(self.auth, "ws", None)
+        if ws is None:
+            _LOGGER.debug("WebSocket not connected—skipping ping")
             return False
 
         try:
-            await asyncio.wait_for(coro, timeout=timeout)
+            await asyncio.wait_for(ws.send_str(""), timeout=ping_timeout)
         except TimeoutError:
+            return False
+        except ClientError as err:
+            _LOGGER.warning("Ping failed due to client error: %s", err)
             return False
 
         return True
