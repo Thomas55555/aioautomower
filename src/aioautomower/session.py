@@ -151,6 +151,11 @@ class AutomowerSession:
         """Register a callback that is called when WebSocket is ready."""
         self._on_ws_ready = callback
 
+    def _schedule_ws_ready_callback(self) -> None:
+        """Schedule the ws_ready callback (thread-safe, optional)."""
+        if self._on_ws_ready is not None:
+            self.loop.call_soon_threadsafe(self._on_ws_ready)
+
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
     ) -> None:
@@ -219,7 +224,8 @@ class AutomowerSession:
                     msg_dict["ready"],
                     msg_dict["connectionId"],
                 )
-                self._on_ws_ready()
+                # self._on_ws_ready()
+                self._schedule_ws_ready_callback()
 
     async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
