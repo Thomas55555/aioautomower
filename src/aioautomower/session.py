@@ -152,7 +152,7 @@ class AutomowerSession:
         self._on_ws_ready = callback
 
     def _schedule_ws_ready_callback(self) -> None:
-        """Schedule the ws_ready callback (thread-safe, optional)."""
+        """Schedule the ws_ready callback (thread-safe)."""
         if self._on_ws_ready is not None:
             self.loop.call_soon_threadsafe(self._on_ws_ready)
 
@@ -224,7 +224,6 @@ class AutomowerSession:
                     msg_dict["ready"],
                     msg_dict["connectionId"],
                 )
-                # self._on_ws_ready()
                 self._schedule_ws_ready_callback()
 
     async def start_listening(self) -> None:
