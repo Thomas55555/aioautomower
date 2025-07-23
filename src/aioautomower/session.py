@@ -287,7 +287,7 @@ class AutomowerSession:
         """Update internal data with new data from websocket."""
         if new_data["type"] == EventTypesV2.MESSAGES:
             if self.messages is None:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Received message update, but 'messages' is not initialized"
                 )
                 return
