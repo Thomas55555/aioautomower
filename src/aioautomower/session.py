@@ -286,6 +286,11 @@ class AutomowerSession:
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
         if new_data["type"] == EventTypesV2.MESSAGES:
+            if self.messages is None:
+                _LOGGER.debug(
+                    "Received message update, but 'messages' is not initialized"
+                )
+                return
             new_msg = Message.from_dict(new_data["attributes"]["message"])
             mower_id = new_data["id"]
             self.messages[mower_id].attributes.messages.insert(0, new_msg)
