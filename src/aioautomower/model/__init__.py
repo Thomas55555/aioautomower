@@ -22,7 +22,7 @@ from .model_calendar import (
     make_name_string,
 )
 from .model_capabilities import Capabilities
-from .model_message import Message, MessageData, Severity
+from .model_message import Message, MessageData, Severity, SingleMessageData
 from .model_metadata import Metadata
 from .model_mower import (
     InactiveReasons,
@@ -87,6 +87,7 @@ __all__ = [
     "RestrictedReasons",
     "Settings",
     "Severity",
+    "SingleMessageData",
     "Statistics",
     "StayOutZones",
     "System",
