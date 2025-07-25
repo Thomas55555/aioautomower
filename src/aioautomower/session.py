@@ -18,7 +18,7 @@ from .exceptions import (
     HusqvarnaTimeoutError,
     NoDataAvailableError,
 )
-from .model import Message, MessageData, MowerAttributes
+from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
@@ -55,6 +55,7 @@ class AutomowerSession:
         "poll",
         "pong_cbs",
         "rest_task",
+        "single_message_cbs",
     )
 
     def __init__(
@@ -80,6 +81,7 @@ class AutomowerSession:
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
+        self.single_message_cbs: list[Callable[[SingleMessageData], None]] = []
         self.messages: dict[str, MessageData] = {}
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
@@ -116,6 +118,25 @@ class AutomowerSession:
         """Schedule a data callbacks."""
         for cb in self.data_update_cbs:
             self._schedule_data_callback(cb)
+
+    def register_single_message_callback(
+        self, cb: Callable[[SingleMessageData], None]
+    ) -> None:
+        """Register a callback for the latest single message of a specific mower."""
+        self.single_message_cbs.append(cb)
+
+    def unregister_single_message_callback(
+        self,
+        cb: Callable[[SingleMessageData], None],
+    ) -> None:
+        """Unregister a single message callback for a specific mower."""
+        if cb in self.single_message_cbs:
+            self.single_message_cbs.remove(cb)
+
+    def _schedule_single_message_callbacks(self, message: SingleMessageData) -> None:
+        """Dispatch only the most recent message to registered callbacks."""
+        for cb in self.single_message_cbs:
+            self.loop.call_soon_threadsafe(cb, message)
 
     def register_message_callback(
         self,
@@ -286,15 +307,14 @@ class AutomowerSession:
     def _update_data(self, new_data: GenericEventData) -> None:
         """Update internal data with new data from websocket."""
         if new_data["type"] == EventTypesV2.MESSAGES:
-            if self.messages is None:
-                _LOGGER.debug(
-                    "Received message update, but 'messages' is not initialized"
-                )
-                return
-            new_msg = Message.from_dict(new_data["attributes"]["message"])
-            mower_id = new_data["id"]
-            self.messages[mower_id].attributes.messages.insert(0, new_msg)
-            self._schedule_message_callbacks(self.messages[mower_id])
+            if self.messages:
+                new_msg = Message.from_dict(new_data["attributes"]["message"])
+                mower_id = new_data["id"]
+                self.messages[mower_id].attributes.messages.insert(0, new_msg)
+                self._schedule_message_callbacks(self.messages[mower_id])
+            if not self.messages:
+                single_message = SingleMessageData.from_dict(new_data)
+                self._schedule_single_message_callbacks(single_message)
 
         if self._data is None:
             raise NoDataAvailableError

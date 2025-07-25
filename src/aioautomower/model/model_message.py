@@ -63,9 +63,25 @@ class MessageAttributes(DataClassDictMixin):
 
 
 @dataclass
+class SingleMessageAttributes(DataClassDictMixin):
+    """Single message attribute container."""
+
+    message: Message
+
+
+@dataclass
 class MessageData(DataClassDictMixin):
     """Top-level message data node."""
 
     type: str
     id: str
     attributes: MessageAttributes = field(metadata=field_options(alias="attributes"))
+
+
+@dataclass
+class SingleMessageData(DataClassDictMixin):
+    """Top-level single message data node."""
+
+    type: str
+    id: str
+    attributes: SingleMessageAttributes
