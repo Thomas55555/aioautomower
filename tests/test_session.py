@@ -30,6 +30,7 @@ from aioautomower.model import (
     Positions,
     RestrictedReasons,
     Severity,
+    SingleMessageData,
     Tasks,
 )
 from aioautomower.session import AutomowerSession
@@ -800,6 +801,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
     """Test automower websocket V2 message update."""
     automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
+    await automower_api.async_get_messages(MOWER_ID)
     assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2025, 6, 28, 21, 36, 27, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
@@ -903,3 +905,36 @@ async def test_async_get_messages(automower_client: AbstractAuth) -> None:
     if TYPE_CHECKING:
         assert automower_api.rest_task is not None
     assert automower_api.rest_task.cancelled()
+
+
+async def test_single_messages(automower_client: AbstractAuth) -> None:
+    """Test single message attributes via websocket."""
+    callback_data: Message | None = None
+    automower_api = AutomowerSession(automower_client, poll=False)
+    await automower_api.connect()
+    # kein get_status()
+
+    def handle(msg: SingleMessageData) -> None:
+        nonlocal callback_data
+        callback_data = msg
+
+    automower_api.register_single_message_callback(handle)
+
+    # Mock WS
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
+            asyncio.CancelledError(),
+        ]
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await automower_api.start_listening()
+
+    await asyncio.sleep(0)
+    assert callback_data is not None, "Callback wurde nicht aufgerufen"
+    assert callback_data.attributes.message.code == "wrong_loop_signal"
+    assert callback_data.attributes.message.severity == Severity.WARNING
+    await automower_api.close()
