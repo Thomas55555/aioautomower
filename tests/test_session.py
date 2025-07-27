@@ -30,6 +30,7 @@ from aioautomower.model import (
     Positions,
     RestrictedReasons,
     Severity,
+    SingleMessageData,
     Tasks,
 )
 from aioautomower.session import AutomowerSession
@@ -909,32 +910,31 @@ async def test_async_get_messages(automower_client: AbstractAuth) -> None:
 async def test_single_messages(automower_client: AbstractAuth) -> None:
     """Test single message attributes via websocket."""
     callback_data: Message | None = None
-    api = AutomowerSession(automower_client, poll=False)
-    await api.connect()
+    automower_api = AutomowerSession(automower_client, poll=False)
+    await automower_api.connect()
     # kein get_status()
 
-    def handle(msg: Message) -> None:
+    def handle(msg: SingleMessageData) -> None:
         nonlocal callback_data
         callback_data = msg
 
-    api.register_single_message_callback(handle)
+    automower_api.register_single_message_callback(handle)
 
     # Mock WS
-    api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
-    api.auth.ws.closed = False
-    api.auth.ws.receive = AsyncMock(
+    automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
+    automower_api.auth.ws.closed = False
+    automower_api.auth.ws.receive = AsyncMock(
         side_effect=[
             WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
             asyncio.CancelledError(),
         ]
     )
 
-    # Wir erwarten hier, dass start_listening() mit CancelledError abbricht
     with pytest.raises(asyncio.CancelledError):
-        await api.start_listening()
+        await automower_api.start_listening()
 
-    # Gib dem Loop einen Moment, um call_soon_threadsafe auszuführen
     await asyncio.sleep(0)
     assert callback_data is not None, "Callback wurde nicht aufgerufen"
     assert callback_data.attributes.message.code == "wrong_loop_signal"
     assert callback_data.attributes.message.severity == Severity.WARNING
+    await automower_api.close()
