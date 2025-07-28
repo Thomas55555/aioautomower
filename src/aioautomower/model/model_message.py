@@ -31,15 +31,15 @@ class Severity(StrEnum):
 class Message(DataClassDictMixin):
     """Single diagnostic or error message."""
 
-    time: datetime | None = field(
+    time: datetime = field(
         metadata=field_options(
             deserialize=convert_timestamp_to_aware_datetime,
             alias="time",
         ),
     )
-    code: str | None = field(
+    code: str = field(
         metadata=field_options(
-            deserialize=lambda x: None if x == 0 else snake_case(ERRORCODES.get(x)),
+            deserialize=lambda x: snake_case(ERRORCODES.get(x)),
             alias="code",
         )
     )
