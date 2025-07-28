@@ -516,19 +516,18 @@ files = [
 
 [[package]]
 name = "ical"
-version = "10.0.4"
+version = "11.0.0"
 description = "Python iCalendar implementation (rfc 2445)"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "ical-10.0.4-py3-none-any.whl", hash = "sha256:6e45bb8d032dede83cd569ec980a83197fa5b502814b76f27803266244927c2b"},
-    {file = "ical-10.0.4.tar.gz", hash = "sha256:eb33aa29f53d0a36aedd4d68a11dbbe6fd4b25eb1b27a802938adfd6297a39b1"},
+    {file = "ical-11.0.0-py3-none-any.whl", hash = "sha256:e22aa04010bc4e8621dd3503c5095087ca473450684a69527f37eabe91e145ea"},
+    {file = "ical-11.0.0.tar.gz", hash = "sha256:78efadc0711dc30da1392271c22713d3081a1df710eacac596f9d49f0030cc9d"},
 ]
 
 [package.dependencies]
 pydantic = ">=2.10.4"
-pyparsing = ">=3.0.9"
 python-dateutil = ">=2.8.2"
 tzdata = ">=2023.3"
 
@@ -1216,21 +1215,6 @@ spelling = ["pyenchant (>=3.2,<4.0)"]
 testutils = ["gitpython (>3)"]
 
 [[package]]
-name = "pyparsing"
-version = "3.2.3"
-description = "pyparsing module - Classes and methods to define and execute parsing grammars"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "pyparsing-3.2.3-py3-none-any.whl", hash = "sha256:a749938e02d6fd0b59b356ca504a24982314bb090c383e3cf201c95ef7e2bfcf"},
-    {file = "pyparsing-3.2.3.tar.gz", hash = "sha256:b9c13f1ab8b3b542f72e28f634bad4de758ab3ce4546e4301970ad6fa77c38be"},
-]
-
-[package.extras]
-diagrams = ["jinja2", "railroad-diagrams"]
-
-[[package]]
 name = "pytest"
 version = "8.4.1"
 description = "pytest: simple powerful testing with Python"
@@ -1664,14 +1648,14 @@ devenv = ["check-manifest", "pytest (>=4.3)", "pytest-cov", "pytest-mock (>=3.3)
 
 [[package]]
 name = "virtualenv"
-version = "20.31.2"
+version = "20.32.0"
 description = "Virtual Python Environment builder"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "virtualenv-20.31.2-py3-none-any.whl", hash = "sha256:36efd0d9650ee985f0cad72065001e66d49a6f24eb44d98980f630686243cf11"},
-    {file = "virtualenv-20.31.2.tar.gz", hash = "sha256:e10c0a9d02835e592521be48b332b6caee6887f332c111aa79a09b9e79efc2af"},
+    {file = "virtualenv-20.32.0-py3-none-any.whl", hash = "sha256:2c310aecb62e5aa1b06103ed7c2977b81e042695de2697d01017ff0f1034af56"},
+    {file = "virtualenv-20.32.0.tar.gz", hash = "sha256:886bf75cadfdc964674e6e33eb74d787dff31ca314ceace03ca5810620f4ecf0"},
 ]
 
 [package.dependencies]
