@@ -316,13 +316,13 @@ class AutomowerSession:
                 self._schedule_message_callbacks(self.messages[mower_id])
             if not self.messages:
                 single_message = SingleMessageData.from_dict(new_data)
-                if single_message == self.single_message:
-                    _LOGGER.debug(
-                        "Received same single message as before, not updating."
-                    )
                 if single_message != self.single_message:
                     self.single_message = single_message
                     self._schedule_single_message_callbacks(self.single_message)
+                else:
+                    _LOGGER.debug(
+                        "Received same single message as before, not updating."
+                    )
 
         if self._data is None:
             raise NoDataAvailableError
