@@ -4,7 +4,7 @@ import asyncio
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import time_machine
@@ -909,18 +909,12 @@ async def test_async_get_messages(automower_client: AbstractAuth) -> None:
 
 async def test_single_messages(automower_client: AbstractAuth) -> None:
     """Test single message attributes via websocket."""
-    callback_data: Message | None = None
     automower_api = AutomowerSession(automower_client, poll=False)
     await automower_api.connect()
-    # kein get_status()
 
-    def handle(msg: SingleMessageData) -> None:
-        nonlocal callback_data
-        callback_data = msg
-
+    handle = Mock()
     automower_api.register_single_message_callback(handle)
 
-    # Mock WS
     automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
     automower_api.auth.ws.closed = False
     automower_api.auth.ws.receive = AsyncMock(
@@ -934,7 +928,24 @@ async def test_single_messages(automower_client: AbstractAuth) -> None:
         await automower_api.start_listening()
 
     await asyncio.sleep(0)
-    assert callback_data is not None, "Callback wurde nicht aufgerufen"
-    assert callback_data.attributes.message.code == "wrong_loop_signal"
-    assert callback_data.attributes.message.severity == Severity.WARNING
+
+    handle.assert_called_once()
+    called_msg = handle.call_args[0][0]
+    assert isinstance(called_msg, SingleMessageData)
+    assert called_msg.attributes.message.code == "wrong_loop_signal"
+    assert called_msg.attributes.message.severity == Severity.WARNING
+
+    handle.reset_mock()
+    automower_api.auth.ws.receive = AsyncMock(
+        side_effect=[
+            WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
+            asyncio.CancelledError(),
+        ]
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await automower_api.start_listening()
+
+    await asyncio.sleep(0)
+    handle.assert_not_called()
     await automower_api.close()
