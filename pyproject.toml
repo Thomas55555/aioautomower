@@ -67,8 +67,6 @@ enable = true
 vcs = "git"
 style = "semver"
 metadata = false
-tag_pattern = "^v(?P<version>.+)$"
-latest_tag = true
 
 [tool.pytest.ini_options]
 addopts = "--cov=aioautomower --cov-report=term-missing -vv"
