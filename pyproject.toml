@@ -47,7 +47,7 @@ python-dateutil = "^2.9.0-post.0"
 aioresponses = "0.7.8"
 codespell = "2.4.1"
 covdefaults = "2.3.0"
-coverage = {version = "7.10.1", extras = ["toml"]}
+coverage = {version = "7.10.2", extras = ["toml"]}
 mypy = "1.17.0"
 pre-commit = "4.2.0"
 pre-commit-hooks = "5.0.0"
