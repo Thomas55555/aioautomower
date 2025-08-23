@@ -22,7 +22,7 @@
         "mower": {
           "mode": "MAIN_AREA",
           "activity": "PARKED_IN_CS",
-          "inactiveReason": "NONE",
+          "inactiveReason": "PLANNING",
           "state": "RESTRICTED",
           "workAreaId": 123456,
           "errorCode": 0,
@@ -62,7 +62,8 @@
           "override": {
             "action": "NOT_ACTIVE"
           },
-          "restrictedReason": "WEEK_SCHEDULE"
+          "restrictedReason": "WEEK_SCHEDULE",
+          "externalReason": 6500
         },
         "metadata": {
           "connected": true,
@@ -152,13 +153,15 @@
         ],
         "statistics": {
           "cuttingBladeUsageTime": 1234,
+          "downTime": 123,
           "numberOfChargingCycles": 1380,
           "numberOfCollisions": 11396,
           "totalChargingTime": 4334400,
           "totalCuttingTime": 4194000,
           "totalDriveDistance": 1780272,
           "totalRunningTime": 4564800,
-          "totalSearchingTime": 370800
+          "totalSearchingTime": 370800,
+          "upTime": 4567
         },
         "stayOutZones": {
           "dirty": false,

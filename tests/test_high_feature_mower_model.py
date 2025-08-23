@@ -1,25 +1,26 @@
 """Tests for asynchronous Python client for aioautomower."""
 
+import zoneinfo
 from dataclasses import fields
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import time_machine
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.auth import AbstractAuth
-from aioautomower.model import WorkArea
 from aioautomower.session import AutomowerSession
+
+if TYPE_CHECKING:
+    from aioautomower.model import WorkArea
 
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
 async def test_high_feature_mower(
-    mock_automower_client: AbstractAuth, mower_tz
+    automower_client: AbstractAuth, mower_tz: zoneinfo.ZoneInfo
 ) -> None:
     """Test converting a high feature mower."""
-    automower_api = AutomowerSession(
-        mock_automower_client, mower_tz=mower_tz, poll=True
-    )
+    automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
     await automower_api.connect()
     mowers = automower_api.data
     assert mowers[MOWER_ID].battery.battery_percent == 100
@@ -38,26 +39,34 @@ async def test_high_feature_mower(
         is True
     )
     assert mowers[MOWER_ID].work_areas is not None
-    workarea = cast(dict[int, WorkArea], mowers[MOWER_ID].work_areas)
+    workarea = cast("dict[int, WorkArea]", mowers[MOWER_ID].work_areas)
     assert workarea[123456] is not None
     assert workarea[123456].name == "Front lawn"
     assert workarea[123456].cutting_height == 50
     assert mowers[MOWER_ID].statistics.cutting_blade_usage_time == 1234
     assert len(mowers[MOWER_ID].positions) != 0  # type: ignore[arg-type]
+    await automower_api.close()
+    assert automower_api._rest_task is not None
 
 
 @time_machine.travel("2024-05-04 8:00:00")
 async def test_mower_snapshot(
-    mock_automower_client: AbstractAuth, snapshot: SnapshotAssertion, mower_tz
-):
+    automower_client: AbstractAuth,
+    snapshot: SnapshotAssertion,
+    mower_tz: zoneinfo.ZoneInfo,
+) -> None:
     """Testing a snapshot of a high feature mower."""
-    # pylint: disable=duplicate-code
-    automower_api = AutomowerSession(
-        mock_automower_client, mower_tz=mower_tz, poll=True
-    )
+    automower_api = AutomowerSession(automower_client, mower_tz=mower_tz, poll=True)
     await automower_api.connect()
-    automower_api.data[MOWER_ID]
-    for field in fields(automower_api.data[MOWER_ID]):
+    mower_data = automower_api.data[MOWER_ID]
+    for field in fields(mower_data):
         field_name = field.name
-        field_value = getattr(automower_api.data[MOWER_ID], field_name)
-        assert field_value == snapshot(name=f"{field_name}")
+        field_value = getattr(mower_data, field_name)
+        assert field_value == snapshot(name=f"status.{field_name}")
+
+    message_data = automower_api.messages[MOWER_ID]
+    for i, message in enumerate(message_data.attributes.messages):
+        assert message == snapshot(name=f"message.{i}")
+
+    await automower_api.close()
+    assert automower_api._rest_task is not None

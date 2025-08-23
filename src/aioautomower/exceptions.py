@@ -47,3 +47,7 @@ class HusqvarnaTimeoutError(HusqvarnaAutomowerError):
 
 class HusqvarnaWSServerHandshakeError(HusqvarnaAutomowerError):
     """Raised due connecting the websocket if server not available."""
+
+
+class HusqvarnaWSClientError(HusqvarnaAutomowerError):
+    """Raised due connecting the websocket."""

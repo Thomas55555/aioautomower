@@ -1,6 +1,7 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
 import asyncio
+import json
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
@@ -22,6 +23,7 @@ from .exceptions import (
     ApiForbiddenError,
     ApiUnauthorizedError,
     AuthError,
+    HusqvarnaWSClientError,
     HusqvarnaWSServerHandshakeError,
 )
 from .utils import structure_token
@@ -56,7 +58,7 @@ class AbstractAuth(ABC):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
         if method != "get" and "json" in kwargs:
-            _LOGGER.debug("request[post json]=%s", kwargs["json"])
+            _LOGGER.debug("request[%s json]=%s", method, kwargs["json"])
         return await self._websession.request(method, url, **kwargs, headers=headers)
 
     async def get(self, url: str, **kwargs: Any) -> ClientResponse:
@@ -67,7 +69,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def get_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
+    async def get_json(self, url: str, **kwargs: Any) -> Any:
         """Make a get request and return json response."""
         resp = await self.get(url, **kwargs)
         try:
@@ -76,7 +78,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", result)
+        _LOGGER.debug("response=%s", json.dumps(result))
         return result
 
     async def post(self, url: str, **kwargs: Any) -> ClientResponse:
@@ -96,7 +98,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", result)
+        _LOGGER.debug("response=%s", json.dumps(result))
         return result
 
     async def patch(self, url: str, **kwargs: Any) -> ClientResponse:
@@ -116,7 +118,7 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", result)
+        _LOGGER.debug("response=%s", json.dumps(result))
         return result
 
     async def _async_get_access_token(self) -> str:
@@ -186,3 +188,5 @@ class AbstractAuth(ABC):
             )
         except WSServerHandshakeError as err:
             raise HusqvarnaWSServerHandshakeError(err) from err
+        except ClientError as err:
+            raise HusqvarnaWSClientError(err) from err

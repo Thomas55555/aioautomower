@@ -1,10 +1,20 @@
 # serializer version: 1
-# name: test_mower_snapshot[battery]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][message_data]
+  dict({
+    'attributes': dict({
+      'messages': list([
+      ]),
+    }),
+    'id': '1234',
+    'type': 'messages',
+  })
+# ---
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.battery]
   dict({
     'battery_percent': 50,
   })
 # ---
-# name: test_mower_snapshot[calendar]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.calendar]
   dict({
     'tasks': list([
       dict({
@@ -22,7 +32,7 @@
     ]),
   })
 # ---
-# name: test_mower_snapshot[capabilities]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.capabilities]
   dict({
     'can_confirm_error': False,
     'headlights': False,
@@ -31,40 +41,41 @@
     'work_areas': False,
   })
 # ---
-# name: test_mower_snapshot[metadata]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.metadata]
   dict({
     'connected': True,
     'status_dateteime': datetime.datetime(2023, 10, 18, 22, 58, 52, 683000, tzinfo=datetime.timezone.utc),
   })
 # ---
-# name: test_mower_snapshot[mower]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.mower]
   dict({
-    'activity': 'parked_in_cs',
+    'activity': <MowerActivities.PARKED_IN_CS: 'parked_in_cs'>,
     'error_code': 1,
     'error_datetime': datetime.datetime(2024, 10, 18, 16, 37, 49, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'error_key': 'outside_working_area',
-    'inactive_reason': 'none',
+    'inactive_reason': <InactiveReasons.NONE: 'none'>,
     'is_error_confirmable': False,
-    'mode': 'main_area',
-    'state': 'restricted',
+    'mode': <MowerModes.MAIN_AREA: 'main_area'>,
+    'state': <MowerStates.RESTRICTED: 'restricted'>,
     'work_area_id': None,
     'work_area_name': None,
   })
 # ---
-# name: test_mower_snapshot[planner]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.planner]
   dict({
+    'external_reason': None,
     'next_start_datetime': datetime.datetime(2023, 6, 5, 19, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     'override': dict({
-      'action': 'not_active',
+      'action': <Actions.NOT_ACTIVE: 'not_active'>,
     }),
-    'restricted_reason': 'week_schedule',
+    'restricted_reason': <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
   })
 # ---
-# name: test_mower_snapshot[positions]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.positions]
   list([
   ])
 # ---
-# name: test_mower_snapshot[settings]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.settings]
   dict({
     'cutting_height': None,
     'headlight': dict({
@@ -72,9 +83,10 @@
     }),
   })
 # ---
-# name: test_mower_snapshot[statistics]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.statistics]
   dict({
     'cutting_blade_usage_time': None,
+    'downtime': None,
     'number_of_charging_cycles': None,
     'number_of_collisions': None,
     'total_charging_time': None,
@@ -82,24 +94,25 @@
     'total_drive_distance': None,
     'total_running_time': None,
     'total_searching_time': None,
+    'uptime': None,
   })
 # ---
-# name: test_mower_snapshot[stay_out_zones]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.stay_out_zones]
   None
 # ---
-# name: test_mower_snapshot[system]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.system]
   dict({
     'model': 'Automower Aspire',
     'name': 'Test Mower 1',
     'serial_number': '123',
   })
 # ---
-# name: test_mower_snapshot[work_area_dict]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.work_area_dict]
   None
 # ---
-# name: test_mower_snapshot[work_area_names]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.work_area_names]
   None
 # ---
-# name: test_mower_snapshot[work_areas]
+# name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.work_areas]
   None
 # ---

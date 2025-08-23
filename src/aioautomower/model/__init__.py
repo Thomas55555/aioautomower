@@ -3,6 +3,7 @@
 from .model import (
     MowerAttributes,
     MowerData,
+    MowerDictionary,
     MowerList,
     generate_work_area_dict,
     generate_work_area_names_list,
@@ -21,8 +22,10 @@ from .model_calendar import (
     make_name_string,
 )
 from .model_capabilities import Capabilities
+from .model_message import Message, MessageData, Severity, SingleMessageData
 from .model_metadata import Metadata
 from .model_mower import (
+    InactiveReasons,
     Mower,
     MowerActivities,
     MowerModes,
@@ -33,7 +36,6 @@ from .model_mower import (
 from .model_planner import (
     Actions,
     ExternalReasons,
-    InactiveReasons,
     Override,
     Planner,
     RestrictedReasons,
@@ -68,11 +70,14 @@ __all__ = [
     "Headlight",
     "HeadlightModes",
     "InactiveReasons",
+    "Message",
+    "MessageData",
     "Metadata",
     "Mower",
     "MowerActivities",
     "MowerAttributes",
     "MowerData",
+    "MowerDictionary",
     "MowerList",
     "MowerModes",
     "MowerStates",
@@ -81,6 +86,8 @@ __all__ = [
     "Positions",
     "RestrictedReasons",
     "Settings",
+    "Severity",
+    "SingleMessageData",
     "Statistics",
     "StayOutZones",
     "System",

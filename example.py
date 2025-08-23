@@ -36,6 +36,16 @@ CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 MAX_WS_RECONNECT_TIME = 600
 
 
+def configure_logging(level: int = logging.INFO) -> None:
+    """Configure logging with specified level."""
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s)"
+        "[%(name)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
 class AsyncTokenAuth(AbstractAuth):
     """Provide Automower authentication tied to an OAuth2 based config entry."""
 
@@ -73,6 +83,7 @@ class AsyncTokenAuth(AbstractAuth):
 
 async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
+    configure_logging(logging.DEBUG)
     websession = ClientSession()
     automower_api = AutomowerSession(AsyncTokenAuth(websession), poll=True)
     await asyncio.sleep(1)
@@ -83,23 +94,26 @@ async def main() -> None:
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
     automower_api.register_pong_callback(pong_callback)
+    messages = await automower_api.async_get_message(next(iter(automower_api.data)))
+    print("messagexxx", messages)
     for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
-        print("next start:", mower_data.planner.next_start_datetime)
+        if mower_data.messages:
+            pprint(mower_data.messages[0].code)
+            pprint(mower_data.statistics)
+        # cursor = mower_data.calendar.timeline.overlapping(
+        #     datetime.datetime.now(),
+        #     datetime.datetime.now() + datetime.timedelta(weeks=1),
+        # )
+        # print("cursor", cursor)
 
-        cursor = mower_data.calendar.timeline.overlapping(
-            datetime.datetime.now(),
-            datetime.datetime.now() + datetime.timedelta(weeks=1),
-        )
-        print("cursor", cursor)
+        # cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
 
-        cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
-
-        print("cursor2", next(cursor2, None))
-        print("program_event1", next(cursor2, None))
-        print("program_event2", next(cursor2, None))
-        print("program_event3", next(cursor2, None))
-        print("program_event4", next(cursor2, None))
-        print("program_event5", next(cursor2, None))
+        # print("cursor2", next(cursor2, None))
+        # print("program_event1", next(cursor2, None))
+        # print("program_event2", next(cursor2, None))
+        # print("program_event3", next(cursor2, None))
+        # print("program_event4", next(cursor2, None))
+        # print("program_event5", next(cursor2, None))
 
         # Uncomment one or more lines below to send this command to all the mowers
         # await automower_api.commands.set_datetime(mower_id, datetime.datetime.now())
@@ -110,7 +124,11 @@ async def main() -> None:
         # await automower_api.commands.start_in_workarea(
         #     mower_id, 0, datetime.timedelta(minutes=30)
         # )
+        # await automower_api.async_get_message(mower_id)
 
+    await asyncio.sleep(10)
+    await automower_api.get_status()
+    print("self._data", automower_api._data)
     await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
@@ -122,7 +140,7 @@ async def main() -> None:
 def callback(ws_data: dict[str, MowerAttributes]):
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_data in ws_data.values():
-        pprint(mower_data)
+        pprint(mower_data.battery)
 
 
 def pong_callback(ws_data: datetime.datetime):

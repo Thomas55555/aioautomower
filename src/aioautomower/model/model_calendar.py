@@ -51,8 +51,8 @@ class TimeSerializationStrategy(SerializationStrategy):
 
     def deserialize(self, value: int) -> time:
         """Deserialize an integer to a time object."""
-        hour = int(value / 60)
-        minute = value - 60 * hour
+        hour = value // 60
+        minute = value % 60
         return time(hour=hour, minute=minute)
 
 
@@ -111,7 +111,7 @@ class AutomowerCalendarEvent:
     start: datetime
     duration: timedelta
     uid: str
-    day_set: set
+    day_set: set[DayOfWeek]
 
 
 class ConvertScheduleToCalendar:
@@ -138,7 +138,7 @@ class ConvertScheduleToCalendar:
             for task_field in fields(self.task):
                 field_name = task_field.name
                 field_value = getattr(self.task, field_name)
-                if field_value is True and field_name is day_to_check_as_string:
+                if field_value is True and field_name == day_to_check_as_string:
                     end_task = (
                         time_to_check_begin_of_day
                         + timedelta(
@@ -151,13 +151,17 @@ class ConvertScheduleToCalendar:
                         and end_task < self.now
                     ):
                         break
-                    return self.now + timedelta(days)
+                    return self.now + timedelta(days=days)
         return self.now
 
-    def make_dayset(self) -> set[DayOfWeek | None]:
+    def make_dayset(self) -> set[DayOfWeek]:
         """Generate a set of days from a task."""
         return {
-            WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+            day
+            for day in (
+                WEEKDAYS_TO_ICAL.get(day) for day in WEEKDAYS if getattr(self.task, day)
+            )
+            if day is not None
         }
 
     def make_event(self) -> AutomowerCalendarEvent:
@@ -191,23 +195,22 @@ class Tasks(DataClassDictMixin):
 
     def timeline_tz(self) -> ProgramTimeline:
         """Return a timeline of all schedules."""
-        self.schedule_no: dict = {}  # pylint: disable=attribute-defined-outside-init
+        schedule_no: dict[int, int] = {}
         for task in self.tasks:
-            if task.work_area_id is not None:
-                self.schedule_no[task.work_area_id] = 0
-            if task.work_area_id is None:
-                self.schedule_no["-1"] = 0
+            key = task.work_area_id if task.work_area_id is not None else -1
+            schedule_no.setdefault(key, 0)
 
         iters: list[Iterable[SortableItem[Timespan, ProgramEvent]]] = []
 
         for task in self.tasks:
             event = ConvertScheduleToCalendar(task).make_event()
-            number = self.generate_schedule_no(task)
+            number = self.generate_schedule_no(task, schedule_no)
 
-            if len(event.day_set) == 7:
-                freq = ProgramFrequency.DAILY
-            else:
-                freq = ProgramFrequency.WEEKLY
+            freq = (
+                ProgramFrequency.DAILY
+                if len(event.day_set) == 7
+                else ProgramFrequency.WEEKLY
+            )
 
             iters.append(
                 create_recurrence(
@@ -222,17 +225,11 @@ class Tasks(DataClassDictMixin):
 
         return ProgramTimeline(MergedIterable(iters))
 
-    def generate_schedule_no(self, task: Calendar) -> int:
+    def generate_schedule_no(self, task: Calendar, schedule_no: dict[int, int]) -> int:
         """Return a schedule number."""
-        if task is not None:
-            if task.work_area_id is not None:
-                self.schedule_no[task.work_area_id] = (
-                    self.schedule_no[task.work_area_id] + 1
-                )
-                return self.schedule_no[task.work_area_id]
-            self.schedule_no["-1"] = self.schedule_no["-1"] + 1
-            return self.schedule_no["-1"]
-        return None
+        key = task.work_area_id if task.work_area_id is not None else -1
+        schedule_no[key] += 1
+        return schedule_no[key]
 
 
 def make_name_string(work_area_name: str | None, number: int) -> str:
