@@ -120,6 +120,22 @@ async def test_get_status_with_error_handling(
         await aio_client.get_status()
 
 
+@pytest.mark.benchmark
+async def test_get_request_success(
+    responses: aioresponses,
+    aio_client: AutomowerSession,
+    control_response: dict,
+    mower_data: MowerDataResponse,
+    mower_tz: zoneinfo.ZoneInfo,
+) -> None:
+    """Test get request success."""
+    await setup_connection(responses, aio_client, mower_data, mower_tz)
+    responses.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        payload=load_fixture_json("high_feature_mower.json"),
+    )
+
+
 async def test_patch_request_success(
     responses: aioresponses,
     aio_client: AutomowerSession,
