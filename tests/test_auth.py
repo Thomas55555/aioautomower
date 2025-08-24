@@ -120,6 +120,22 @@ async def test_get_status_with_error_handling(
         await aio_client.get_status()
 
 
+@pytest.mark.benchmark
+@pytest.mark.asyncio
+async def test_get_json_functional(
+    aio_client: AutomowerSession, high_feature_mower_data: dict
+) -> None:
+    """Test get json functional."""
+    url = f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"
+
+    with aioresponses() as mocked:
+        mocked.get(url, payload=high_feature_mower_data)
+
+        result = await aio_client.auth.get_json(url)
+        assert isinstance(result, dict)
+        assert "data" in result
+
+
 async def test_patch_request_success(
     responses: aioresponses,
     aio_client: AutomowerSession,

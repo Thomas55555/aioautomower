@@ -19,6 +19,7 @@ from .conftest import TEST_TZ
 MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
+@pytest.mark.benchmark
 @time_machine.travel(
     datetime(2024, 5, 4, 8, tzinfo=TEST_TZ),
     tick=False,
