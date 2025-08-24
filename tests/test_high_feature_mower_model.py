@@ -4,6 +4,7 @@ import zoneinfo
 from dataclasses import fields
 from typing import TYPE_CHECKING, cast
 
+import time_machine
 from syrupy.assertion import SnapshotAssertion
 
 from aioautomower.auth import AbstractAuth
@@ -48,6 +49,7 @@ async def test_high_feature_mower(
     assert automower_api._rest_task is not None
 
 
+@time_machine.travel("2024-05-04 8:00:00")
 async def test_mower_snapshot(
     automower_client: AbstractAuth,
     snapshot: SnapshotAssertion,
