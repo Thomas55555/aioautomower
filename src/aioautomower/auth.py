@@ -44,7 +44,6 @@ class AbstractAuth(ABC):
         self._host = host if host is not None else API_BASE_URL
         self._client_id = ""
         self.loop = asyncio.get_event_loop()
-        self.ws_status: bool = True
         self.ws: ClientWebSocketResponse | None = None
 
     @abstractmethod
