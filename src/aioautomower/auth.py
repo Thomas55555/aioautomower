@@ -195,6 +195,7 @@ class AbstractAuth(ABC):
         if self.ws is not None:
             try:
                 await self.ws.close()
-                self.ws = None
             except ClientError as err:
+                self.ws = None
                 raise HusqvarnaWSClientError(err) from err
+            self.ws = None
