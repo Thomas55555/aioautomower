@@ -190,3 +190,12 @@ class AbstractAuth(ABC):
             raise HusqvarnaWSServerHandshakeError(err) from err
         except ClientError as err:
             raise HusqvarnaWSClientError(err) from err
+
+    async def websocket_close(self) -> None:
+        """Close the websocket connection."""
+        if self.ws is not None:
+            try:
+                await self.ws.close()
+                self.ws = None
+            except ClientError as err:
+                raise HusqvarnaWSClientError(err) from err
