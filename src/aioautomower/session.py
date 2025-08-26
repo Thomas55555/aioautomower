@@ -251,9 +251,13 @@ class AutomowerSession:
 
     async def start_listening(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
-        while not self.auth.ws.closed:
+        ws = self.auth.ws
+        if ws is None:
+            exc = RuntimeError("WebSocket not connected")
+            raise exc
+        while not ws.closed:
             try:
-                msg = await self.auth.ws.receive(timeout=300)
+                msg = await ws.receive(timeout=300)
                 if msg.type in (
                     WSMsgType.CLOSE,
                     WSMsgType.CLOSING,

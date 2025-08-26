@@ -45,7 +45,7 @@ class AbstractAuth(ABC):
         self._client_id = ""
         self.loop = asyncio.get_event_loop()
         self.ws_status: bool = True
-        self.ws: ClientWebSocketResponse
+        self.ws: ClientWebSocketResponse | None = None
 
     @abstractmethod
     async def async_get_access_token(self) -> str:
