@@ -182,7 +182,7 @@ class AutomowerSession:
         for cb in list(self.ws_ready_cbs):
             try:
                 self.loop.call_soon_threadsafe(cb)
-            except Exception:
+            except RuntimeError:
                 _LOGGER.exception("Error while scheduling ws_ready callback %s", cb)
 
     def unregister_ws_ready_callback(self, cb: Callable[[], None]) -> None:
