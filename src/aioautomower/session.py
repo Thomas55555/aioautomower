@@ -41,7 +41,6 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
-        "_on_ws_ready",
         "auth",
         "commands",
         "current_mowers",
@@ -57,6 +56,7 @@ class AutomowerSession:
         "rest_task",
         "single_message",
         "single_message_cbs",
+        "ws_ready_cbs",
     )
 
     def __init__(
@@ -88,7 +88,7 @@ class AutomowerSession:
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
-        self._on_ws_ready: Callable[[], None] | None = None
+        self.ws_ready_cbs: list[Callable[[], None]] = []
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -170,14 +170,25 @@ class AutomowerSession:
             if mower_id == msg_data.id:
                 self._schedule_message_callback(msg_data, cb)
 
-    def register_ws_ready_callback(self, callback: Callable[[], None]) -> None:
+    def register_ws_ready_callback(self, cb: Callable[[], None]) -> None:
         """Register a callback that is called when WebSocket is ready."""
-        self._on_ws_ready = callback
+        if cb not in self.ws_ready_cbs:
+            self.ws_ready_cbs.append(cb)
 
     def _schedule_ws_ready_callback(self) -> None:
-        """Schedule the ws_ready callback (thread-safe)."""
-        if self._on_ws_ready is not None:
-            self.loop.call_soon_threadsafe(self._on_ws_ready)
+        """Schedule all ws_ready callbacks (thread-safe)."""
+        if not self.ws_ready_cbs:
+            return
+        for cb in list(self.ws_ready_cbs):
+            try:
+                self.loop.call_soon_threadsafe(cb)
+            except RuntimeError:
+                _LOGGER.exception("Error while scheduling ws_ready callback %s", cb)
+
+    def unregister_ws_ready_callback(self, cb: Callable[[], None]) -> None:
+        """Unregister a ws_ready callback."""
+        if cb in self.ws_ready_cbs:
+            self.ws_ready_cbs.remove(cb)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
