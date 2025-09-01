@@ -28,6 +28,8 @@ from .utils import mower_list_to_dictionary_dataclass
 
 _LOGGER = logging.getLogger(__name__)
 
+INVALID_MOWER_ID = "0-0"
+
 
 class AutomowerSession:
     """Automower API to communicate with an Automower.
@@ -292,7 +294,7 @@ class AutomowerSession:
         )
         self._data = mower_list
         for mower in self._data["data"]:
-            if mower["id"] == "0-0":
+            if mower["id"] == INVALID_MOWER_ID:
                 raise NoValidDataError
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.current_mowers = set(self.data.keys())
