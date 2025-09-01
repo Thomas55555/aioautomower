@@ -305,6 +305,9 @@ class AutomowerSession:
             AutomowerEndpoint.mowers
         )
         self._data = mower_list
+        for mower in self._data["data"]:
+            if mower["id"] == "0-0":
+                raise NoDataAvailableError
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)

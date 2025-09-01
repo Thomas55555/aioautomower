@@ -1,0 +1,43 @@
+{
+  "data": [
+    {
+      "type": "mower",
+      "id": "0-0",
+      "attributes": {
+        "system": {
+          "name": "AM435X AWD",
+          "model": "Unavailable",
+          "serialNumber": 0
+        },
+        "battery": { "batteryPercent": 0 },
+        "capabilities": {
+          "headlights": false,
+          "workAreas": false,
+          "position": false,
+          "canConfirmError": false,
+          "stayOutZones": false
+        },
+        "mower": {
+          "mode": null,
+          "activity": null,
+          "inactiveReason": null,
+          "state": null,
+          "errorCode": 0,
+          "errorCodeTimestamp": 0,
+          "isErrorConfirmable": false
+        },
+        "calendar": { "tasks": [] },
+        "planner": {
+          "nextStartTimestamp": 0,
+          "override": { "action": null },
+          "restrictedReason": null,
+          "externalReason": 0
+        },
+        "metadata": { "connected": false, "statusTimestamp": 0 },
+        "positions": [],
+        "settings": { "cuttingHeight": null, "headlight": { "mode": null } },
+        "statistics": {}
+      }
+    }
+  ]
+}

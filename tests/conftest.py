@@ -80,6 +80,12 @@ def mock_mower_data_without_tasks() -> dict:
     return load_fixture_json("high_feature_mower_without_tasks.json")
 
 
+@pytest.fixture(name="trash_mower_data")
+def mock_trash_mower_data() -> dict:
+    """Return snapshot assertion fixture with the Automower extension."""
+    return load_fixture_json("rest_trash.json")
+
+
 @pytest.fixture(name="message_data")
 def mock_message_data_fixture(request: pytest.FixtureRequest) -> dict:
     """Return snapshot assertion fixture with the Automower extension."""
