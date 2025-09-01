@@ -41,6 +41,10 @@ class NoDataAvailableError(HusqvarnaAutomowerError):
     """Raised due updating data, when no data is available."""
 
 
+class NoValidDataError(HusqvarnaAutomowerError):
+    """Raised due updating data, when data is invalid."""
+
+
 class HusqvarnaTimeoutError(HusqvarnaAutomowerError):
     """Raised due connecting the websocket."""
 

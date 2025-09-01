@@ -18,7 +18,7 @@ from aiohttp import (
 from aioautomower.auth import AbstractAuth
 from aioautomower.exceptions import (
     FeatureNotSupportedError,
-    NoDataAvailableError,
+    NoValidDataError,
     WorkAreasDifferentError,
 )
 from aioautomower.model import (
@@ -863,8 +863,7 @@ async def test_get_status_raises_on_trash_mower(trash_mower_data: dict) -> None:
 
     automower_api = AutomowerSession(automower_client, poll=False)
 
-    # Prüfen, dass NoDataAvailableError geworfen wird
-    with pytest.raises(NoDataAvailableError):
+    with pytest.raises(NoValidDataError):
         await automower_api.get_status()
 
 

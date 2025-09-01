@@ -14,10 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import (
-    HusqvarnaTimeoutError,
-    NoDataAvailableError,
-)
+from .exceptions import HusqvarnaTimeoutError, NoDataAvailableError, NoValidDataError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -41,6 +38,7 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
+        "_on_ws_ready",
         "auth",
         "commands",
         "current_mowers",
@@ -56,7 +54,6 @@ class AutomowerSession:
         "rest_task",
         "single_message",
         "single_message_cbs",
-        "ws_ready_cbs",
     )
 
     def __init__(
@@ -88,7 +85,7 @@ class AutomowerSession:
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
-        self.ws_ready_cbs: list[Callable[[], None]] = []
+        self._on_ws_ready: Callable[[], None] | None = None
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -170,25 +167,14 @@ class AutomowerSession:
             if mower_id == msg_data.id:
                 self._schedule_message_callback(msg_data, cb)
 
-    def register_ws_ready_callback(self, cb: Callable[[], None]) -> None:
+    def register_ws_ready_callback(self, callback: Callable[[], None]) -> None:
         """Register a callback that is called when WebSocket is ready."""
-        if cb not in self.ws_ready_cbs:
-            self.ws_ready_cbs.append(cb)
+        self._on_ws_ready = callback
 
     def _schedule_ws_ready_callback(self) -> None:
-        """Schedule all ws_ready callbacks (thread-safe)."""
-        if not self.ws_ready_cbs:
-            return
-        for cb in list(self.ws_ready_cbs):
-            try:
-                self.loop.call_soon_threadsafe(cb)
-            except RuntimeError:
-                _LOGGER.exception("Error while scheduling ws_ready callback %s", cb)
-
-    def unregister_ws_ready_callback(self, cb: Callable[[], None]) -> None:
-        """Unregister a ws_ready callback."""
-        if cb in self.ws_ready_cbs:
-            self.ws_ready_cbs.remove(cb)
+        """Schedule the ws_ready callback (thread-safe)."""
+        if self._on_ws_ready is not None:
+            self.loop.call_soon_threadsafe(self._on_ws_ready)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -307,7 +293,7 @@ class AutomowerSession:
         self._data = mower_list
         for mower in self._data["data"]:
             if mower["id"] == "0-0":
-                raise NoDataAvailableError
+                raise NoValidDataError
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
