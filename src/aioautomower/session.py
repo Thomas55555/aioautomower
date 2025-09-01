@@ -14,10 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import (
-    HusqvarnaTimeoutError,
-    NoDataAvailableError,
-)
+from .exceptions import HusqvarnaTimeoutError, NoDataAvailableError, NoValidDataError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -30,6 +27,8 @@ from .model_input import (
 from .utils import mower_list_to_dictionary_dataclass
 
 _LOGGER = logging.getLogger(__name__)
+
+INVALID_MOWER_ID = "0-0"
 
 
 class AutomowerSession:
@@ -305,6 +304,9 @@ class AutomowerSession:
             AutomowerEndpoint.mowers
         )
         self._data = mower_list
+        for mower in self._data["data"]:
+            if mower["id"] == INVALID_MOWER_ID:
+                raise NoValidDataError
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)

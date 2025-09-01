@@ -41,6 +41,14 @@ class NoDataAvailableError(HusqvarnaAutomowerError):
     """Raised due updating data, when no data is available."""
 
 
+class NoValidDataError(HusqvarnaAutomowerError):
+    """Raised due updating data, when data is invalid."""
+
+    def __init__(self) -> None:
+        """Initialize the exception with a standard error message."""
+        super().__init__("Received invalid mower data")
+
+
 class HusqvarnaTimeoutError(HusqvarnaAutomowerError):
     """Raised due connecting the websocket."""
 
