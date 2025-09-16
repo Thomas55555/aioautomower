@@ -362,7 +362,7 @@ class AutomowerSession:
             "headlights": self._handle_headlight_event,
             "position": self._handle_position_event,
         }
-        attributes = new_data.get("attributes", {})
+        attributes: dict[str, Any] = new_data.get("attributes", {})
         for key, handler in handlers.items():
             if key in attributes:
                 handler(mower, attributes)  # Pass the specific attribute
