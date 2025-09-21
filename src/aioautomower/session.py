@@ -14,7 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import NoDataAvailableError, NoValidDataError
+from .exceptions import HusqvarnaWSClientError, NoDataAvailableError, NoValidDataError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -323,7 +323,13 @@ class AutomowerSession:
             _LOGGER.debug("Websocket will be closed and reconnected")
             await self.auth.websocket_close()
             _LOGGER.debug("Websocket closed, now reconnecting")
-            await self.auth.websocket_connect()
+            try:
+                await self.auth.websocket_connect()
+            except HusqvarnaWSClientError as err:
+                _LOGGER.error("Couldn't reconnect to websocket: %s", err)
+                _LOGGER.debug("Scheduling a new reconnect task")
+                self.reconnect_task = self.loop.create_task(self._reconnect_scheduler())
+                return
             _LOGGER.debug("Websocket reconnected, now starting listener")
             await self.start_listening()
 
@@ -332,6 +338,7 @@ class AutomowerSession:
         ws = getattr(self.auth, "ws", None)
         if ws is None:
             _LOGGER.debug("WebSocket not connected—skipping ping")
+            await self.auth.websocket_connect()
             return False
 
         try:
@@ -340,6 +347,7 @@ class AutomowerSession:
             return False
         except ClientError as err:
             _LOGGER.warning("Ping failed due to client error: %s", err)
+            await self.reconnect()
             return False
 
         return True
