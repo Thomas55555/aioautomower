@@ -167,14 +167,14 @@ async def _send_messages(
     automower_client: AutomowerSession,
 ) -> None:
     """Listen with the client."""
-    try:
-        while True:
+    while True:
+        try:
             result = await automower_client.send_empty_message()
             _LOGGER.debug("Ping result: %s", result)
             await asyncio.sleep(30.5)
-    except Exception as err:  # noqa: BLE001
-        # We need to guard against unknown exceptions to not crash this task.
-        _LOGGER.debug("Unexpected exception while sending message: %s", err)
+        except Exception as err:  # noqa: BLE001
+            # We need to guard against unknown exceptions to not crash this task.
+            _LOGGER.debug("Unexpected exception while sending message: %s", err)
 
 
 asyncio.run(main())
