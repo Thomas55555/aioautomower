@@ -95,11 +95,11 @@ async def main() -> None:
     automower_api.register_data_callback(callback)
     automower_api.register_pong_callback(pong_callback)
     for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
-        # cursor = mower_data.calendar.timeline.overlapping(
-        #     datetime.datetime.now(),
-        #     datetime.datetime.now() + datetime.timedelta(weeks=1),
-        # )
-        # print("cursor", cursor)
+        cursor = mower_data.calendar.timeline.overlapping(
+            datetime.datetime.now(),
+            datetime.datetime.now() + datetime.timedelta(weeks=1),
+        )
+        print("cursor", cursor)
 
         # cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
 
@@ -119,7 +119,7 @@ async def main() -> None:
         # await automower_api.commands.start_in_workarea(
         #     mower_id, 0, datetime.timedelta(minutes=30)
         # )
-        await automower_api.async_get_messages(mower_id)
+        # await automower_api.async_get_messages(mower_id)
 
     await asyncio.sleep(10)
     await automower_api.get_status()
