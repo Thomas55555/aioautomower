@@ -14,7 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import HusqvarnaTimeoutError, NoDataAvailableError, NoValidDataError
+from .exceptions import NoDataAvailableError, NoValidDataError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -40,6 +40,7 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
+        "_reconnect_lock",
         "auth",
         "commands",
         "current_mowers",
@@ -52,10 +53,12 @@ class AutomowerSession:
         "mower_tz",
         "poll",
         "pong_cbs",
+        "reconnect_task",
         "rest_task",
         "single_message",
         "single_message_cbs",
         "ws_ready_cbs",
+        "ws_task",
     )
 
     def __init__(
@@ -87,7 +90,10 @@ class AutomowerSession:
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
+        self.ws_task: asyncio.Task[None] | None = None
+        self.reconnect_task: asyncio.Task[None] | None = None
         self.ws_ready_cbs: list[Callable[[], None]] = []
+        self._reconnect_lock = asyncio.Lock()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -259,7 +265,7 @@ class AutomowerSession:
                 )
                 self._schedule_ws_ready_callback()
 
-    async def start_listening(self) -> None:
+    async def _listen(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
         ws = self.auth.ws
         if ws is None:
@@ -278,8 +284,48 @@ class AutomowerSession:
                     await self._handle_text_message(msg)
                 elif msg.type == WSMsgType.ERROR:
                     continue
-            except TimeoutError as exc:
-                raise HusqvarnaTimeoutError from exc
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Timeout receiving from websocket, scheduling reconnect"
+                )
+                self.loop.create_task(self.reconnect())
+                break
+            except ClientError as exc:
+                _LOGGER.warning(
+                    "ClientError from websocket, scheduling reconnect: %s", exc
+                )
+                self.loop.create_task(self.reconnect())
+                break
+
+    async def start_listening(self) -> None:
+        """Start listening to the websocket."""
+        self.ws_task = self.loop.create_task(self._listen())
+        self.reconnect_task = self.loop.create_task(self._reconnect_scheduler())
+
+    async def _reconnect_scheduler(self) -> None:
+        """Reconnect scheduler."""
+        await asyncio.sleep(30)
+        _LOGGER.info("Websocket needs to be reconnected")
+        await self.reconnect()
+
+    async def reconnect(self) -> None:
+        """Reconnect to the websocket."""
+        async with self._reconnect_lock:
+            _LOGGER.debug("Trying to reconnect to websocket")
+            if self.ws_task and not self.ws_task.done():
+                self.ws_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await self.ws_task
+            if self.reconnect_task and not self.reconnect_task.done():
+                self.reconnect_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await self.reconnect_task
+            _LOGGER.debug("Websocket will be closed and reconnected")
+            await self.auth.websocket_close()
+            _LOGGER.debug("Websocket closed, now reconnecting")
+            await self.auth.websocket_connect()
+            _LOGGER.debug("Websocket reconnected, now starting listener")
+            await self.start_listening()
 
     async def send_empty_message(self, ping_timeout: int = 5) -> bool:
         """Send a single ping with timeout (in seconds)."""
@@ -419,5 +465,15 @@ class AutomowerSession:
                 self.rest_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await asyncio.gather(self.rest_task)
+        if self.ws_task:
+            if not self.ws_task.cancelled():
+                self.ws_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await asyncio.gather(self.ws_task)
+        if self.reconnect_task:
+            if not self.reconnect_task.cancelled():
+                self.reconnect_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await asyncio.gather(self.reconnect_task)
         for mower_id, cb in self.message_update_cbs[:]:
             self.unregister_message_callback(cb, mower_id)

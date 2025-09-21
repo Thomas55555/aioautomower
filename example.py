@@ -145,22 +145,14 @@ def pong_callback(ws_data: datetime.datetime):
 
 async def _client_listen(
     automower_client: AutomowerSession,
-    reconnect_time: int = 2,
 ) -> None:
     """Listen with the client."""
     try:
         await automower_client.auth.websocket_connect()
         await automower_client.start_listening()
-    except Exception as err:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
-        print("Unexpected exception: %s", err)
-    while True:
-        await asyncio.sleep(reconnect_time)
-        reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-        await _client_listen(
-            automower_client=automower_client,
-            reconnect_time=reconnect_time,
-        )
+        _LOGGER.exception("Unexpected exception in client listen task")
 
 
 async def _send_messages(
@@ -168,7 +160,10 @@ async def _send_messages(
 ) -> None:
     """Listen with the client."""
     try:
-        await automower_client.send_empty_message()
+        while True:
+            result = await automower_client.send_empty_message()
+            _LOGGER.debug("Ping result: %s", result)
+            await asyncio.sleep(30.5)
     except Exception as err:  # noqa: BLE001
         # We need to guard against unknown exceptions to not crash this task.
         print("Unexpected exception: %s", err)
