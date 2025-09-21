@@ -166,7 +166,7 @@ async def _client_listen(
 async def _send_messages(
     automower_client: AutomowerSession,
 ) -> None:
-    """Listen with the client."""
+    """Send periodic pings to the websocket."""
     while True:
         try:
             result = await automower_client.send_empty_message()
