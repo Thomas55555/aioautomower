@@ -304,7 +304,7 @@ class AutomowerSession:
 
     async def _reconnect_scheduler(self) -> None:
         """Reconnect scheduler."""
-        await asyncio.sleep(30)
+        await asyncio.sleep(7195)
         _LOGGER.info("Websocket needs to be reconnected")
         await self.reconnect()
 
