@@ -1,6 +1,7 @@
 """Test automower session."""
 
 import asyncio
+import re
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
@@ -210,7 +211,7 @@ async def test_post_commands_2(
         tasks = Tasks.from_dict(tasks_dict)
         with pytest.raises(
             WorkAreasDifferentError,
-            match="Only identical work areas are allowed in one command.",
+            match=re.escape("Only identical work areas are allowed in one command."),
         ):
             await automower_api.commands.set_calendar(MOWER_ID, tasks)
 
@@ -236,7 +237,7 @@ async def test_post_commands_2(
         mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm")
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape("This mower does not support this command."),
         ):
             await automower_api.commands.set_headlight_mode(
                 "1234", HeadlightModes.ALWAYS_OFF
@@ -244,13 +245,13 @@ async def test_post_commands_2(
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape("This mower does not support this command."),
         ):
             await automower_api.commands.error_confirm("1234")
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape("This mower does not support this command."),
         ):
             await automower_api.commands.start_in_workarea(
                 "1234", 0, timedelta(minutes=10)
@@ -435,7 +436,7 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape("This mower does not support this command."),
         ):
             await automower_api.commands.switch_stay_out_zone(
                 "1234", "vallhala", switch=True
@@ -509,7 +510,7 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape("This mower does not support this command."),
         ):
             await automower_api.commands.workarea_settings("1234", 0).cutting_height(50)
 
