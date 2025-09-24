@@ -304,33 +304,58 @@ class AutomowerSession:
 
     async def _reconnect_scheduler(self) -> None:
         """Reconnect scheduler."""
-        await asyncio.sleep(7195)
+        await asyncio.sleep(20)
         _LOGGER.info("Websocket needs to be reconnected")
         await self.reconnect()
 
     async def reconnect(self) -> None:
         """Reconnect to the websocket."""
         async with self._reconnect_lock:
-            _LOGGER.debug("Trying to reconnect to websocket")
+            _LOGGER.debug("Attempting to reconnect to WebSocket (make-before-break)")
+
+            # keep reference to old ws (if any)
+            old_ws = getattr(self.auth, "ws", None)
+
+            # 1. Make new connection
+            try:
+                await self.auth.websocket_connect()
+                _LOGGER.debug("New WebSocket connection successful")
+            except HusqvarnaWSClientError as err:
+                _LOGGER.exception(
+                    "Failed to establish new WebSocket connection: %s", err
+                )
+                if not self.reconnect_task or self.reconnect_task.done():
+                    self.reconnect_task = asyncio.create_task(
+                        self._reconnect_scheduler()
+                    )
+                return
+
+            # 2. Break old connection and replace tasks
+            _LOGGER.debug("Closing old WebSocket connection and tasks")
+            # cancel old listener task (if running)
             if self.ws_task and not self.ws_task.done():
                 self.ws_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
-                    await self.ws_task
+                    await asyncio.wait_for(self.ws_task, timeout=2)
+
+            # cancel old reconnect scheduler (if running)
             if self.reconnect_task and not self.reconnect_task.done():
                 self.reconnect_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
-                    await self.reconnect_task
-            _LOGGER.debug("Websocket will be closed and reconnected")
-            await self.auth.websocket_close()
-            _LOGGER.debug("Websocket closed, now reconnecting")
+                    await asyncio.wait_for(self.reconnect_task, timeout=2)
+
+            # explicitly close previous websocket if it's different and still open
+            new_ws = getattr(self.auth, "ws", None)
             try:
-                await self.auth.websocket_connect()
-            except HusqvarnaWSClientError as err:
-                _LOGGER.error("Couldn't reconnect to websocket: %s", err)
-                _LOGGER.debug("Scheduling a new reconnect task")
-                self.reconnect_task = self.loop.create_task(self._reconnect_scheduler())
-                return
-            _LOGGER.debug("Websocket reconnected, now starting listener")
+                if old_ws is not None and old_ws is not new_ws:
+                    # aiohttp ws has .closed property and .close() coroutine
+                    with contextlib.suppress(Exception):
+                        await old_ws.close()
+                        _LOGGER.debug("Closed previous websocket connection")
+            except Exception as exc:  # noqa: BLE001
+                _LOGGER.debug("Error closing previous websocket: %s", exc)
+
+            _LOGGER.debug("Starting new WebSocket listener")
             await self.start_listening()
 
     async def send_empty_message(self, ping_timeout: int = 5) -> bool:
