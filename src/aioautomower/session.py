@@ -57,6 +57,7 @@ class AutomowerSession:
         "rest_task",
         "single_message",
         "single_message_cbs",
+        "ws_disconnected_cbs",
         "ws_ready_cbs",
         "ws_task",
     )
@@ -92,6 +93,7 @@ class AutomowerSession:
         self.rest_task: asyncio.Task[None] | None = None
         self.ws_task: asyncio.Task[None] | None = None
         self.reconnect_task: asyncio.Task[None] | None = None
+        self.ws_disconnected_cbs: list[Callable[[], None]] = []
         self.ws_ready_cbs: list[Callable[[], None]] = []
         self._reconnect_lock = asyncio.Lock()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
@@ -194,6 +196,28 @@ class AutomowerSession:
         """Unregister a ws_ready callback."""
         if cb in self.ws_ready_cbs:
             self.ws_ready_cbs.remove(cb)
+
+    def register_ws_disconnected_callback(self, cb: Callable[[], None]) -> None:
+        """Register a callback that is called when WebSocket is disconnected."""
+        if cb not in self.ws_disconnected_cbs:
+            self.ws_disconnected_cbs.append(cb)
+
+    def _schedule_ws_disconnected_callback(self) -> None:
+        """Schedule all ws_disconnected callbacks (thread-safe)."""
+        if not self.ws_disconnected_cbs:
+            return
+        for cb in list(self.ws_disconnected_cbs):
+            try:
+                self.loop.call_soon_threadsafe(cb)
+            except RuntimeError:
+                _LOGGER.exception(
+                    "Error while scheduling ws_disconnected callback %s", cb
+                )
+
+    def unregister_ws_disconnected_callback(self, cb: Callable[[], None]) -> None:
+        """Unregister a ws_disconnected callback."""
+        if cb in self.ws_disconnected_cbs:
+            self.ws_disconnected_cbs.remove(cb)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -349,6 +373,7 @@ class AutomowerSession:
                     # aiohttp ws has .closed property and .close() coroutine
                     with contextlib.suppress(Exception):
                         await old_ws.close()
+                        self._schedule_ws_disconnected_callback()
                         _LOGGER.debug("Closed previous websocket connection")
             except Exception as exc:  # noqa: BLE001
                 _LOGGER.debug("Error closing previous websocket: %s", exc)
