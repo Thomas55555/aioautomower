@@ -320,10 +320,8 @@ class AutomowerSession:
             try:
                 await self.auth.websocket_connect()
                 _LOGGER.debug("New WebSocket connection successful")
-            except HusqvarnaWSClientError as err:
-                _LOGGER.exception(
-                    "Failed to establish new WebSocket connection: %s", err
-                )
+            except HusqvarnaWSClientError:
+                _LOGGER.exception("Failed to establish new WebSocket connection: %s")
                 if not self.reconnect_task or self.reconnect_task.done():
                     self.reconnect_task = asyncio.create_task(
                         self._reconnect_scheduler()
