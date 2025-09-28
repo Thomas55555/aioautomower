@@ -19,6 +19,7 @@ from aioautomower.utils import (
     async_get_access_token,
     structure_token,
 )
+from aioautomower.exceptions import HusqvarnaWSServerHandshakeError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,10 +90,12 @@ async def main() -> None:
     await asyncio.sleep(1)
     await automower_api.connect()
     api_task = asyncio.create_task(_client_listen(automower_api))
-    ping_pong_task = asyncio.create_task(_send_messages(automower_api))
+    state: dict[str, asyncio.Task | None] = {"ping_pong_task": None}
     # Add a callback, can be done at any point in time and
     # multiple callbacks can be added.
     automower_api.register_data_callback(callback)
+    automower_api.register_ws_ready_callback(ws_ready_callback(automower_api, state))
+    automower_api.register_ws_disconnected_callback(ws_disconnected_callback)
     automower_api.register_pong_callback(pong_callback)
     for mower_id, mower_data in automower_api.data.items():  # noqa: B007, PERF102
         cursor = mower_data.calendar.timeline.overlapping(
@@ -121,26 +124,45 @@ async def main() -> None:
         # )
         # await automower_api.async_get_messages(mower_id)
 
-    await asyncio.sleep(10)
-    await automower_api.get_status()
-    print("self._data", automower_api._data)
-    await asyncio.sleep(3000)
+    # await asyncio.sleep(10)
+    # await automower_api.get_status()
+    # print("self._data", automower_api._data)
+    await asyncio.sleep(30)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
     api_task.cancel()
-    ping_pong_task.cancel()
+    if state["ping_pong_task"] is not None:
+        state["ping_pong_task"].cancel()
     await websession.close()
 
 
-def callback(ws_data: dict[str, MowerAttributes]):
+def callback(ws_data: dict[str, MowerAttributes]) -> None:
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     for mower_data in ws_data.values():
         pprint(mower_data.battery)
 
 
-def pong_callback(ws_data: datetime.datetime):
+def pong_callback(ws_data: datetime.datetime) -> None:
     """Process websocket callbacks and write them to the DataUpdateCoordinator."""
     print("Last websocket info: ", ws_data)
+
+
+def ws_ready_callback(
+    api: AutomowerSession, state: dict[str, asyncio.Task | None]
+) -> callable[[], None]:
+    """Process websocket ready callbacks and start ping pong task."""
+
+    def _callback() -> None:
+        if state["ping_pong_task"] is None:
+            _LOGGER.info("Websocket ready")
+            state["ping_pong_task"] = asyncio.create_task(_send_messages(api))
+
+    return _callback
+
+
+def ws_disconnected_callback() -> None:
+    """Process websocket callbacks and write them to the DataUpdateCoordinator."""
+    _LOGGER.info("Websocket disconnected")
 
 
 async def _client_listen(
@@ -150,7 +172,9 @@ async def _client_listen(
     try:
         await automower_client.auth.websocket_connect()
         await automower_client.start_listening()
-    except Exception:  # noqa: BLE001
+    except HusqvarnaWSServerHandshakeError as err:
+        _LOGGER.exception("Websocket handshake error: %s", err)
+    except Exception:
         # We need to guard against unknown exceptions to not crash this task.
         _LOGGER.exception("Unexpected exception in client listen task")
 
