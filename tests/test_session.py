@@ -539,7 +539,7 @@ async def test_battery_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].battery.battery_percent == 77
     listening_task.cancel()
     await automower_api.close()
@@ -565,7 +565,7 @@ async def test_calendar_event_work_area(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=time(hour=12),
@@ -605,7 +605,7 @@ async def test_cutting_height_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
     listening_task.cancel()
@@ -636,7 +636,7 @@ async def test_headlights_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert (
         automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
     )
@@ -670,7 +670,7 @@ async def test_single_mower_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
 
     listening_task.cancel()
@@ -712,7 +712,7 @@ async def test_single_planner_event(
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
@@ -756,7 +756,7 @@ async def test_full_planner_event(
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.FORCE_MOW
     assert (
@@ -791,7 +791,7 @@ async def test_position_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     listening_task.cancel()
     await automower_api.close()
@@ -827,7 +827,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2024, 10, 4, 9, 43, 16, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
@@ -931,19 +931,22 @@ async def test_single_messages(automower_client: AbstractAuth) -> None:
     handle = Mock()
     automower_api.register_single_message_callback(handle)
 
+    # WS-Mock vorbereiten
     automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
     automower_api.auth.ws.closed = False
     automower_api.auth.ws.receive = AsyncMock(
         side_effect=[
-            WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
-            asyncio.CancelledError(),
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/message_event.json"),
+                None,
+            ),
+            WSMessage(WSMsgType.CLOSE, "", None),
         ]
     )
 
-    with pytest.raises(asyncio.CancelledError):
-        await automower_api.start_listening()
-
-    await asyncio.sleep(0)
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    await asyncio.sleep(0.05)
 
     handle.assert_called_once()
     called_msg = handle.call_args[0][0]
@@ -951,17 +954,7 @@ async def test_single_messages(automower_client: AbstractAuth) -> None:
     assert called_msg.attributes.message.code == "wrong_loop_signal"
     assert called_msg.attributes.message.severity == Severity.WARNING
 
-    handle.reset_mock()
-    automower_api.auth.ws.receive = AsyncMock(
-        side_effect=[
-            WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
-            asyncio.CancelledError(),
-        ]
-    )
-
-    with pytest.raises(asyncio.CancelledError):
-        await automower_api.start_listening()
-
-    await asyncio.sleep(0)
-    handle.assert_not_called()
+    listening_task.cancel()
     await automower_api.close()
+    handle.reset_mock()
+    assert not handle.called
