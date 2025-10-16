@@ -313,6 +313,12 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
 
+    async def async_get_connectivity(self, mower_id: str) -> Any:
+        """Get mower data via the Connectivity API."""
+        return await self.auth.get_json(
+            f"https://api.connectivity.husqvarna.dev/v1/devices/{mower_id}/full"
+        )
+
     async def async_get_messages(self, mower_id: str) -> MessageData:
         """Fetch messages for one mower and merge into self._messages."""
         raw_data = await self.auth.get_json(
