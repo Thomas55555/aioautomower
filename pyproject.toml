@@ -27,6 +27,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -51,13 +52,13 @@ coverage = {version = "7.10.7", extras = ["toml"]}
 mypy = "1.18.2"
 pre-commit = "4.3.0"
 pre-commit-hooks = "6.0.0"
-pylint = "3.3.8"
+pylint = "4.0.0"
 pytest = "8.4.2"
 pytest-asyncio = "1.2.0"
-pytest-codspeed = "4.0.0"
+pytest-codspeed = "4.1.1"
 pytest-cov = "7.0.0"
-ruff = "0.13.1"
-syrupy = "4.9.1"
+ruff = "0.14.0"
+syrupy = "5.0.0"
 time-machine = "2.19.0"
 types-python-dateutil = "^2.9.0.20240821"
 types-pyyaml = "^6.0.12.20241230"
