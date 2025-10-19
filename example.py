@@ -127,6 +127,11 @@ async def main() -> None:
     # await asyncio.sleep(10)
     # await automower_api.get_status()
     # print("self._data", automower_api._data)
+    await automower_api.commands.park_for(
+        "mower_id_here",
+        datetime.timedelta(minutes=45),
+        external_reason=200011,
+    )
     await asyncio.sleep(30)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
@@ -149,15 +154,13 @@ def pong_callback(ws_data: datetime.datetime) -> None:
 
 def ws_ready_callback(
     api: AutomowerSession, state: dict[str, asyncio.Task | None]
-) -> callable[[], None]:
+) -> None:
     """Process websocket ready callbacks and start ping pong task."""
 
     def _callback() -> None:
         if state["ping_pong_task"] is None:
             _LOGGER.info("Websocket ready")
             state["ping_pong_task"] = asyncio.create_task(_send_messages(api))
-
-    return _callback
 
 
 def ws_disconnected_callback() -> None:

@@ -4,6 +4,10 @@ import datetime
 import logging
 import zoneinfo
 from dataclasses import dataclass
+from typing import Annotated
+
+from beartype import beartype
+from beartype.vale import Is
 
 from .auth import AbstractAuth
 from .exceptions import (
@@ -191,7 +195,15 @@ class MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
+    ExternalReason = Annotated[int, Is[lambda x: 200_000 <= x <= 299_999]]
+
+    @beartype
+    async def park_for(
+        self,
+        mower_id: str,
+        tdelta: datetime.timedelta,
+        external_reason: ExternalReason | None = None,
+    ) -> None:
         """Parks the mower for a period of minutes.
 
         The mower will drive to
@@ -200,7 +212,10 @@ class MowerCommands:
         body = {
             "data": {
                 "type": "Park",
-                "attributes": {"duration": timedelta_to_minutes(tdelta)},
+                "attributes": {
+                    "duration": timedelta_to_minutes(tdelta),
+                    "externalReason": external_reason,
+                },
             }
         }
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)

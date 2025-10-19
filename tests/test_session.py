@@ -96,7 +96,7 @@ async def test_post_commands_1(
             json={
                 "data": {
                     "type": "Park",
-                    "attributes": {"duration": 30},
+                    "attributes": {"duration": 30, "externalReason": None},
                 }
             },
         )
