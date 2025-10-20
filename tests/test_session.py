@@ -105,7 +105,22 @@ async def test_post_commands_1(
             await automower_api.commands.park_for(
                 MOWER_ID, timedelta(minutes=30, seconds=59), external_reason=1
             )
-
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "External reason can only be used for park durations less than 25hours."
+            ),
+        ):
+            await automower_api.commands.park_for(
+                MOWER_ID, timedelta(hours=26), external_reason=200_000
+            )
+        with pytest.raises(
+            FeatureNotSupportedError,
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
+        ):
+            await automower_api.commands.park_for(
+                MOWER_ID_LOW_FEATURE, timedelta(hours=24), external_reason=200_000
+            )
         await automower_api.commands.reset_cutting_blade_usage_time(MOWER_ID)
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/statistics/resetCuttingBladeUsageTime"
