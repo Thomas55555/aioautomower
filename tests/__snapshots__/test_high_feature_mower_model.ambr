@@ -65,6 +65,7 @@
 # name: test_mower_snapshot[status.battery]
   dict({
     'battery_percent': 100,
+    'remaining_charging_time': datetime.timedelta(0),
   })
 # ---
 # name: test_mower_snapshot[status.calendar]
