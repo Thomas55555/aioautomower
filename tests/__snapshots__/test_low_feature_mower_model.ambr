@@ -12,7 +12,7 @@
 # name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.battery]
   dict({
     'battery_percent': 50,
-    'remaining_charging_time': datetime.timedelta(seconds=309),
+    'remaining_charging_time': 309,
   })
 # ---
 # name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.calendar]
