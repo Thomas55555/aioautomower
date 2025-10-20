@@ -15,7 +15,6 @@ from aiohttp import (
     WSMessage,
     WSMsgType,
 )
-from beartype.roar import BeartypeCallHintParamViolation
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.commands import FEATURE_NOT_SUPPORTED_MSG
@@ -101,7 +100,10 @@ async def test_post_commands_1(
                 }
             },
         )
-        with pytest.raises(BeartypeCallHintParamViolation):
+        with pytest.raises(
+            ValueError,
+            match=re.escape("External reason must be between 200000 and 299999."),
+        ):
             await automower_api.commands.park_for(
                 MOWER_ID, timedelta(minutes=30, seconds=59), external_reason=1
             )

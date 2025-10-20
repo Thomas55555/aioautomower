@@ -4,10 +4,6 @@ import datetime
 import logging
 import zoneinfo
 from dataclasses import dataclass
-from typing import Annotated
-
-from beartype import beartype
-from beartype.vale import Is
 
 from .auth import AbstractAuth
 from .exceptions import (
@@ -195,14 +191,11 @@ class MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    ExternalReason = Annotated[int, Is[lambda x: 200_000 <= x <= 299_999]]
-
-    @beartype
     async def park_for(
         self,
         mower_id: str,
         tdelta: datetime.timedelta,
-        external_reason: ExternalReason | None = None,
+        external_reason: int | None = None,
     ) -> None:
         """Parks the mower for a period of minutes.
 
@@ -211,6 +204,9 @@ class MowerCommands:
         reason. The external reason can be used to set the reason for the parking when
         you have more than one integration to the API.
         """
+        if external_reason is not None and not (200_000 <= external_reason <= 299_999):
+            msg = "External reason must be between 200000 and 299999."
+            raise ValueError(msg)
         if external_reason is not None and tdelta >= datetime.timedelta(hours=25):
             msg = (
                 "External reason can only be used for park durations less than 25hours."
