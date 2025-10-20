@@ -11,9 +11,9 @@ class Battery(DataClassDictMixin):
     """Information about the battery in the Automower."""
 
     battery_percent: int = field(metadata=field_options(alias="batteryPercent"))
-    remaining_charging_time: timedelta = field(
+    remaining_charging_time: timedelta | None = field(
         metadata=field_options(
             alias="remainingChargingTime",
-            deserialize=lambda x: timedelta(seconds=x),
+            deserialize=lambda x: None if x == 0 else timedelta(seconds=x),
         ),
     )
