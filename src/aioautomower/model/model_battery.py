@@ -14,6 +14,6 @@ class Battery(DataClassDictMixin):
     remaining_charging_time: timedelta | None = field(
         metadata=field_options(
             alias="remainingChargingTime",
-            deserialize=lambda x: None if x == 0 else timedelta(seconds=x),
+            deserialize=lambda x: None if x == 0 else x,
         ),
     )
