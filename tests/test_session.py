@@ -15,6 +15,7 @@ from aiohttp import (
     WSMessage,
     WSMsgType,
 )
+from beartype.roar import BeartypeCallHintParamViolation
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.commands import FEATURE_NOT_SUPPORTED_MSG
@@ -100,6 +101,11 @@ async def test_post_commands_1(
                 }
             },
         )
+        with pytest.raises(BeartypeCallHintParamViolation):
+            await automower_api.commands.park_for(
+                MOWER_ID, timedelta(minutes=30, seconds=59), external_reason=1
+            )
+
         await automower_api.commands.reset_cutting_blade_usage_time(MOWER_ID)
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/statistics/resetCuttingBladeUsageTime"
