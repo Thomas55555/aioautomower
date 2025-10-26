@@ -183,6 +183,7 @@ class MowerModes(StrEnum):
     DEMO = "demo"
     SECONDARY_AREA = "secondary_area"
     HOME = "home"
+    POI = "poi"
     UNKNOWN = "unknown"
 
 
