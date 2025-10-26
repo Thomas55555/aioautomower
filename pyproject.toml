@@ -27,6 +27,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -48,17 +49,17 @@ orjson = "^3.11.2"
 aioresponses = "0.7.8"
 codespell = "2.4.1"
 covdefaults = "2.3.0"
-coverage = {version = "7.10.4", extras = ["toml"]}
-mypy = "1.17.1"
+coverage = {version = "7.11.0", extras = ["toml"]}
+mypy = "1.18.2"
 pre-commit = "4.3.0"
 pre-commit-hooks = "6.0.0"
-pylint = "3.3.8"
-pytest = "8.4.1"
-pytest-asyncio = "1.1.0"
-pytest-codspeed = "^3.1.2"
-pytest-cov = "6.2.1"
-ruff = "0.12.10"
-syrupy = "4.9.1"
+pylint = "4.0.2"
+pytest = "8.4.2"
+pytest-asyncio = "1.2.0"
+pytest-codspeed = "4.1.1"
+pytest-cov = "7.0.0"
+ruff = "0.14.2"
+syrupy = "5.0.0"
 time-machine = "2.19.0"
 types-python-dateutil = "^2.9.0.20240821"
 types-pyyaml = "^6.0.12.20241230"

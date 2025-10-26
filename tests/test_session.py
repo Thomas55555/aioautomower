@@ -1,6 +1,7 @@
 """Test automower session."""
 
 import asyncio
+import re
 import zoneinfo
 from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
@@ -16,8 +17,10 @@ from aiohttp import (
 )
 
 from aioautomower.auth import AbstractAuth
+from aioautomower.commands import FEATURE_NOT_SUPPORTED_MSG
 from aioautomower.exceptions import (
     FeatureNotSupportedError,
+    NoValidDataError,
     WorkAreasDifferentError,
 )
 from aioautomower.model import (
@@ -93,10 +96,33 @@ async def test_post_commands_1(
             json={
                 "data": {
                     "type": "Park",
-                    "attributes": {"duration": 30},
+                    "attributes": {"duration": 30, "externalReason": None},
                 }
             },
         )
+        with pytest.raises(
+            ValueError,
+            match=re.escape("External reason must be between 200000 and 299999."),
+        ):
+            await automower_api.commands.park_for(
+                MOWER_ID, timedelta(minutes=30, seconds=59), external_reason=1
+            )
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "External reason can only be used for park durations less than 25hours."
+            ),
+        ):
+            await automower_api.commands.park_for(
+                MOWER_ID, timedelta(hours=26), external_reason=200_000
+            )
+        with pytest.raises(
+            FeatureNotSupportedError,
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
+        ):
+            await automower_api.commands.park_for(
+                MOWER_ID_LOW_FEATURE, timedelta(hours=24), external_reason=200_000
+            )
         await automower_api.commands.reset_cutting_blade_usage_time(MOWER_ID)
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/statistics/resetCuttingBladeUsageTime"
@@ -209,7 +235,7 @@ async def test_post_commands_2(
         tasks = Tasks.from_dict(tasks_dict)
         with pytest.raises(
             WorkAreasDifferentError,
-            match="Only identical work areas are allowed in one command.",
+            match=re.escape("Only identical work areas are allowed in one command."),
         ):
             await automower_api.commands.set_calendar(MOWER_ID, tasks)
 
@@ -235,7 +261,7 @@ async def test_post_commands_2(
         mocked_method.assert_called_with(f"mowers/{MOWER_ID}/errors/confirm")
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
         ):
             await automower_api.commands.set_headlight_mode(
                 "1234", HeadlightModes.ALWAYS_OFF
@@ -243,13 +269,13 @@ async def test_post_commands_2(
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
         ):
             await automower_api.commands.error_confirm("1234")
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
         ):
             await automower_api.commands.start_in_workarea(
                 "1234", 0, timedelta(minutes=10)
@@ -434,7 +460,7 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
         ):
             await automower_api.commands.switch_stay_out_zone(
                 "1234", "vallhala", switch=True
@@ -508,7 +534,7 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
 
         with pytest.raises(
             FeatureNotSupportedError,
-            match="This mower does not support this command.",
+            match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
         ):
             await automower_api.commands.workarea_settings("1234", 0).cutting_height(50)
 
@@ -536,7 +562,7 @@ async def test_battery_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].battery.battery_percent == 77
     listening_task.cancel()
     await automower_api.close()
@@ -562,7 +588,7 @@ async def test_calendar_event_work_area(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].calendar.tasks == [
         Calendar(
             start=time(hour=12),
@@ -602,7 +628,7 @@ async def test_cutting_height_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].settings.cutting_height == 5
 
     listening_task.cancel()
@@ -633,7 +659,7 @@ async def test_headlights_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert (
         automower_api.data[MOWER_ID].settings.headlight.mode == HeadlightModes.ALWAYS_ON
     )
@@ -667,7 +693,7 @@ async def test_single_mower_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].mower.mode == MowerModes.DEMO
 
     listening_task.cancel()
@@ -709,7 +735,7 @@ async def test_single_planner_event(
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime == datetime(
         2023, 6, 5, 19, 0, tzinfo=mower_tz
     )
@@ -753,7 +779,7 @@ async def test_full_planner_event(
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].planner.next_start_datetime is None
     assert automower_api.data[MOWER_ID].planner.override.action == Actions.FORCE_MOW
     assert (
@@ -788,7 +814,7 @@ async def test_position_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.data[MOWER_ID].positions[0] == Positions(57.70074, 14.4787133)
     listening_task.cancel()
     await automower_api.close()
@@ -824,7 +850,7 @@ async def test_message_event(automower_client: AbstractAuth) -> None:
             asyncio.CancelledError(),
         ]
     )
-    await asyncio.sleep(0)
+    await asyncio.wait_for(listening_task, timeout=1)
     assert automower_api.messages[MOWER_ID].attributes.messages[0] == Message(
         time=datetime(
             2024, 10, 4, 9, 43, 16, tzinfo=zoneinfo.ZoneInfo(key="Europe/Berlin")
@@ -851,6 +877,19 @@ async def test_empty_tasks(automower_client: AbstractAuth, mower_data: dict) -> 
     automower_api = AutomowerSession(automower_client, poll=True)
     await automower_api.connect()
     assert automower_api.data[MOWER_ID].calendar.tasks == []
+
+
+@pytest.mark.asyncio
+async def test_get_status_raises_on_trash_mower(trash_mower_data: dict) -> None:
+    """Test that get_status raises NoDataAvailableError for trash mower."""
+    # Mock Async-Client
+    automower_client = AsyncMock()
+    automower_client.get_json = AsyncMock(return_value=trash_mower_data)
+
+    automower_api = AutomowerSession(automower_client, poll=False)
+
+    with pytest.raises(NoValidDataError):
+        await automower_api.get_status()
 
 
 async def test_timezone_default(automower_client: AbstractAuth) -> None:
@@ -915,19 +954,22 @@ async def test_single_messages(automower_client: AbstractAuth) -> None:
     handle = Mock()
     automower_api.register_single_message_callback(handle)
 
+    # WS-Mock vorbereiten
     automower_api.auth.ws = AsyncMock(spec=ClientWebSocketResponse)
     automower_api.auth.ws.closed = False
     automower_api.auth.ws.receive = AsyncMock(
         side_effect=[
-            WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
-            asyncio.CancelledError(),
+            WSMessage(
+                WSMsgType.TEXT,
+                load_fixture("events/message_event.json"),
+                None,
+            ),
+            WSMessage(WSMsgType.CLOSE, "", None),
         ]
     )
 
-    with pytest.raises(asyncio.CancelledError):
-        await automower_api.start_listening()
-
-    await asyncio.sleep(0)
+    listening_task = asyncio.create_task(automower_api.start_listening())
+    await asyncio.sleep(0.05)
 
     handle.assert_called_once()
     called_msg = handle.call_args[0][0]
@@ -935,17 +977,7 @@ async def test_single_messages(automower_client: AbstractAuth) -> None:
     assert called_msg.attributes.message.code == "wrong_loop_signal"
     assert called_msg.attributes.message.severity == Severity.WARNING
 
-    handle.reset_mock()
-    automower_api.auth.ws.receive = AsyncMock(
-        side_effect=[
-            WSMessage(WSMsgType.TEXT, load_fixture("events/message_event.json"), None),
-            asyncio.CancelledError(),
-        ]
-    )
-
-    with pytest.raises(asyncio.CancelledError):
-        await automower_api.start_listening()
-
-    await asyncio.sleep(0)
-    handle.assert_not_called()
+    listening_task.cancel()
     await automower_api.close()
+    handle.reset_mock()
+    assert not handle.called

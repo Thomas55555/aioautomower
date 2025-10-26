@@ -1,5 +1,6 @@
 """Test automower session."""
 
+import re
 import zoneinfo
 from unittest.mock import AsyncMock, patch
 
@@ -35,7 +36,9 @@ async def test_get_status_400(
     )
     with pytest.raises(
         ApiBadRequestError,
-        match="400, message='Bad Request', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        match=re.escape(
+            "400, message='Bad Request', url='https://api.amc.husqvarna.dev/v1/mowers/'"
+        ),
     ):
         await aio_client.get_status()
 
@@ -52,7 +55,9 @@ async def test_get_status_401(
     )
     with pytest.raises(
         ApiUnauthorizedError,
-        match="401, message='Unauthorized', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        match=re.escape(
+            "401, message='Unauthorized', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        ),
     ):
         await aio_client.get_status()
 
@@ -69,7 +74,9 @@ async def test_get_status_402(
     )
     with pytest.raises(
         ApiForbiddenError,
-        match="403, message='Forbidden', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        match=re.escape(
+            "403, message='Forbidden', url='https://api.amc.husqvarna.dev/v1/mowers/'",
+        ),
     ):
         await aio_client.get_status()
 

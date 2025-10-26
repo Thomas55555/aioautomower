@@ -14,10 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import (
-    HusqvarnaTimeoutError,
-    NoDataAvailableError,
-)
+from .exceptions import HusqvarnaWSClientError, NoDataAvailableError, NoValidDataError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -31,6 +28,8 @@ from .utils import mower_list_to_dictionary_dataclass
 
 _LOGGER = logging.getLogger(__name__)
 
+INVALID_MOWER_ID = "0-0"
+
 
 class AutomowerSession:
     """Automower API to communicate with an Automower.
@@ -41,7 +40,7 @@ class AutomowerSession:
 
     __slots__ = (
         "_data",
-        "_on_ws_ready",
+        "_reconnect_lock",
         "auth",
         "commands",
         "current_mowers",
@@ -54,9 +53,13 @@ class AutomowerSession:
         "mower_tz",
         "poll",
         "pong_cbs",
+        "reconnect_task",
         "rest_task",
         "single_message",
         "single_message_cbs",
+        "ws_disconnected_cbs",
+        "ws_ready_cbs",
+        "ws_task",
     )
 
     def __init__(
@@ -88,7 +91,11 @@ class AutomowerSession:
         self.poll = poll
         self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
-        self._on_ws_ready: Callable[[], None] | None = None
+        self.ws_task: asyncio.Task[None] | None = None
+        self.reconnect_task: asyncio.Task[None] | None = None
+        self.ws_disconnected_cbs: list[Callable[[], None]] = []
+        self.ws_ready_cbs: list[Callable[[], None]] = []
+        self._reconnect_lock = asyncio.Lock()
         _LOGGER.debug("self.mower_tz: %s", self.mower_tz)
 
     def register_data_callback(
@@ -170,14 +177,47 @@ class AutomowerSession:
             if mower_id == msg_data.id:
                 self._schedule_message_callback(msg_data, cb)
 
-    def register_ws_ready_callback(self, callback: Callable[[], None]) -> None:
+    def register_ws_ready_callback(self, cb: Callable[[], None]) -> None:
         """Register a callback that is called when WebSocket is ready."""
-        self._on_ws_ready = callback
+        if cb not in self.ws_ready_cbs:
+            self.ws_ready_cbs.append(cb)
 
     def _schedule_ws_ready_callback(self) -> None:
-        """Schedule the ws_ready callback (thread-safe)."""
-        if self._on_ws_ready is not None:
-            self.loop.call_soon_threadsafe(self._on_ws_ready)
+        """Schedule all ws_ready callbacks (thread-safe)."""
+        if not self.ws_ready_cbs:
+            return
+        for cb in list(self.ws_ready_cbs):
+            try:
+                self.loop.call_soon_threadsafe(cb)
+            except RuntimeError:
+                _LOGGER.exception("Error while scheduling ws_ready callback %s", cb)
+
+    def unregister_ws_ready_callback(self, cb: Callable[[], None]) -> None:
+        """Unregister a ws_ready callback."""
+        if cb in self.ws_ready_cbs:
+            self.ws_ready_cbs.remove(cb)
+
+    def register_ws_disconnected_callback(self, cb: Callable[[], None]) -> None:
+        """Register a callback that is called when WebSocket is disconnected."""
+        if cb not in self.ws_disconnected_cbs:
+            self.ws_disconnected_cbs.append(cb)
+
+    def _schedule_ws_disconnected_callback(self) -> None:
+        """Schedule all ws_disconnected callbacks (thread-safe)."""
+        if not self.ws_disconnected_cbs:
+            return
+        for cb in list(self.ws_disconnected_cbs):
+            try:
+                self.loop.call_soon_threadsafe(cb)
+            except RuntimeError:
+                _LOGGER.exception(
+                    "Error while scheduling ws_disconnected callback %s", cb
+                )
+
+    def unregister_ws_disconnected_callback(self, cb: Callable[[], None]) -> None:
+        """Unregister a ws_disconnected callback."""
+        if cb in self.ws_disconnected_cbs:
+            self.ws_disconnected_cbs.remove(cb)
 
     def register_pong_callback(
         self, pong_callback: Callable[[datetime.datetime], None]
@@ -249,11 +289,15 @@ class AutomowerSession:
                 )
                 self._schedule_ws_ready_callback()
 
-    async def start_listening(self) -> None:
+    async def _listen(self) -> None:
         """Start listening to the websocket (and receive initial state)."""
-        while not self.auth.ws.closed:
+        ws = self.auth.ws
+        if ws is None:
+            exc = RuntimeError("WebSocket not connected")
+            raise exc
+        while not ws.closed:
             try:
-                msg = await self.auth.ws.receive(timeout=300)
+                msg = await ws.receive(timeout=300)
                 if msg.type in (
                     WSMsgType.CLOSE,
                     WSMsgType.CLOSING,
@@ -264,14 +308,85 @@ class AutomowerSession:
                     await self._handle_text_message(msg)
                 elif msg.type == WSMsgType.ERROR:
                     continue
-            except TimeoutError as exc:
-                raise HusqvarnaTimeoutError from exc
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Timeout receiving from websocket, scheduling reconnect"
+                )
+                self.loop.create_task(self.reconnect())
+                break
+            except ClientError as exc:
+                _LOGGER.warning(
+                    "ClientError from websocket, scheduling reconnect: %s", exc
+                )
+                self.loop.create_task(self.reconnect())
+                break
+
+    async def start_listening(self) -> None:
+        """Start listening to the websocket."""
+        self.ws_task = self.loop.create_task(self._listen())
+        self.reconnect_task = self.loop.create_task(self._reconnect_scheduler())
+
+    async def _reconnect_scheduler(self) -> None:
+        """Reconnect scheduler."""
+        await asyncio.sleep(7195)
+        _LOGGER.debug("Websocket needs to be reconnected")
+        await self.reconnect()
+
+    async def reconnect(self) -> None:
+        """Reconnect to the websocket."""
+        async with self._reconnect_lock:
+            _LOGGER.debug("Attempting to reconnect to WebSocket (make-before-break)")
+
+            # keep reference to old ws (if any)
+            old_ws = getattr(self.auth, "ws", None)
+
+            # 1. Make new connection
+            try:
+                await self.auth.websocket_connect()
+                _LOGGER.debug("New WebSocket connection successful")
+            except HusqvarnaWSClientError:
+                _LOGGER.exception("Failed to establish new WebSocket connection: %s")
+                if not self.reconnect_task or self.reconnect_task.done():
+                    self.reconnect_task = asyncio.create_task(
+                        self._reconnect_scheduler()
+                    )
+                return
+
+            # 2. Break old connection and replace tasks
+            _LOGGER.debug("Closing old WebSocket connection and tasks")
+            # cancel old listener task (if running)
+            if self.ws_task and not self.ws_task.done():
+                self.ws_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await asyncio.wait_for(self.ws_task, timeout=2)
+
+            # cancel old reconnect scheduler (if running)
+            if self.reconnect_task and not self.reconnect_task.done():
+                self.reconnect_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await asyncio.wait_for(self.reconnect_task, timeout=2)
+
+            # explicitly close previous websocket if it's different and still open
+            new_ws = getattr(self.auth, "ws", None)
+            try:
+                if old_ws is not None and old_ws is not new_ws:
+                    # aiohttp ws has .closed property and .close() coroutine
+                    with contextlib.suppress(Exception):
+                        await old_ws.close()
+                        self._schedule_ws_disconnected_callback()
+                        _LOGGER.debug("Closed previous websocket connection")
+            except Exception as exc:  # noqa: BLE001
+                _LOGGER.debug("Error closing previous websocket: %s", exc)
+
+            _LOGGER.debug("Starting new WebSocket listener")
+            await self.start_listening()
 
     async def send_empty_message(self, ping_timeout: int = 5) -> bool:
         """Send a single ping with timeout (in seconds)."""
         ws = getattr(self.auth, "ws", None)
         if ws is None:
             _LOGGER.debug("WebSocket not connected—skipping ping")
+            await self.auth.websocket_connect()
             return False
 
         try:
@@ -280,6 +395,7 @@ class AutomowerSession:
             return False
         except ClientError as err:
             _LOGGER.warning("Ping failed due to client error: %s", err)
+            await self.reconnect()
             return False
 
         return True
@@ -290,6 +406,9 @@ class AutomowerSession:
             AutomowerEndpoint.mowers
         )
         self._data = mower_list
+        for mower in self._data["data"]:
+            if mower["id"] == INVALID_MOWER_ID:
+                raise NoValidDataError
         self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
         self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
@@ -345,7 +464,7 @@ class AutomowerSession:
             "headlights": self._handle_headlight_event,
             "position": self._handle_position_event,
         }
-        attributes = new_data.get("attributes", {})
+        attributes: dict[str, Any] = new_data.get("attributes", {})
         for key, handler in handlers.items():
             if key in attributes:
                 handler(mower, attributes)  # Pass the specific attribute
@@ -402,5 +521,13 @@ class AutomowerSession:
                 self.rest_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await asyncio.gather(self.rest_task)
+        if self.ws_task:
+            self.ws_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.ws_task
+        if self.reconnect_task:
+            self.reconnect_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.reconnect_task
         for mower_id, cb in self.message_update_cbs[:]:
             self.unregister_message_callback(cb, mower_id)
