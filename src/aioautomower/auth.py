@@ -71,11 +71,11 @@ class AbstractAuth(ABC):
     async def get_json(self, url: str, **kwargs: Any) -> Any:
         """Make a get request and return json response."""
         resp = await self.get(url, **kwargs)
-        raw = await resp.read()
-        _LOGGER.debug("response=%s", raw.decode("utf-8"))
         try:
+            raw = await resp.read()
+            _LOGGER.debug("response=%s", raw.decode("utf-8"))
             result = orjson.loads(raw)
-        except Exception as err:
+        except (orjson.JSONDecodeError, ClientError) as err:
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
@@ -92,11 +92,11 @@ class AbstractAuth(ABC):
     async def post_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
         """Make a post request and return a json response."""
         resp = await self.post(url, **kwargs)
-        raw = await resp.read()
-        _LOGGER.debug("response=%s", raw.decode("utf-8"))
         try:
+            raw = await resp.read()
+            _LOGGER.debug("response=%s", raw.decode("utf-8"))
             result = orjson.loads(raw)
-        except Exception as err:
+        except (orjson.JSONDecodeError, ClientError) as err:
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
@@ -113,11 +113,11 @@ class AbstractAuth(ABC):
     async def patch_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
         """Make a patch request and return a json response."""
         resp = await self.patch(url, **kwargs)
-        raw = await resp.read()
-        _LOGGER.debug("response=%s", raw.decode("utf-8"))
         try:
+            raw = await resp.read()
+            _LOGGER.debug("response=%s", raw.decode("utf-8"))
             result = orjson.loads(raw)
-        except Exception as err:
+        except (orjson.JSONDecodeError, ClientError) as err:
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
