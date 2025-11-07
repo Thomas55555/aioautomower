@@ -664,14 +664,14 @@ files = [
 
 [[package]]
 name = "ical"
-version = "11.0.0"
+version = "11.1.0"
 description = "Python iCalendar implementation (rfc 2445)"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "ical-11.0.0-py3-none-any.whl", hash = "sha256:e22aa04010bc4e8621dd3503c5095087ca473450684a69527f37eabe91e145ea"},
-    {file = "ical-11.0.0.tar.gz", hash = "sha256:78efadc0711dc30da1392271c22713d3081a1df710eacac596f9d49f0030cc9d"},
+    {file = "ical-11.1.0-py3-none-any.whl", hash = "sha256:e6ce2814a1ec08cc522b128e1e8b34571acc7790a1e85e14d3d203e31a098d4b"},
+    {file = "ical-11.1.0.tar.gz", hash = "sha256:b8374591ebc769b3e634d3d974b2ccb63ae1fe7751c3121f03b4bc52e83c51ac"},
 ]
 
 [package.dependencies]
