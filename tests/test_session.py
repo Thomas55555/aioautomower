@@ -96,7 +96,7 @@ async def test_post_commands_1(
             json={
                 "data": {
                     "type": "Park",
-                    "attributes": {"duration": 30, "externalReason": None},
+                    "attributes": {"duration": 30},
                 }
             },
         )
@@ -110,7 +110,8 @@ async def test_post_commands_1(
         with pytest.raises(
             ValueError,
             match=re.escape(
-                "External reason can only be used for park durations less than 25hours."
+                "External reason can only be used for park durations less than "
+                "25 hours."
             ),
         ):
             await automower_api.commands.park_for(
