@@ -669,9 +669,28 @@ description = "Python iCalendar implementation (rfc 2445)"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
+markers = "python_version == \"3.11\""
 files = [
     {file = "ical-11.1.0-py3-none-any.whl", hash = "sha256:e6ce2814a1ec08cc522b128e1e8b34571acc7790a1e85e14d3d203e31a098d4b"},
     {file = "ical-11.1.0.tar.gz", hash = "sha256:b8374591ebc769b3e634d3d974b2ccb63ae1fe7751c3121f03b4bc52e83c51ac"},
+]
+
+[package.dependencies]
+pydantic = ">=2.10.4"
+python-dateutil = ">=2.8.2"
+tzdata = ">=2023.3"
+
+[[package]]
+name = "ical"
+version = "12.0.0"
+description = "Python iCalendar implementation (rfc 2445)"
+optional = false
+python-versions = ">=3.12"
+groups = ["main"]
+markers = "python_version >= \"3.12\""
+files = [
+    {file = "ical-12.0.0-py3-none-any.whl", hash = "sha256:677f82d098d627d234785345aefe5f567bbf65e1ece31ed4ca3294e3cecc56fe"},
+    {file = "ical-12.0.0.tar.gz", hash = "sha256:2f1c7450bd1eff586322273360f44931eb0919dc048c7284f1647037624be7c4"},
 ]
 
 [package.dependencies]
