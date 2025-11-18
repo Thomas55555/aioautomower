@@ -124,6 +124,19 @@ async def test_post_commands_1(
             await automower_api.commands.park_for(
                 MOWER_ID_LOW_FEATURE, timedelta(hours=24), external_reason=200_000
             )
+        await automower_api.commands.park_for(
+            MOWER_ID, timedelta(minutes=30, seconds=59), external_reason=200_123
+        )
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/actions",
+            json={
+                "data": {
+                    "type": "Park",
+                    "attributes": {"duration": 30, "externalReason": 200123},
+                }
+            },
+        )
+
         await automower_api.commands.reset_cutting_blade_usage_time(MOWER_ID)
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/statistics/resetCuttingBladeUsageTime"
