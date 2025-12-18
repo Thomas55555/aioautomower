@@ -309,13 +309,11 @@ class AutomowerSession:
                 elif msg.type == WSMsgType.ERROR:
                     continue
             except TimeoutError:
-                _LOGGER.warning(
-                    "Timeout receiving from websocket, scheduling reconnect"
-                )
+                _LOGGER.debug("Timeout receiving from websocket, scheduling reconnect")
                 self.loop.create_task(self.reconnect())
                 break
             except ClientError as exc:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "ClientError from websocket, scheduling reconnect: %s", exc
                 )
                 self.loop.create_task(self.reconnect())
