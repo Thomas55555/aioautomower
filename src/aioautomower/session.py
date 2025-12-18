@@ -394,7 +394,7 @@ class AutomowerSession:
         except TimeoutError:
             return False
         except ClientError as err:
-            _LOGGER.warning("Ping failed due to client error: %s", err)
+            _LOGGER.debug("Ping failed due to client error: %s", err)
             await self.reconnect()
             return False
 
