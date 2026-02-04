@@ -37,12 +37,12 @@ For a first start you can run the `example.py`, by doing the following steps
 This is an active open-source project. We are always open to people who want to use the code or contribute to it.
 This Python project is fully managed using the [Poetry][poetry] dependency manager.
 
-As this repository uses the [pre-commit][pre-commit] framework, all changes
+As this repository uses the [prek][prek] framework, all changes
 are linted and tested with each commit. You can run all checks and tests
 manually, using the following command:
 
 ```bash
-poetry run pre-commit run --all-files
+poetry run prek run --all-files
 ```
 
 To run just the Python tests:
@@ -59,7 +59,7 @@ poetry run pytest --snapshot-update
 
 [poetry-install]: https://python-poetry.org/docs/#installation
 [poetry]: https://python-poetry.org
-[pre-commit]: https://pre-commit.com/
+[prek]: https://pypi.org/project/prek/
 
 
 # Buying Equipment
