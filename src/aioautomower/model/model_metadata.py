@@ -13,7 +13,7 @@ class Metadata(DataClassDictMixin):
     connected: bool
     status_dateteime: datetime = field(
         metadata=field_options(
-            deserialize=lambda x: (datetime.fromtimestamp(x / 1000, tz=UTC)),
+            deserialize=lambda x: datetime.fromtimestamp(x / 1000, tz=UTC),
             alias="statusTimestamp",
         ),
     )
