@@ -20,7 +20,6 @@ def set_mower_time_zone(time_zone: tzinfo) -> None:
 
     Async friendly.
     """
-    # pylint: disable-next=global-statement
     global MOWER_TIME_ZONE  # noqa: PLW0603
 
     MOWER_TIME_ZONE = time_zone
