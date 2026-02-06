@@ -27,9 +27,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "poetry"
       - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+        run: poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Check code for common misspellings
@@ -50,9 +48,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "poetry"
       - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+        run: poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run ruff linter
@@ -75,9 +71,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "poetry"
       - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+        run: poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Check Python AST
@@ -122,9 +116,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "poetry"
       - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+        run: poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run pylint
@@ -145,9 +137,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "poetry"
       - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+        run: poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run yamllint
