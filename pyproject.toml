@@ -2,39 +2,39 @@
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
-[tool.poetry]
+[project]
 name = "aioautomower"
 # The version is set by GH action on release
 version = "0.0.0"
 description = "MPython module to talk to Husqvarna Automower."
-authors = [
-    "Thomas Peter Protzner <thomas.protzner@gmail.com>",
-]
-license = "MIT"
 readme = "README.md"
-packages = [
-    { include = "aioautomower", from = "src" },
+license = { text = "MIT" }
+
+authors = [
+  { name = "Thomas Peter Protzner", email = "thomas.protzner@gmail.com" },
 ]
-homepage = "https://github.com/Thomas55555/aioautomower"
-repository = "https://github.com/Thomas55555/aioautomower"
-documentation = "https://github.com/Thomas55555/aioautomower"
+
 keywords = ["Husqvarna", "Automower", "api", "async", "client"]
+
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Framework :: AsyncIO",
   "Intended Audience :: Developers",
   "Natural Language :: English",
+  "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
-  "Programming Language :: Python :: 3",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-[tool.poetry.urls]
-Issues = "https://github.com/Thomas55555/aioautomower/issues"
 
+[project.urls]
+Homepage = "https://github.com/Thomas55555/aioautomower"
+Repository = "https://github.com/Thomas55555/aioautomower"
+Documentation = "https://github.com/Thomas55555/aioautomower"
+Issues = "https://github.com/Thomas55555/aioautomower/issues"
 [tool.poetry.dependencies]
 python = "^3.11"
 aiohttp = "^3.9.3"
