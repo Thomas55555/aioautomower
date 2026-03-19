@@ -8,7 +8,8 @@ name = "aioautomower"
 version = "0.0.0"
 description = "MPython module to talk to Husqvarna Automower."
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 
 authors = [
   { name = "Thomas Peter Protzner", email = "thomas.protzner@gmail.com" },
