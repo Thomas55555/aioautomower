@@ -36,6 +36,12 @@ Homepage = "https://github.com/Thomas55555/aioautomower"
 Repository = "https://github.com/Thomas55555/aioautomower"
 Documentation = "https://github.com/Thomas55555/aioautomower"
 Issues = "https://github.com/Thomas55555/aioautomower/issues"
+
+[tool.poetry]
+packages = [
+    { include = "aioautomower", from = "src" },
+]
+
 [tool.poetry.dependencies]
 python = "^3.11"
 aiohttp = "^3.9.3"
