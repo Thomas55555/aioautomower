@@ -1,5 +1,8 @@
 """Provide a model for the Automower Connect API."""
 
+from .connectivity import (
+    DeviceResponse,
+)
 from .model import (
     MowerAttributes,
     MowerData,
@@ -65,6 +68,7 @@ __all__ = [
     "Calendar",
     "Capabilities",
     "ConvertScheduleToCalendar",
+    "DeviceResponse",
     "DurationSerializationStrategy",
     "ExternalReasons",
     "Headlight",
