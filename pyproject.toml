@@ -35,6 +35,12 @@ Homepage = "https://github.com/Thomas55555/aioautomower"
 Repository = "https://github.com/Thomas55555/aioautomower"
 Documentation = "https://github.com/Thomas55555/aioautomower"
 Issues = "https://github.com/Thomas55555/aioautomower/issues"
+
+[tool.poetry]
+packages = [
+    { include = "aioautomower", from = "src" },
+]
+
 [tool.poetry.dependencies]
 python = "^3.11"
 aiohttp = "^3.9.3"
@@ -44,11 +50,6 @@ ical = ">=8.0.1"
 tzlocal = "^5.2"
 python-dateutil = "^2.9.0-post.0"
 orjson = "^3.11.2"
-
-[tool.poetry]
-packages = [
-    { include = "aioautomower", from = "src" },
-]
 
 [tool.poetry.group.dev.dependencies]
 aioresponses = "0.7.8"
