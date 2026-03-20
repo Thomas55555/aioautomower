@@ -4,6 +4,7 @@ import datetime
 import logging
 import zoneinfo
 from dataclasses import dataclass
+from typing import Any
 
 from .auth import AbstractAuth
 from .exceptions import (
@@ -191,18 +192,41 @@ class MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def park_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
+    async def park_for(
+        self,
+        mower_id: str,
+        tdelta: datetime.timedelta,
+        external_reason: int | None = None,
+    ) -> None:
         """Parks the mower for a period of minutes.
 
-        The mower will drive to
-        the charching station and park for the duration set by the command.
+        The mower will drive to the charging station and park for the duration set by
+        the command. If external reason is set the mower will be parked with an external
+        reason. The external reason can be used to set the reason for the parking when
+        you have more than one integration to the API.
         """
-        body = {
+        body: dict[str, Any] = {
             "data": {
                 "type": "Park",
-                "attributes": {"duration": timedelta_to_minutes(tdelta)},
+                "attributes": {
+                    "duration": timedelta_to_minutes(tdelta),
+                },
             }
         }
+        if external_reason is not None:
+            if not 200_000 <= external_reason <= 299_999:
+                msg = "External reason must be between 200000 and 299999."
+                raise ValueError(msg)
+            if tdelta >= datetime.timedelta(hours=25):
+                msg = (
+                    "External reason can only be used for park durations less than "
+                    "25 hours."
+                )
+                raise ValueError(msg)
+            if not self.data[mower_id].capabilities.work_areas:
+                msg = FEATURE_NOT_SUPPORTED_MSG
+                raise FeatureNotSupportedError(msg)
+            body["data"]["attributes"]["externalReason"] = external_reason
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 

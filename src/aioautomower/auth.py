@@ -1,12 +1,12 @@
 """Module for AbstractAuth for Husqvarna Automower."""
 
 import asyncio
-import json
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 from typing import Any
 
+import orjson
 from aiohttp import (
     ClientError,
     ClientResponse,
@@ -68,17 +68,22 @@ class AbstractAuth(ABC):
             raise ApiError(err) from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def get_json(self, url: str, **kwargs: Any) -> Any:
-        """Make a get request and return json response."""
-        resp = await self.get(url, **kwargs)
+    async def _process_json_response(self, resp: ClientResponse) -> dict[str, Any]:
+        """Read and parse a JSON response using orjson."""
         try:
-            result = await resp.json(encoding="UTF-8")
-        except ClientError as err:
+            raw = await resp.read()
+            _LOGGER.debug("response=%s", raw.decode("utf-8"))
+            result = orjson.loads(raw)
+        except (orjson.JSONDecodeError, ClientError) as err:
             raise ApiError(err) from err
         if not isinstance(result, dict):
             raise ApiError(result) from result
-        _LOGGER.debug("response=%s", json.dumps(result))
         return result
+
+    async def get_json(self, url: str, **kwargs: Any) -> Any:
+        """Make a get request and return json response."""
+        resp = await self.get(url, **kwargs)
+        return await self._process_json_response(resp)
 
     async def post(self, url: str, **kwargs: Any) -> ClientResponse:
         """Make a post request."""
@@ -91,14 +96,7 @@ class AbstractAuth(ABC):
     async def post_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
         """Make a post request and return a json response."""
         resp = await self.post(url, **kwargs)
-        try:
-            result = await resp.json()
-        except ClientError as err:
-            raise ApiError(err) from err
-        if not isinstance(result, dict):
-            raise ApiError(result) from result
-        _LOGGER.debug("response=%s", json.dumps(result))
-        return result
+        return await self._process_json_response(resp)
 
     async def patch(self, url: str, **kwargs: Any) -> ClientResponse:
         """Make a post request."""
@@ -109,16 +107,9 @@ class AbstractAuth(ABC):
         return await AbstractAuth._raise_for_status(resp)
 
     async def patch_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
-        """Make a post request and return a json response."""
+        """Make a patch request and return a json response."""
         resp = await self.patch(url, **kwargs)
-        try:
-            result = await resp.json()
-        except ClientError as err:
-            raise ApiError(err) from err
-        if not isinstance(result, dict):
-            raise ApiError(result) from result
-        _LOGGER.debug("response=%s", json.dumps(result))
-        return result
+        return await self._process_json_response(resp)
 
     async def _async_get_access_token(self) -> str:
         """Request a new access token."""

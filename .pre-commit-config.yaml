@@ -113,11 +113,6 @@ repos:
         types: [yaml, json, markdown]
         entry: npm run prettier
         pass_filenames: false
-      - id: pylint
-        name: 🌟 Starring code with pylint
-        language: system
-        types: [python]
-        entry: poetry run pylint
       - id: pytest
         name: 🧪 Running tests and test coverage with pytest
         language: system

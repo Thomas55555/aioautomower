@@ -24,7 +24,7 @@ class AutomowerSnapshotSerializer(AmberDataSerializer):
     """
 
     @classmethod
-    def _serialize(  # pylint: disable=too-many-arguments
+    def _serialize(
         cls,
         data: SerializableData,
         *,
