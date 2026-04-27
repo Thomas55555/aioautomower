@@ -77,47 +77,68 @@ class WorkAreaSettings:
         self.mower_id = mower_id
         self.work_area_id = work_area_id
 
-        # Verify capability
         if not client.data[mower_id].capabilities.work_areas:
             msg = FEATURE_NOT_SUPPORTED_MSG
             raise FeatureNotSupportedError(msg)
 
-    async def cutting_height(
-        self,
-        cutting_height: int,
-    ) -> None:
-        """Set the cutting height for this work area."""
-        payload = {
-            "data": {
-                "type": "workArea",
-                "id": self.work_area_id,
-                "attributes": {"cuttingHeight": cutting_height},
-            }
-        }
-        url = AutomowerEndpoint.work_area_cutting_height.format(
-            mower_id=self.mower_id,
-            work_area_id=self.work_area_id,
-        )
-        await self._client.auth.patch_json(url, json=payload)
+    def _validate_range(self, field: str, value: int) -> None:
+        if not 0 <= value <= 1800:
+            msg = f"{field} must be between 0 and 1800"
+            raise ValueError(msg)
 
-    async def enabled(
+    async def update(
         self,
         *,
-        enabled: bool,
+        cutting_height: int | None = None,
+        enabled: bool | None = None,
+        name: str | None = None,
+        orientation: int | None = None,
+        orientation_shift: int | None = None,
     ) -> None:
-        """Enable or disable this work area."""
+        """Update work area settings."""
+        if orientation is not None:
+            self._validate_range("orientation", orientation)
+
+        if orientation_shift is not None:
+            self._validate_range("orientation_shift", orientation_shift)
+
+        attributes: dict[str, int | bool | str] = {}
+        if cutting_height is not None:
+            attributes["cuttingHeight"] = cutting_height
+        if enabled is not None:
+            attributes["enable"] = enabled
+        if name is not None:
+            attributes["name"] = name
+        if orientation is not None:
+            attributes["orientation"] = orientation
+        if orientation_shift is not None:
+            attributes["orientationShift"] = orientation_shift
+
+        if not attributes:
+            return
+
         payload = {
             "data": {
                 "type": "workArea",
                 "id": self.work_area_id,
-                "attributes": {"enable": enabled},
+                "attributes": attributes,
             }
         }
+
         url = AutomowerEndpoint.work_area_cutting_height.format(
             mower_id=self.mower_id,
             work_area_id=self.work_area_id,
         )
+
         await self._client.auth.patch_json(url, json=payload)
+
+    async def cutting_height(self, cutting_height: int) -> None:
+        """Set the cutting height for this work area."""
+        await self.update(cutting_height=cutting_height)
+
+    async def enabled(self, *, enabled: bool) -> None:
+        """Enable or disable this work area."""
+        await self.update(enabled=enabled)
 
 
 class MowerCommands:
