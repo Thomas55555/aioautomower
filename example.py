@@ -103,6 +103,7 @@ async def main() -> None:
             datetime.datetime.now() + datetime.timedelta(weeks=1),
         )
         print("cursor", cursor)
+
         # cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
 
         # print("cursor2", next(cursor2, None))
