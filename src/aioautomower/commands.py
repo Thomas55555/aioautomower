@@ -81,6 +81,11 @@ class WorkAreaSettings:
             msg = FEATURE_NOT_SUPPORTED_MSG
             raise FeatureNotSupportedError(msg)
 
+    def _validate_range(self, field: str, value: int) -> None:
+        if not 0 <= value <= 1800:
+            msg = f"{field} must be between 0 and 1800"
+            raise ValueError(msg)
+
     async def update(
         self,
         *,
@@ -91,8 +96,13 @@ class WorkAreaSettings:
         orientation_shift: int | None = None,
     ) -> None:
         """Update work area settings."""
-        attributes: dict[str, int | bool | str] = {}
+        if orientation is not None:
+            self._validate_range("orientation", orientation)
 
+        if orientation_shift is not None:
+            self._validate_range("orientation_shift", orientation_shift)
+
+        attributes: dict[str, int | bool | str] = {}
         if cutting_height is not None:
             attributes["cuttingHeight"] = cutting_height
         if enabled is not None:

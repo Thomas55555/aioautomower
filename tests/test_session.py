@@ -494,11 +494,41 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
                 }
             },
         )
-
+        await automower_api.commands.workarea_settings(MOWER_ID, 0).update(
+            cutting_height=8
+        )
+        assert mocked_method.call_count == 3
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/workAreas/0",
+            json={
+                "data": {
+                    "type": "workArea",
+                    "id": 0,
+                    "attributes": {
+                        "cuttingHeight": 8,
+                    },
+                }
+            },
+        )
         await automower_api.commands.workarea_settings(MOWER_ID, 0).enabled(
             enabled=True
         )
-        assert mocked_method.call_count == 3
+        assert mocked_method.call_count == 4
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/workAreas/0",
+            json={
+                "data": {
+                    "type": "workArea",
+                    "id": 0,
+                    "attributes": {
+                        "enable": True,
+                    },
+                }
+            },
+        )
+
+        await automower_api.commands.workarea_settings(MOWER_ID, 0).update(enabled=True)
+        assert mocked_method.call_count == 5
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/0",
             json={
@@ -515,7 +545,7 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
         await automower_api.commands.workarea_settings(MOWER_ID, 123456).enabled(
             enabled=False
         )
-        assert mocked_method.call_count == 4
+        assert mocked_method.call_count == 6
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/123456",
             json={
@@ -528,11 +558,45 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
                 }
             },
         )
+        await automower_api.commands.workarea_settings(MOWER_ID, 123456).update(
+            enabled=False
+        )
+        assert mocked_method.call_count == 7
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/workAreas/123456",
+            json={
+                "data": {
+                    "type": "workArea",
+                    "id": 123456,
+                    "attributes": {
+                        "enable": False,
+                    },
+                }
+            },
+        )
+        await automower_api.commands.workarea_settings(MOWER_ID, 123456).update(
+            name="New name", orientation=90, orientation_shift=10
+        )
+        assert mocked_method.call_count == 8
+        mocked_method.assert_called_with(
+            f"mowers/{MOWER_ID}/workAreas/123456",
+            json={
+                "data": {
+                    "type": "workArea",
+                    "id": 123456,
+                    "attributes": {
+                        "name": "New name",
+                        "orientation": 90,
+                        "orientationShift": 10,
+                    },
+                }
+            },
+        )
 
         await automower_api.commands.workarea_settings(MOWER_ID, 123456).cutting_height(
             40
         )
-        assert mocked_method.call_count == 5
+        assert mocked_method.call_count == 9
         mocked_method.assert_called_with(
             f"mowers/{MOWER_ID}/workAreas/123456",
             json={
@@ -545,12 +609,22 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
                 }
             },
         )
+        await automower_api.commands.workarea_settings(MOWER_ID, 123456).update()
+        assert mocked_method.call_count == 9
 
         with pytest.raises(
             FeatureNotSupportedError,
             match=re.escape(FEATURE_NOT_SUPPORTED_MSG),
         ):
             await automower_api.commands.workarea_settings("1234", 0).cutting_height(50)
+
+        with pytest.raises(
+            ValueError,
+            match=re.escape("orientation must be between 0 and 1800"),
+        ):
+            await automower_api.commands.workarea_settings(MOWER_ID, 0).update(
+                orientation=1801
+            )
 
         mocked_method.reset_mock()
         await automower_api.close()
