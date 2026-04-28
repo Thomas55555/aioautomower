@@ -1,5 +1,6 @@
 """Models for Automower Connect API - WorkAreas."""
 
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
@@ -16,8 +17,22 @@ class WorkAreaType(StrEnum):
     SYSTEMATIC = "systematic"
 
 
-# Backwards compatible alias for the previous, generic name.
-Type = WorkAreaType
+def __getattr__(name: str) -> object:
+    """Provide a deprecated alias for the previous, generic ``Type`` name.
+
+    Accessing ``aioautomower.model.model_work_areas.Type`` keeps working but
+    emits a DeprecationWarning so downstream consumers can migrate.
+    """
+    if name == "Type":
+        warnings.warn(
+            "aioautomower.model.model_work_areas.Type is deprecated, "
+            "use WorkAreaType instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return WorkAreaType
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 @dataclass
