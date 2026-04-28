@@ -9,11 +9,15 @@ from mashumaro import DataClassDictMixin, field_options
 from .utils import convert_timestamp_to_aware_datetime
 
 
-class Type(StrEnum):
+class WorkAreaType(StrEnum):
     """Types of work areas."""
 
     RANDOM = "random"
     SYSTEMATIC = "systematic"
+
+
+# Backwards compatible alias for the previous, generic name.
+Type = WorkAreaType
 
 
 @dataclass
@@ -25,8 +29,10 @@ class WorkArea(DataClassDictMixin):
             deserialize=lambda x: "my_lawn" if x == "" else x,
         ),
     )
-    type: Type = field(
-        metadata=field_options(deserialize=lambda x: Type(x.lower()), alias="type")
+    type: WorkAreaType = field(
+        metadata=field_options(
+            deserialize=lambda x: WorkAreaType(x.lower()), alias="type"
+        )
     )
     cutting_height: int = field(metadata=field_options(alias="cuttingHeight"))
     use_global_cutting_height: bool = field(
