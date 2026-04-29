@@ -268,7 +268,7 @@
       'orientation': None,
       'orientation_shift': None,
       'progress': 20,
-      'type': <Type.SYSTEMATIC: 'systematic'>,
+      'type': <WorkAreaType.SYSTEMATIC: 'systematic'>,
       'use_global_cutting_height': True,
     }),
     123456: dict({
@@ -281,7 +281,7 @@
       'orientation': 1800,
       'orientation_shift': 1800,
       'progress': 40,
-      'type': <Type.SYSTEMATIC: 'systematic'>,
+      'type': <WorkAreaType.SYSTEMATIC: 'systematic'>,
       'use_global_cutting_height': True,
     }),
     654321: dict({
@@ -294,7 +294,7 @@
       'orientation': None,
       'orientation_shift': None,
       'progress': None,
-      'type': <Type.RANDOM: 'random'>,
+      'type': <WorkAreaType.RANDOM: 'random'>,
       'use_global_cutting_height': True,
     }),
   })

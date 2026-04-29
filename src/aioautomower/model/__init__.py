@@ -53,7 +53,7 @@ from .model_token import (
     JWT,
     User,
 )
-from .model_work_areas import WorkArea
+from .model_work_areas import WorkArea, WorkAreaType
 
 __all__ = [
     "JWT",
@@ -95,6 +95,7 @@ __all__ = [
     "TimeSerializationStrategy",
     "User",
     "WorkArea",
+    "WorkAreaType",
     "Zone",
     "convert_timestamp_to_aware_datetime",
     "error_key_dict",
