@@ -13,7 +13,7 @@ from aiohttp import ClientSession
 
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
-from aioautomower.model import MowerAttributes
+from aioautomower.model import MowerAttributes, DeviceResponse
 from aioautomower.session import AutomowerSession
 from aioautomower.utils import (
     async_get_access_token,
@@ -104,6 +104,13 @@ async def main() -> None:
         )
         print("cursor", cursor)
 
+        print("Now polling connectivity")
+        connectivity = await automower_api.async_get_connectivity(mower_id)
+        print(
+            "Firmware version: ",
+            connectivity.data.attributes.mower.payload.system.sw_package_version_string,
+        )
+        await asyncio.sleep(2)
         # cursor2 = mower_data.calendar.timeline.active_after(datetime.datetime.now())
 
         # print("cursor2", next(cursor2, None))
@@ -124,10 +131,7 @@ async def main() -> None:
         # )
         # await automower_api.async_get_messages(mower_id)
 
-    # await asyncio.sleep(10)
-    # await automower_api.get_status()
-    # print("self._data", automower_api._data)
-    await asyncio.sleep(30)
+    await asyncio.sleep(3000)
     # The close() will stop the websocket and the token refresh tasks
     await automower_api.close()
     api_task.cancel()

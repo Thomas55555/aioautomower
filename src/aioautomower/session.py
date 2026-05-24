@@ -15,7 +15,13 @@ from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
 from .exceptions import HusqvarnaWSClientError, NoDataAvailableError, NoValidDataError
-from .model import Message, MessageData, MowerAttributes, SingleMessageData
+from .model import (
+    DeviceResponse,
+    Message,
+    MessageData,
+    MowerAttributes,
+    SingleMessageData,
+)
 from .model_input import (
     CuttingHeightAttributes,
     GenericEventData,
@@ -412,6 +418,13 @@ class AutomowerSession:
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         return self.data
+
+    async def async_get_connectivity(self, mower_id: str) -> DeviceResponse:
+        """Get mower data via the Connectivity API."""
+        data: dict[str, Any] = await self.auth.get_json(
+            f"https://api.connectivity.husqvarna.dev/v1/devices/{mower_id}/full"
+        )
+        return DeviceResponse.from_dict(data)
 
     async def async_get_messages(self, mower_id: str) -> MessageData:
         """Fetch messages for one mower and merge into self._messages."""
