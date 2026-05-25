@@ -578,15 +578,15 @@ tzdata = ">=2023.3"
 
 [[package]]
 name = "ical"
-version = "13.2.4"
+version = "13.2.5"
 description = "Python iCalendar implementation (rfc 2445)"
 optional = false
 python-versions = ">=3.13"
 groups = ["main"]
 markers = "python_version >= \"3.15\""
 files = [
-    {file = "ical-13.2.4-py3-none-any.whl", hash = "sha256:8ec6c114a8b617159d35461ea0914efc602189af0ff23b2ce69cdc7572d7f5b1"},
-    {file = "ical-13.2.4.tar.gz", hash = "sha256:46c5c1409ad5ab86840016822b3edbd98584167b2f3fe3821a41ee23c3d15115"},
+    {file = "ical-13.2.5-py3-none-any.whl", hash = "sha256:410c195c59244c59bd6d1ffd6b27fb96ab29cf063b7359b531ee5de055f32486"},
+    {file = "ical-13.2.5.tar.gz", hash = "sha256:1cc3116e6f522eeeaa694b3e20b58dbfbe4b281954a8d3d28892cfb61f03fd40"},
 ]
 
 [package.dependencies]
