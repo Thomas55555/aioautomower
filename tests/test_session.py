@@ -976,6 +976,7 @@ async def test_get_status_on_trash_mower(trash_mower_data: dict) -> None:
     automower_api = AutomowerSession(automower_client, poll=False)
     status = await automower_api.get_status()
     assert status == {}
+    assert automower_api.invalid_mower is True
 
 
 async def test_timezone_default(automower_client: AbstractAuth) -> None:

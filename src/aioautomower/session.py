@@ -46,6 +46,7 @@ class AutomowerSession:
         "current_mowers",
         "data",
         "data_update_cbs",
+        "invalid_mower",
         "last_ws_message",
         "loop",
         "message_update_cbs",
@@ -82,6 +83,7 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
+        self.invalid_mower: bool = False
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
@@ -274,6 +276,8 @@ class AutomowerSession:
             if "type" in msg_dict:
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
                     _LOGGER.debug("Received websocket message %s", msg_dict)
+                    if msg_dict["id"] == INVALID_MOWER_ID:
+                        return
                     if msg_dict["id"] not in self.current_mowers:
                         _LOGGER.debug("New mower detected %s", msg_dict["id"])
                         self.current_mowers.add(msg_dict["id"])
@@ -402,6 +406,10 @@ class AutomowerSession:
         """Get mower status via REST."""
         mower_list: MowerDataResponse = await self.auth.get_json(
             AutomowerEndpoint.mowers
+        )
+
+        self.invalid_mower = any(
+            mower["id"] == INVALID_MOWER_ID for mower in mower_list["data"]
         )
 
         self._data = {
