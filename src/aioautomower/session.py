@@ -46,7 +46,7 @@ class AutomowerSession:
         "current_mowers",
         "data",
         "data_update_cbs",
-        "invalid_mower",
+        "invalid_mowers",
         "last_ws_message",
         "loop",
         "message_update_cbs",
@@ -83,7 +83,7 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
-        self.invalid_mower: bool = False
+        self.invalid_mowers: set[str] = set()
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
@@ -407,16 +407,20 @@ class AutomowerSession:
         mower_list: MowerDataResponse = await self.auth.get_json(
             AutomowerEndpoint.mowers
         )
+        self.invalid_mowers.clear()
+        valid_mowers = []
 
-        self.invalid_mower = any(
-            mower["id"] == INVALID_MOWER_ID for mower in mower_list["data"]
-        )
+        for mower in mower_list["data"]:
+            if mower["id"] == INVALID_MOWER_ID:
+                self.invalid_mowers.add(mower["attributes"]["system"]["name"])
+                continue
+            valid_mowers.append(mower)
+
+        _LOGGER.debug("invalid_mowers: %s", self.invalid_mowers)
 
         self._data = {
             **mower_list,
-            "data": [
-                mower for mower in mower_list["data"] if mower["id"] != INVALID_MOWER_ID
-            ],
+            "data": valid_mowers,
         }
 
         self.data = mower_list_to_dictionary_dataclass(
