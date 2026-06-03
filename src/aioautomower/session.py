@@ -14,7 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import HusqvarnaWSClientError, NoDataAvailableError, NoValidDataError
+from .exceptions import HusqvarnaWSClientError, NoDataAvailableError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -46,6 +46,7 @@ class AutomowerSession:
         "current_mowers",
         "data",
         "data_update_cbs",
+        "invalid_mowers",
         "last_ws_message",
         "loop",
         "message_update_cbs",
@@ -82,6 +83,7 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
+        self.invalid_mowers: set[str] = set()
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
@@ -274,6 +276,8 @@ class AutomowerSession:
             if "type" in msg_dict:
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
                     _LOGGER.debug("Received websocket message %s", msg_dict)
+                    if msg_dict["id"] == INVALID_MOWER_ID:
+                        return
                     if msg_dict["id"] not in self.current_mowers:
                         _LOGGER.debug("New mower detected %s", msg_dict["id"])
                         self.current_mowers.add(msg_dict["id"])
@@ -403,14 +407,30 @@ class AutomowerSession:
         mower_list: MowerDataResponse = await self.auth.get_json(
             AutomowerEndpoint.mowers
         )
-        self._data = mower_list
-        for mower in self._data["data"]:
+        self.invalid_mowers.clear()
+        valid_mowers = []
+
+        for mower in mower_list["data"]:
             if mower["id"] == INVALID_MOWER_ID:
-                raise NoValidDataError
-        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+                self.invalid_mowers.add(mower["attributes"]["system"]["name"])
+                continue
+            valid_mowers.append(mower)
+
+        _LOGGER.debug("invalid_mowers: %s", self.invalid_mowers)
+
+        self._data = {
+            **mower_list,
+            "data": valid_mowers,
+        }
+
+        self.data = mower_list_to_dictionary_dataclass(
+            self._data,
+            self.mower_tz,
+        )
         self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
+
         return self.data
 
     async def async_get_messages(self, mower_id: str) -> MessageData:
