@@ -20,7 +20,6 @@ from aioautomower.auth import AbstractAuth
 from aioautomower.commands import FEATURE_NOT_SUPPORTED_MSG
 from aioautomower.exceptions import (
     FeatureNotSupportedError,
-    NoValidDataError,
     WorkAreasDifferentError,
 )
 from aioautomower.model import (
@@ -968,16 +967,15 @@ async def test_empty_tasks(automower_client: AbstractAuth, mower_data: dict) -> 
 
 
 @pytest.mark.asyncio
-async def test_get_status_raises_on_trash_mower(trash_mower_data: dict) -> None:
-    """Test that get_status raises NoDataAvailableError for trash mower."""
+async def test_get_status_on_trash_mower(trash_mower_data: dict) -> None:
+    """Test that get_status adds no data for trash mower."""
     # Mock Async-Client
     automower_client = AsyncMock()
     automower_client.get_json = AsyncMock(return_value=trash_mower_data)
 
     automower_api = AutomowerSession(automower_client, poll=False)
-
-    with pytest.raises(NoValidDataError):
-        await automower_api.get_status()
+    status = await automower_api.get_status()
+    assert status == {}
 
 
 async def test_timezone_default(automower_client: AbstractAuth) -> None:

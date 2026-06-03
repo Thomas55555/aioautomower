@@ -14,7 +14,7 @@ from aiohttp import ClientError, WSMessage, WSMsgType
 from .auth import AbstractAuth
 from .commands import AutomowerEndpoint, MowerCommands
 from .const import REST_POLL_CYCLE, EventTypesV2
-from .exceptions import HusqvarnaWSClientError, NoDataAvailableError, NoValidDataError
+from .exceptions import HusqvarnaWSClientError, NoDataAvailableError
 from .model import Message, MessageData, MowerAttributes, SingleMessageData
 from .model_input import (
     CuttingHeightAttributes,
@@ -403,14 +403,22 @@ class AutomowerSession:
         mower_list: MowerDataResponse = await self.auth.get_json(
             AutomowerEndpoint.mowers
         )
-        self._data = mower_list
-        for mower in self._data["data"]:
-            if mower["id"] == INVALID_MOWER_ID:
-                raise NoValidDataError
-        self.data = mower_list_to_dictionary_dataclass(self._data, self.mower_tz)
+
+        self._data = {
+            **mower_list,
+            "data": [
+                mower for mower in mower_list["data"] if mower["id"] != INVALID_MOWER_ID
+            ],
+        }
+
+        self.data = mower_list_to_dictionary_dataclass(
+            self._data,
+            self.mower_tz,
+        )
         self.current_mowers = set(self.data.keys())
         _LOGGER.debug("current_mowers: %s", self.current_mowers)
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
+
         return self.data
 
     async def async_get_messages(self, mower_id: str) -> MessageData:
