@@ -34,7 +34,7 @@ jobs:
       - name: 🏗 Install dependencies
         run: poetry install --no-interaction
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v4.17.0
+        uses: CodSpeedHQ/action@v4.17.5
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           mode: "instrumentation"
