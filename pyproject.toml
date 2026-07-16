@@ -54,7 +54,7 @@ orjson = "^3.11.2"
 
 [tool.poetry.group.dev.dependencies]
 aioresponses = "0.7.9"
-codespell = "2.4.2"
+codespell = "2.4.3"
 covdefaults = "2.3.0"
 coverage = {version = "7.15.1", extras = ["toml"]}
 mypy = "2.3.0"
