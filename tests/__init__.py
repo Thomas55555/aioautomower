@@ -9,7 +9,7 @@ import zoneinfo
 from pathlib import Path
 from typing import Any
 
-from aioresponses import aioresponses
+from aiointercept import aiointercept
 
 from aioautomower.const import API_BASE_URL
 from aioautomower.model_input import MowerDataResponse
@@ -33,7 +33,7 @@ def load_fixture_json(filename: str) -> Any:
 
 
 async def setup_connection(
-    responses: aioresponses,
+    responses: aiointercept,
     automower_client: AutomowerSession,
     mower_data: MowerDataResponse,
     mower_tz: zoneinfo.ZoneInfo,
