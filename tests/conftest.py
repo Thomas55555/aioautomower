@@ -157,9 +157,9 @@ async def mock_aio_client(
 
         async def __aexit__(
             self,
-            exc_type: None | type[BaseException],
-            exc_value: None | BaseException,
-            traceback: None | TracebackType,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            traceback: TracebackType | None,
         ) -> bool:
             # Perform any cleanup needed for MyAuth
             await self._websession.close()
