@@ -8,7 +8,8 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
-from aioresponses import aioresponses
+import pytest_asyncio
+from aiointercept import aiointercept
 from syrupy import SnapshotAssertion
 
 from aioautomower.auth import AbstractAuth
@@ -141,9 +142,10 @@ def mock_automower_client(
         yield client
 
 
-@pytest.fixture(name="aio_client")
+@pytest_asyncio.fixture(name="aio_client", loop_scope="function")
 async def mock_aio_client(
-    jwt_token: str, mower_tz: zoneinfo.ZoneInfo
+    jwt_token: str,
+    mower_tz: zoneinfo.ZoneInfo,
 ) -> AsyncGenerator[AutomowerSession, None]:
     """Return an Automower session client."""
 
@@ -152,7 +154,6 @@ async def mock_aio_client(
             return jwt_token
 
         async def __aenter__(self) -> Self:
-            # Perform any setup needed for MyAuth
             return self
 
         async def __aexit__(
@@ -161,7 +162,6 @@ async def mock_aio_client(
             exc_value: BaseException | None,
             traceback: TracebackType | None,
         ) -> bool:
-            # Perform any cleanup needed for MyAuth
             await self._websession.close()
             return False
 
@@ -169,12 +169,16 @@ async def mock_aio_client(
         aiohttp.ClientSession() as session,
         MockAuth(websession=session, host=API_BASE_URL) as auth,
     ):
-        automower_client = AutomowerSession(auth=auth, mower_tz=mower_tz, poll=False)
+        automower_client = AutomowerSession(
+            auth=auth,
+            mower_tz=mower_tz,
+            poll=False,
+        )
         yield automower_client
 
 
-@pytest.fixture(name="responses")
-def aioresponses_fixture() -> Generator[aioresponses, None, None]:
-    """Return aioresponses fixture."""
-    with aioresponses() as mocked_responses:
+@pytest_asyncio.fixture(name="responses", loop_scope="function")
+async def aiointercept_fixture() -> AsyncGenerator[aiointercept, None]:
+    """Return aiointercept fixture."""
+    async with aiointercept(mock_external_urls=True) as mocked_responses:
         yield mocked_responses

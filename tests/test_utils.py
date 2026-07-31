@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
-from aioresponses import aioresponses
+from aiointercept import aiointercept
 
 from aioautomower.exceptions import (
     ApiError,
@@ -74,7 +74,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
         with pytest.raises(ApiError):
             await async_get_access_token(client_id, client_secret)
 
-    @aioresponses()
+    @aiointercept(mock_external_urls=True)
     async def test_async_invalidate_access_token_success(
         self, mock_post: MagicMock
     ) -> None:
@@ -100,7 +100,7 @@ class TestAuthenticationFunctions(unittest.IsolatedAsyncioTestCase):
         # Assert the result
         assert result["message"] == "Token revoked successfully"
 
-    @aioresponses()
+    @aiointercept(mock_external_urls=True)
     async def test_async_invalidate_access_token_failure(
         self, mock_post: MagicMock
     ) -> None:

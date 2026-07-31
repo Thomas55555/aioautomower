@@ -5,10 +5,7 @@ import zoneinfo
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from aiohttp import ClientError, ClientResponseError, RequestInfo
-from aioresponses import aioresponses
-from multidict import CIMultiDict, CIMultiDictProxy
-from yarl import URL
+from aiointercept import aiointercept
 
 from aioautomower.const import API_BASE_URL, AUTH_HEADER_FMT, WS_URL
 from aioautomower.exceptions import (
@@ -25,7 +22,7 @@ from .const import MOWER_ID, STAY_OUT_ZONE_ID_SPRING_FLOWERS
 
 
 async def test_get_status_400(
-    responses: aioresponses,
+    responses: aiointercept,
     aio_client: AutomowerSession,
 ) -> None:
     """Test get status with error."""
@@ -44,7 +41,7 @@ async def test_get_status_400(
 
 
 async def test_get_status_401(
-    responses: aioresponses,
+    responses: aiointercept,
     aio_client: AutomowerSession,
 ) -> None:
     """Test get status with error."""
@@ -63,7 +60,7 @@ async def test_get_status_401(
 
 
 async def test_get_status_402(
-    responses: aioresponses,
+    responses: aiointercept,
     aio_client: AutomowerSession,
 ) -> None:
     """Test get status with error."""
@@ -82,69 +79,49 @@ async def test_get_status_402(
 
 
 async def test_get_status_with_error_handling(
-    responses: aioresponses,
+    responses: aiointercept,
     aio_client: AutomowerSession,
-    jwt_token: str,
 ) -> None:
     """Test get status with error handling code covered."""
-    request_info = RequestInfo(
-        url=URL(f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"),
-        method="GET",
-        headers=CIMultiDictProxy(
-            CIMultiDict(
-                {
-                    "Authorization": f"Bearer {jwt_token}",
-                    "Authorization-Provider": "husqvarna",
-                    "Content-Type": "application/vnd.api+json",
-                    "X-Api-Key": "433e5fdf-5129-452c-xxxx-fadce3213042",
-                }
-            )
-        ),
-        real_url=URL(f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"),
-    )
-
-    # Simuliere ClientResponseError mit einer Nachricht
+    # aiointercept models response errors as HTTP responses.
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
-        exception=ClientResponseError(
-            request_info=request_info,
-            history=(),
-            status=400,
-            message="Bad Request",
-        ),
+        status=500,
+        payload={"error": {"status": "500", "message": "Internal Server Error"}},
     )
 
-    # Test, ob ApiError geworfen wird, wenn der Fehler in detail gespeichert wird
-    with pytest.raises(ApiError, match="Bad Request"):
+    with pytest.raises(ApiError, match="Internal Server Error"):
         await aio_client.get_status()
 
-    # Simuliere ClientError, um den ClientError Block abzudecken
+    # aiointercept uses a dropped connection to raise ClientConnectionError.
     responses.get(
         f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
-        exception=ClientError("Client error occurred"),
+        exception=True,
     )
-    with pytest.raises(ApiError, match="Client error occurred"):
+    with pytest.raises(ApiError, match="Server disconnected"):
         await aio_client.get_status()
 
 
 @pytest.mark.benchmark
 @pytest.mark.asyncio
 async def test_get_json_functional(
-    aio_client: AutomowerSession, high_feature_mower_data: dict
+    aio_client: AutomowerSession,
+    high_feature_mower_data: dict,
 ) -> None:
     """Test get json functional."""
     url = f"{API_BASE_URL}/{AutomowerEndpoint.mowers}"
 
-    with aioresponses() as mocked:
+    async with aiointercept(mock_external_urls=True) as mocked:
         mocked.get(url, payload=high_feature_mower_data)
 
         result = await aio_client.auth.get_json(url)
-        assert isinstance(result, dict)
-        assert "data" in result
+
+    assert isinstance(result, dict)
+    assert "data" in result
 
 
 async def test_patch_request_success(
-    responses: aioresponses,
+    responses: aiointercept,
     aio_client: AutomowerSession,
     control_response: dict,
     mower_data: MowerDataResponse,
@@ -168,7 +145,7 @@ async def test_patch_request_success(
 
 
 async def test_post_request_success(
-    responses: aioresponses,
+    responses: aiointercept,
     aio_client: AutomowerSession,
     control_response: dict,
     mower_data: MowerDataResponse,
