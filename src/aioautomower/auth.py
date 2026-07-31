@@ -77,7 +77,7 @@ class AbstractAuth(ABC):
         except (orjson.JSONDecodeError, ClientError) as err:
             raise ApiError(err) from err
         if not isinstance(result, dict):
-            raise ApiError(result) from result
+            raise ApiError(result)
         return result
 
     async def get_json(self, url: str, **kwargs: Any) -> Any:
