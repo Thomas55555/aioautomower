@@ -98,7 +98,7 @@ ignore = [
   "D213", # Conflicts with other rules
   "D417", # False positives in some occasions
   "PLR2004", # Just annoying, not really useful
-
+  "CPY001",  # Just annoying, not really useful
   # Conflicts with the Ruff formatter
   "COM812",
 ]
