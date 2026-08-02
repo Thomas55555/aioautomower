@@ -433,6 +433,12 @@ class AutomowerSession:
 
         return self.data
 
+    async def async_get_generated_maps(self, mower_id: str) -> str:
+        """Fetch generated maps for one mower and merge into self._messages."""
+        return await self.auth.get_text(
+            AutomowerEndpoint.maps_generated.format(mower_id=mower_id)
+        )
+
     async def async_get_messages(self, mower_id: str) -> MessageData:
         """Fetch messages for one mower and merge into self._messages."""
         raw_data = await self.auth.get_json(
