@@ -56,7 +56,7 @@ orjson = "^3.11.2"
 aiointercept = "0.1.9"
 codespell = "2.4.3"
 covdefaults = "2.3.0"
-coverage = {version = "7.15.3", extras = ["toml"]}
+coverage = {version = "7.15.4", extras = ["toml"]}
 mypy = "2.3.0"
 prek = "0.4.12"
 pre-commit-hooks = "6.0.0"
