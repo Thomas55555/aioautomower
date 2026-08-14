@@ -27,4 +27,4 @@ jobs:
       - name: 🏗 Install dependencies
         run: uv sync
       - name: 🚀 Run ty
-        run: uv run ty check
+        run: uv run ty check src
