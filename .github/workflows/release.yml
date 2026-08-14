@@ -27,8 +27,6 @@ jobs:
         with:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Install dependencies
-        run: uv sync
       - name: 🏗 Set package version
         run: |
           version="${{ github.event.release.tag_name }}"
