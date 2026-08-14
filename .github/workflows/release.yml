@@ -42,6 +42,10 @@ jobs:
           print-hash: true
       - name: ✍️ Sign published artifacts
         uses: sigstore/gh-action-sigstore-python@v3.5.0
+        env:
+          # setup-uv exports UV_PYTHON globally. Sigstore creates its own
+          # virtual environment and must be allowed to select its interpreter.
+          UV_PYTHON: ""
         with:
           inputs: ./dist/*.tar.gz ./dist/*.whl
           release-signing-artifacts: true
