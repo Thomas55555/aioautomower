@@ -1,7 +1,7 @@
 """Tests for asynchronous Python client for aioautomower.
 
-Run tests with `poetry run pytest`
-and to update snapshots `poetry run pytest --snapshot-update`
+Run tests with `uv run pytest`
+and to update snapshots `uv run pytest --snapshot-update`
 """
 
 import json
