@@ -56,7 +56,6 @@ dev = [
   "codespell==2.4.3",
   "covdefaults==2.3.0",
   "coverage[toml]==7.15.4",
-  "mypy==2.3.0",
   "prek==0.4.13",
   "pre-commit-hooks==6.0.0",
   "pytest==9.1.1",
@@ -66,6 +65,7 @@ dev = [
   "ruff==0.16.2",
   "syrupy==5.5.3",
   "time-machine==3.4.0",
+  "ty==0.0.62",
   "types-python-dateutil==2.9.0.20240821",
   "types-pyyaml==6.0.12.20241230",
   "yamllint==1.38.0",
@@ -126,30 +126,13 @@ max-returns=15
 max-args=10
 max-statements=50
 
-[tool.mypy]
-platform = "linux"
-python_version = "3.11"
-strict = true
-namespace_packages = true
-mypy_path = "src"
-follow_imports = "normal"
-ignore_missing_imports = true
-check_untyped_defs = true
-disallow_any_generics = true
-disallow_incomplete_defs = true
-disallow_subclassing_any = true
-disallow_untyped_calls = true
-disallow_untyped_decorators = true
-disallow_untyped_defs = true
-no_implicit_optional = true
-no_implicit_reexport = true
-strict_optional = true
-warn_incomplete_stub = true
-warn_no_return = true
-warn_redundant_casts = true
-warn_return_any = true
-warn_unused_configs = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.11"
+root = ["./src"]
+
+[tool.ty.rules]
+missing-type-argument = "error"
+possibly-unresolved-reference = "warn"
 
 [tool.coverage.report]
 show_missing = true
