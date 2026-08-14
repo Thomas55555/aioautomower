@@ -1,6 +1,6 @@
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
 
 [project]
 name = "aioautomower"
@@ -8,6 +8,7 @@ name = "aioautomower"
 version = "0.0.0"
 description = "MPython module to talk to Husqvarna Automower."
 readme = "README.md"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 
@@ -30,6 +31,15 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+dependencies = [
+  "aiohttp>=3.9.3,<4",
+  "ical>=8.0.1",
+  "mashumaro>=3.12,<4",
+  "orjson>=3.11.2,<4",
+  "PyJWT>=2.8.0,<3",
+  "python-dateutil>=2.9.0.post0,<3",
+  "tzlocal>=5.2,<6",
+]
 
 [project.urls]
 Homepage = "https://github.com/Thomas55555/aioautomower"
@@ -37,45 +47,29 @@ Repository = "https://github.com/Thomas55555/aioautomower"
 Documentation = "https://github.com/Thomas55555/aioautomower"
 Issues = "https://github.com/Thomas55555/aioautomower/issues"
 
-[tool.poetry]
-packages = [
-    { include = "aioautomower", from = "src" },
+[tool.hatch.build.targets.wheel]
+packages = ["src/aioautomower"]
+
+[dependency-groups]
+dev = [
+  "aiointercept==0.1.9",
+  "codespell==2.4.3",
+  "covdefaults==2.3.0",
+  "coverage[toml]==7.15.4",
+  "mypy==2.3.0",
+  "prek==0.4.13",
+  "pre-commit-hooks==6.0.0",
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "pytest-codspeed==5.0.3",
+  "pytest-cov==7.1.0",
+  "ruff==0.16.2",
+  "syrupy==5.5.3",
+  "time-machine==3.4.0",
+  "types-python-dateutil==2.9.0.20240821",
+  "types-pyyaml==6.0.12.20241230",
+  "yamllint==1.38.0",
 ]
-
-[tool.poetry.dependencies]
-python = "^3.11"
-aiohttp = "^3.9.3"
-mashumaro = "^3.12"
-PyJWT = "^2.8.0"
-ical = ">=8.0.1"
-tzlocal = "^5.2"
-python-dateutil = "^2.9.0-post.0"
-orjson = "^3.11.2"
-
-[tool.poetry.group.dev.dependencies]
-aiointercept = "0.1.9"
-codespell = "2.4.3"
-covdefaults = "2.3.0"
-coverage = {version = "7.15.4", extras = ["toml"]}
-mypy = "2.3.0"
-prek = "0.4.13"
-pre-commit-hooks = "6.0.0"
-pytest = "9.1.1"
-pytest-asyncio = "1.4.0"
-pytest-codspeed = "5.0.3"
-pytest-cov = "7.1.0"
-ruff = "0.16.2"
-syrupy = "5.5.3"
-time-machine = "3.4.0"
-types-python-dateutil = "^2.9.0.20240821"
-types-pyyaml = "^6.0.12.20241230"
-yamllint = "1.38.0"
-
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-style = "semver"
-metadata = false
 
 [tool.pytest.ini_options]
 addopts = "--cov=aioautomower --cov-report=term-missing -vv"
@@ -89,7 +83,6 @@ src = ["./src"]
 target-version = "py311"
 line-length = 88
 include = ["src/**/*.py", "tests/**/*.py"]
-
 
 [tool.ruff.lint]
 ignore = [
@@ -133,21 +126,14 @@ max-returns=15
 max-args=10
 max-statements=50
 
-
 [tool.mypy]
 platform = "linux"
 python_version = "3.11"
 strict = true
 namespace_packages = true
 mypy_path = "src"
-
-# show error messages from unrelated files
 follow_imports = "normal"
-
-# suppress errors about unsatisfied imports
 ignore_missing_imports = true
-
-# strict rules
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true
@@ -164,7 +150,6 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
-
 
 [tool.coverage.report]
 show_missing = true

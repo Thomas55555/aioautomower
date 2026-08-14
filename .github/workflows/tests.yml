@@ -23,22 +23,15 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v7.0.1
-      - name: 🏗 Set up Poetry
-        run: pipx install poetry
-      - name: 🏗 Set up Python ${{ matrix.python }}
-        id: python
-        uses: actions/setup-python@v7.0.0
+      - name: 🏗 Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: ${{ matrix.python }}
-          cache: "poetry"
-      - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
       - name: 🏗 Install dependencies
-        run: poetry install --no-interaction
+        run: uv sync
       - name: 🚀 Run pytest
-        run: poetry run pytest --cov src tests
+        run: uv run pytest --cov src tests
       - name: ⬆️ Upload coverage artifact
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -56,24 +49,17 @@ jobs:
           fetch-depth: 0
       - name: ⬇️ Download coverage data
         uses: actions/download-artifact@v8.0.1
-      - name: 🏗 Set up Poetry
-        run: pipx install poetry
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v7.0.0
+      - name: 🏗 Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: "poetry"
-      - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
       - name: 🏗 Install dependencies
-        run: poetry install --no-interaction
+        run: uv sync
       - name: 🚀 Process coverage results
         run: |
-          poetry run coverage combine coverage*/.coverage*
-          poetry run coverage xml -i
+          uv run coverage combine coverage*/.coverage*
+          uv run coverage xml -i
       - name: 🚀 Upload coverage reports to Codecov
         uses: codecov/codecov-action@v7.0.0
         with:
