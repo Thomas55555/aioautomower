@@ -24,7 +24,7 @@ jobs:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install Python dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: 🚀 Check code for common misspellings
         run: uv run prek run codespell --all-files
 
@@ -40,7 +40,7 @@ jobs:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install Python dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: 🚀 Run ruff linter
         run: uv run ruff check --output-format=github
       - name: 🚀 Run ruff formatter
@@ -58,7 +58,7 @@ jobs:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install Python dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: 🚀 Check Python AST
         run: uv run prek run check-ast --all-files
       - name: 🚀 Check for case conflicts
@@ -98,6 +98,6 @@ jobs:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install Python dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: 🚀 Run yamllint
         run: uv run yamllint .
