@@ -85,11 +85,11 @@ repos:
         types: [text]
         entry: uv run end-of-file-fixer
         stages: [pre-commit, pre-push, manual]
-      - id: mypy
-        name: 🆎 Static type checking using mypy
+      - id: ty
+        name: 🆎 Static type checking using ty
         language: system
         types: [python]
-        entry: uv run mypy --explicit-package-bases -p aioautomower
+        entry: uv run ty check
         require_serial: true
         pass_filenames: false
       - id: no-commit-to-branch
