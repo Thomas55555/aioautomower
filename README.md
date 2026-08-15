@@ -22,45 +22,44 @@ to access the API.
 You need at least:
 
 - Python 3.11+
-- [Poetry][poetry-install]
+- [uv][uv-install]
 
 For a first start you can run the `example.py`, by doing the following steps
 
 - `git clone https://github.com/Thomas55555/aioautomower.git`
 - `cd aioautomower`
-- `poetry install`
+- `uv sync`
 - Enter your personal `client_id` and `client_secret` in the `_secrets.yaml` and rename it to `secrets.yaml`
-- Run with `poetry run ./example.py`
+- Run with `uv run ./example.py`
 
 ## Contributing
 
 This is an active open-source project. We are always open to people who want to use the code or contribute to it.
-This Python project is fully managed using the [Poetry][poetry] dependency manager.
+This Python project is fully managed using [uv][uv].
 
 As this repository uses the [prek][prek] framework, all changes
 are linted and tested with each commit. You can run all checks and tests
 manually, using the following command:
 
 ```bash
-poetry run prek run --all-files
+uv run prek run --all-files
 ```
 
 To run just the Python tests:
 
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 To update snapshots:
 
 ```bash
-poetry run pytest --snapshot-update
+uv run pytest --snapshot-update
 ```
 
-[poetry-install]: https://python-poetry.org/docs/#installation
-[poetry]: https://python-poetry.org
+[uv-install]: https://docs.astral.sh/uv/getting-started/installation/
+[uv]: https://docs.astral.sh/uv/
 [prek]: https://github.com/prek/prek
-
 
 # Buying Equipment
 

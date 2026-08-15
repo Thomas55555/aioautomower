@@ -21,29 +21,20 @@ jobs:
       id-token: write
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v6.1.0
-      - name: 🏗 Set up Poetry
-        run: pipx install poetry
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v6.3.0
+        uses: actions/checkout@v7.0.1
+      - name: 🏗 Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: "poetry"
-      - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-      - name: 🏗 Install dependencies
-        run: poetry install --no-interaction
       - name: 🏗 Set package version
         run: |
           version="${{ github.event.release.tag_name }}"
           version="${version,,}"
           version="${version#v}"
-          poetry version --no-interaction "${version}"
+          uv version "${version}"
       - name: 🏗 Build package
-        run: poetry build --no-interaction
+        run: uv build
       - name: 🚀 Publish to PyPi
         uses: pypa/gh-action-pypi-publish@v1.14.2
         with:
@@ -51,6 +42,10 @@ jobs:
           print-hash: true
       - name: ✍️ Sign published artifacts
         uses: sigstore/gh-action-sigstore-python@v3.5.0
+        env:
+          # setup-uv exports UV_PYTHON globally. Sigstore creates its own
+          # virtual environment and must be allowed to select its interpreter.
+          UV_PYTHON: ""
         with:
           inputs: ./dist/*.tar.gz ./dist/*.whl
           release-signing-artifacts: true

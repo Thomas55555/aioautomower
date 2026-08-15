@@ -11,16 +11,16 @@
   "commitMessagePrefix": "⬆️",
   "packageRules": [
     {
-      "matchManagers": ["poetry"],
+      "matchManagers": ["uv"],
       "addLabels": ["python"]
     },
     {
-      "matchManagers": ["poetry"],
+      "matchManagers": ["uv"],
       "matchDepTypes": ["dev"],
       "rangeStrategy": "pin"
     },
     {
-      "matchManagers": ["poetry"],
+      "matchManagers": ["uv"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     },

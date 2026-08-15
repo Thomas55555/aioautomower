@@ -8,6 +8,7 @@ import zoneinfo
 from collections.abc import Callable
 from typing import Any, cast
 
+import orjson
 import tzlocal
 from aiohttp import ClientError, WSMessage, WSMsgType
 
@@ -274,7 +275,7 @@ class AutomowerSession:
             _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
             self._schedule_pong_callbacks()
         if msg.data:
-            msg_dict: GenericEventData = msg.json()
+            msg_dict: GenericEventData = orjson.loads(msg.data)
             if "type" in msg_dict:
                 if msg_dict["type"] in {event.value for event in EventTypesV2}:
                     _LOGGER.debug("Received websocket message %s", msg_dict)

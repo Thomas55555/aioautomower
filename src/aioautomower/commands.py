@@ -380,12 +380,11 @@ class MowerCommands:
             await self.auth.post_json(url, json=body)
         if self.data[mower_id].capabilities.work_areas:
             task_list: list[Calendar] = tasks.tasks
-            first_work_area_id = None
-            for task in task_list:
-                work_area_id = task.work_area_id
-                if first_work_area_id is None:
-                    first_work_area_id = work_area_id
-                elif work_area_id != first_work_area_id:
+            if not task_list:
+                return
+            first_work_area_id = task_list[0].work_area_id
+            for task in task_list[1:]:
+                if task.work_area_id != first_work_area_id:
                     msg = "Only identical work areas are allowed in one command."
                     raise WorkAreasDifferentError(msg)
             body = {
@@ -395,7 +394,7 @@ class MowerCommands:
                 }
             }
             url = AutomowerEndpoint.work_area_calendar.format(
-                mower_id=mower_id, work_area_id=work_area_id
+                mower_id=mower_id, work_area_id=first_work_area_id
             )
             await self.auth.post_json(url, json=body)
 
