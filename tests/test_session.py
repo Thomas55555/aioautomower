@@ -243,6 +243,11 @@ async def test_post_commands_2(
             json={"data": {"type": "calendar", "attributes": tasks_dict}},
         )
 
+        # Test calendar with empty tasks
+        mocked_method.reset_mock()
+        await automower_api.commands.set_calendar(MOWER_ID, Tasks(tasks=[]))
+        mocked_method.assert_not_called()
+
         # Test calendar with different work areas in one command.
         tasks_dict["tasks"][0]["workAreaId"] = 6789
         tasks = Tasks.from_dict(tasks_dict)
