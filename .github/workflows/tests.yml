@@ -29,7 +29,7 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python }}
       - name: 🏗 Install dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: 🚀 Run pytest
         run: uv run pytest --cov src tests
       - name: ⬆️ Upload coverage artifact
@@ -55,7 +55,7 @@ jobs:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: 🚀 Process coverage results
         run: |
           uv run coverage combine coverage*/.coverage*
