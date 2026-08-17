@@ -27,7 +27,7 @@ jobs:
       - name: 🏗 Install dependencies
         run: uv sync --locked
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v4.19.1
+        uses: CodSpeedHQ/action@v5.0.3
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           mode: "instrumentation"
