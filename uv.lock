@@ -1,10 +1,6 @@
 version = 1
 revision = 3
 requires-python = ">=3.11"
-resolution-markers = [
-    "python_full_version >= '3.15'",
-    "python_full_version < '3.15'",
-]
 
 [[package]]
 name = "aioautomower"
@@ -497,16 +493,16 @@ wheels = [
 
 [[package]]
 name = "ical"
-version = "14.1.0"
+version = "14.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dateutil" },
     { name = "tzdata" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e4/37/c20ea9cb032360b476207f23544b4c113fae4f79619951b3b1c1dfdcec38/ical-14.1.0.tar.gz", hash = "sha256:768274c90a8882ef8cd6610688c161cfe44d22c2769b5d4833efeb27910b7976", size = 156309, upload-time = "2026-08-09T16:24:11.188Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/9f/0749faf343fcad7e17c5cb8fce382194bd35ff16c96d0542e84b669f7515/ical-14.1.1.tar.gz", hash = "sha256:741e5ff3b7a2853811bd568c614d5cf96191c3134c954ec7815579b82e6e2ad8", size = 156951, upload-time = "2026-08-16T18:08:06.771Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/6d/feb3315521c7b119ce40b248a02595da3db7fc73119be45aa627642e0c6b/ical-14.1.0-py3-none-any.whl", hash = "sha256:bf5ddfa278cdec8608d1bc1bd1f97b4481f7c8e5c608b3823cbaa3571bd4c238", size = 144063, upload-time = "2026-08-09T16:24:09.684Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/14/7bfe39089a44c6a620b644bd2251501cf5147a830adaf839b3968cc0002a/ical-14.1.1-py3-none-any.whl", hash = "sha256:33846e06871f8e23a4db39ebbe7fadc3194b922a7a0dc734f6fbc380926c6105", size = 144127, upload-time = "2026-08-16T18:08:05.491Z" },
 ]
 
 [[package]]
@@ -1033,11 +1029,11 @@ wheels = [
 
 [[package]]
 name = "pygments"
-version = "2.20.0"
+version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/49/2e/ced460408999b33da6b31b0021b0f37d329e202d4169aeb164493778f25b/pygments-2.21.0.tar.gz", hash = "sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c", size = 5005329, upload-time = "2026-08-17T08:02:48.824Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
+    { url = "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl", hash = "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9", size = 1250147, upload-time = "2026-08-17T08:02:44.912Z" },
 ]
 
 [[package]]
