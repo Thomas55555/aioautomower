@@ -12,8 +12,8 @@ env:
   DEFAULT_PYTHON: "3.11"
 
 jobs:
-  ruff:
-    name: Ruff
+  prek:
+    name: prek
     runs-on: ubuntu-latest
     steps:
       - name: ⤵️ Check out code from GitHub
@@ -25,63 +25,5 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install Python dependencies
         run: uv sync --locked
-      - name: 🚀 Run ruff linter
-        run: uv run ruff check --output-format=github
-      - name: 🚀 Run ruff formatter
-        run: uv run ruff format --check
-
-  prek-hooks:
-    name: prek-hooks
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v7.0.1
-      - name: 🏗 Set up uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Install Python dependencies
-        run: uv sync --locked
-      - name: 🚀 Check Python AST
-        run: uv run prek run check-ast --all-files
-      - name: 🚀 Check for case conflicts
-        run: uv run prek run check-case-conflict --all-files
-      - name: 🚀 Check docstring is first
-        run: uv run prek run check-docstring-first --all-files
-      - name: 🚀 Check that executables have shebangs
-        run: uv run prek run check-executables-have-shebangs --all-files
-      - name: 🚀 Check JSON files
-        run: uv run prek run check-json --all-files
-      - name: 🚀 Check for merge conflicts
-        run: uv run prek run check-merge-conflict --all-files
-      - name: 🚀 Check for broken symlinks
-        run: uv run prek run check-symlinks --all-files
-      - name: 🚀 Check TOML files
-        run: uv run prek run check-toml --all-files
-      - name: 🚀 Check XML files
-        run: uv run prek run check-xml --all-files
-      - name: 🚀 Check YAML files
-        run: uv run prek run check-yaml --all-files
-      - name: 🚀 Detect Private Keys
-        run: uv run prek run detect-private-key --all-files
-      - name: 🚀 Check End of Files
-        run: uv run prek run end-of-file-fixer --all-files
-      - name: 🚀 Trim Trailing Whitespace
-        run: uv run prek run trailing-whitespace --all-files
-
-  yamllint:
-    name: yamllint
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v7.0.1
-      - name: 🏗 Set up uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Install Python dependencies
-        run: uv sync --locked
-      - name: 🚀 Run yamllint
-        run: uv run yamllint .
+      - name: 🚀 Run all prek hooks
+        run: uv run prek run --all-files
