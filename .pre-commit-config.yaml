@@ -89,7 +89,7 @@ repos:
         name: 🆎 Static type checking using ty
         language: system
         types: [python]
-        entry: uv run ty check
+        entry: uv run ty check src
         require_serial: true
         pass_filenames: false
       - id: no-commit-to-branch
