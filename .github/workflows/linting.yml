@@ -27,5 +27,5 @@ jobs:
         run: uv sync --locked
       - name: 🚀 Run all prek hooks
         env:
-          SKIP: pytest,ty
+          TZ: Europe/Berlin
         run: uv run prek run --all-files
