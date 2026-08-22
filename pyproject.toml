@@ -62,7 +62,7 @@ dev = [
   "pytest-asyncio==1.4.0",
   "pytest-codspeed==5.0.3",
   "pytest-cov==7.1.0",
-  "ruff==0.16.3",
+  "ruff==0.16.4",
   "syrupy==5.5.3",
   "time-machine==3.4.0",
   "ty==0.0.72",
