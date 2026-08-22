@@ -42,6 +42,7 @@ class AutomowerSession:
     __slots__ = (
         "_data",
         "_reconnect_lock",
+        "_warned_invalid_mowers",
         "auth",
         "commands",
         "current_mowers",
@@ -96,6 +97,7 @@ class AutomowerSession:
         self.rest_task: asyncio.Task[None] | None = None
         self.ws_task: asyncio.Task[None] | None = None
         self.reconnect_task: asyncio.Task[None] | None = None
+        self._warned_invalid_mowers: set[str] = set()
         self.ws_disconnected_cbs: list[Callable[[], None]] = []
         self.ws_ready_cbs: list[Callable[[], None]] = []
         self._reconnect_lock = asyncio.Lock()
@@ -413,11 +415,20 @@ class AutomowerSession:
 
         for mower in mower_list["data"]:
             if mower["id"] == INVALID_MOWER_ID:
-                self.invalid_mowers.add(mower["attributes"]["system"]["name"])
-                continue
-            valid_mowers.append(mower)
+                mower_name = mower["attributes"]["system"]["name"]
+                self.invalid_mowers.add(mower_name)
 
-        _LOGGER.debug("invalid_mowers: %s", self.invalid_mowers)
+                if mower["id"] not in self._warned_invalid_mowers:
+                    _LOGGER.warning(
+                        "Ignoring invalid mower %s (%s)",
+                        mower_name,
+                        mower["id"],
+                    )
+                    self._warned_invalid_mowers.add(mower["id"])
+
+                continue
+
+            valid_mowers.append(mower)
 
         self._data = {
             **mower_list,
