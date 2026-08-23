@@ -27,5 +27,6 @@ jobs:
         run: uv sync --locked
       - name: 🚀 Run all prek hooks
         env:
+          SKIP: no-commit-to-branch
           TZ: Europe/Berlin
         run: uv run prek run --all-files
