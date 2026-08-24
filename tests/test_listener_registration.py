@@ -12,6 +12,7 @@ from aioautomower.session import AutomowerSession
 @pytest.mark.asyncio
 async def test_start_listening_is_idempotent(automower_client: AbstractAuth) -> None:
     """Starting the websocket listener repeatedly must not create duplicate tasks."""
+
     async def wait_forever(session: AutomowerSession) -> None:
         await asyncio.Event().wait()
 
