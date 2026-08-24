@@ -3,13 +3,16 @@
 import asyncio
 from unittest.mock import Mock, patch
 
+import pytest
+
 from aioautomower.auth import AbstractAuth
 from aioautomower.session import AutomowerSession
 
 
+@pytest.mark.asyncio
 async def test_start_listening_is_idempotent(automower_client: AbstractAuth) -> None:
     """Starting the websocket listener repeatedly must not create duplicate tasks."""
-    async def wait_forever() -> None:
+    async def wait_forever(session: AutomowerSession) -> None:
         await asyncio.Event().wait()
 
     automower_api = AutomowerSession(automower_client)
@@ -29,7 +32,8 @@ async def test_start_listening_is_idempotent(automower_client: AbstractAuth) -> 
     await automower_api.close()
 
 
-def test_callback_registration_is_idempotent(
+@pytest.mark.asyncio
+async def test_callback_registration_is_idempotent(
     automower_client: AbstractAuth,
 ) -> None:
     """Registering the same callback repeatedly must only register it once."""
