@@ -48,7 +48,6 @@ class AutomowerSession:
         "current_mowers",
         "data",
         "data_update_cbs",
-        "invalid_mowers",
         "last_ws_message",
         "loop",
         "message_update_cbs",
@@ -85,7 +84,6 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
-        self.invalid_mowers: set[str] = set()
         self.last_ws_message: datetime.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
@@ -410,24 +408,18 @@ class AutomowerSession:
         mower_list: MowerDataResponse = await self.auth.get_json(
             AutomowerEndpoint.mowers
         )
-        self.invalid_mowers.clear()
         valid_mowers = []
 
         for mower in mower_list["data"]:
             if mower["id"] == INVALID_MOWER_ID:
                 mower_name = mower["attributes"]["system"]["name"]
-                self.invalid_mowers.add(mower_name)
-
-                if mower["id"] not in self._warned_invalid_mowers:
+                if mower_name not in self._warned_invalid_mowers:
                     _LOGGER.warning(
-                        "Ignoring invalid mower %s (%s)",
+                        "Ignoring invalid mower %s",
                         mower_name,
-                        mower["id"],
                     )
-                    self._warned_invalid_mowers.add(mower["id"])
-
+                    self._warned_invalid_mowers.add(mower_name)
                 continue
-
             valid_mowers.append(mower)
 
         self._data = {
