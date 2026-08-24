@@ -20,14 +20,14 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v7.0.1
       - name: 🏗 Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install dependencies
         run: uv sync --locked
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@v4.19.1
+        uses: CodSpeedHQ/action@v5.0.3
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
           mode: "instrumentation"
