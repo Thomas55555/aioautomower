@@ -135,7 +135,8 @@ class AutomowerSession:
         self, cb: Callable[[SingleMessageData], None]
     ) -> None:
         """Register a callback for the latest single message of a specific mower."""
-        self.single_message_cbs.append(cb)
+        if cb not in self.single_message_cbs:
+            self.single_message_cbs.append(cb)
 
     def unregister_single_message_callback(
         self,
@@ -156,7 +157,9 @@ class AutomowerSession:
         mower_id: str,
     ) -> None:
         """Register a callback triggered when new messages arrive for specific mower."""
-        self.message_update_cbs.append((mower_id, callback))
+        registration = (mower_id, callback)
+        if registration not in self.message_update_cbs:
+            self.message_update_cbs.append(registration)
 
     def unregister_message_callback(
         self,
@@ -164,7 +167,9 @@ class AutomowerSession:
         mower_id: str,
     ) -> None:
         """Unregister a previously registered message callback."""
-        self.message_update_cbs.remove((mower_id, callback))
+        registration = (mower_id, callback)
+        if registration in self.message_update_cbs:
+            self.message_update_cbs.remove(registration)
 
     def _schedule_message_callback(
         self,
@@ -326,8 +331,11 @@ class AutomowerSession:
 
     async def start_listening(self) -> None:
         """Start listening to the websocket."""
+        if self.ws_task and not self.ws_task.done():
+            return
         self.ws_task = self.loop.create_task(self._listen())
-        self.reconnect_task = self.loop.create_task(self._reconnect_scheduler())
+        if not self.reconnect_task or self.reconnect_task.done():
+            self.reconnect_task = self.loop.create_task(self._reconnect_scheduler())
 
     async def _reconnect_scheduler(self) -> None:
         """Reconnect scheduler."""
@@ -448,7 +456,7 @@ class AutomowerSession:
         return msg_resp
 
     def _update_data(self, new_data: GenericEventData) -> None:
-        """Update internal data with new data from websocket."""
+        """Update internal data from a websocket event."""
         if new_data["type"] == EventTypesV2.MESSAGES:
             if self.messages:
                 new_msg = Message.from_dict(new_data["attributes"]["message"])
@@ -489,10 +497,9 @@ class AutomowerSession:
         attributes: dict[str, Any] = new_data.get("attributes", {})
         for key, handler in handlers.items():
             if key in attributes:
-                handler(mower, attributes)  # Pass the specific attribute
+                handler(mower, attributes)
                 return
         mower_attributes = mower["attributes"]
-        # General handling for other attributes
         self._update_nested_dict(cast("dict[str, Any]", mower_attributes), attributes)
 
     def _handle_cutting_height_event(
