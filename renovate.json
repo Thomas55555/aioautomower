@@ -11,26 +11,14 @@
   "commitMessagePrefix": "⬆️",
   "packageRules": [
     {
-      "matchManagers": ["uv"],
-      "addLabels": ["python"]
-    },
-    {
-      "matchManagers": ["uv"],
-      "matchDepTypes": ["dev"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchManagers": ["uv"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": ["pep621"],
+      "addLabels": ["python"],
+      "matchUpdateTypes": ["pin", "minor", "patch"],
       "automerge": true
     },
     {
       "matchManagers": ["github-actions"],
       "addLabels": ["github_actions"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     }
