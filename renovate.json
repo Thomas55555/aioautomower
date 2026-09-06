@@ -12,25 +12,13 @@
   "packageRules": [
     {
       "matchManagers": ["pep621"],
-      "addLabels": ["python"]
-    },
-    {
-      "matchManagers": ["pep621"],
-      "matchDepTypes": ["dependency-groups"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchManagers": ["pep621"],
+      "addLabels": ["python"],
       "matchUpdateTypes": ["pin", "minor", "patch"],
       "automerge": true
     },
     {
       "matchManagers": ["github-actions"],
       "addLabels": ["github_actions"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     }
