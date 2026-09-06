@@ -11,17 +11,17 @@
   "commitMessagePrefix": "⬆️",
   "packageRules": [
     {
-      "matchManagers": ["uv"],
+      "matchManagers": ["pep621"],
       "addLabels": ["python"]
     },
     {
-      "matchManagers": ["uv"],
-      "matchDepTypes": ["dev"],
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["dependency-groups"],
       "rangeStrategy": "pin"
     },
     {
-      "matchManagers": ["uv"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["pin", "minor", "patch"],
       "automerge": true
     },
     {
