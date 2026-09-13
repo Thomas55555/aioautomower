@@ -3,11 +3,17 @@
 import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import StrEnum
 
 from mashumaro import DataClassDictMixin, field_options
 
 from .utils import convert_timestamp_to_aware_datetime
+
+
+def _tenths_of_degree_to_degrees(value: int | None) -> float | None:
+    """Convert an API angle from tenths of a degree to degrees."""
+    if value is None:
+        return None
+    return value / 10
 
 
 class WorkAreaType(StrEnum):
@@ -54,12 +60,23 @@ class WorkArea(DataClassDictMixin):
         metadata=field_options(alias="useGlobalCuttingHeight")
     )
     enabled: bool = field(default=False)
-    orientation: int | None = field(default=None)
-    orientation_shift: int | None = field(
-        metadata=field_options(alias="orientationShift"), default=None
+    orientation: float | None = field(
+        default=None,
+        metadata=field_options(deserialize=_tenths_of_degree_to_degrees),
     )
-    current_orientation: int | None = field(
-        metadata=field_options(alias="currentOrientation"), default=None
+    orientation_shift: float | None = field(
+        metadata=field_options(
+            alias="orientationShift",
+            deserialize=_tenths_of_degree_to_degrees,
+        ),
+        default=None,
+    )
+    current_orientation: float | None = field(
+        metadata=field_options(
+            alias="currentOrientation",
+            deserialize=_tenths_of_degree_to_degrees,
+        ),
+        default=None,
     )
     progress: int | None = field(default=None)
     last_time_completed: datetime | None = field(
