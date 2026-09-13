@@ -23,6 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 FEATURE_NOT_SUPPORTED_MSG = "This mower does not support this command."
 
 
+def _degrees_to_tenths_of_degree(value: float) -> int:
+    """Convert an angle in degrees to the API's tenths-of-a-degree format."""
+    return round(value * 10)
+
+
 @dataclass
 class AutomowerEndpoint:
     """Endpoint URLs for the AutomowerConnect API."""
@@ -81,9 +86,9 @@ class WorkAreaSettings:
             msg = FEATURE_NOT_SUPPORTED_MSG
             raise FeatureNotSupportedError(msg)
 
-    def _validate_range(self, field: str, value: int) -> None:
-        if not 0 <= value <= 1800:
-            msg = f"{field} must be between 0 and 1800"
+    def _validate_range(self, field: str, value: float) -> None:
+        if not 0 <= value <= 180:
+            msg = f"{field} must be between 0 and 180 degrees"
             raise ValueError(msg)
 
     async def update(
@@ -92,10 +97,10 @@ class WorkAreaSettings:
         cutting_height: int | None = None,
         enabled: bool | None = None,
         name: str | None = None,
-        orientation: int | None = None,
-        orientation_shift: int | None = None,
+        orientation: float | None = None,
+        orientation_shift: float | None = None,
     ) -> None:
-        """Update work area settings."""
+        """Update work area settings; angles are specified in degrees."""
         if orientation is not None:
             self._validate_range("orientation", orientation)
 
@@ -110,9 +115,11 @@ class WorkAreaSettings:
         if name is not None:
             attributes["name"] = name
         if orientation is not None:
-            attributes["orientation"] = orientation
+            attributes["orientation"] = _degrees_to_tenths_of_degree(orientation)
         if orientation_shift is not None:
-            attributes["orientationShift"] = orientation_shift
+            attributes["orientationShift"] = _degrees_to_tenths_of_degree(
+                orientation_shift
+            )
 
         if not attributes:
             return
@@ -174,253 +181,3 @@ class MowerCommands:
             mower_id=mower_id,
             work_area_id=work_area_id,
         )
-
-    async def reset_cutting_blade_usage_time(self, mower_id: str) -> None:
-        """Reset the cutting blade usage time.
-
-        Same function that is available in the Automower Connect app. The statistics
-        value cuttingBladeUsageTime will be reset. Can be used when cutting blades are
-        changed on the Automower to know when its time to the blades next time.
-        """
-        url = AutomowerEndpoint.reset_cutting_blade_usage_time.format(mower_id=mower_id)
-        await self.auth.post_json(url)
-
-    async def resume_schedule(self, mower_id: str) -> None:
-        """Resume schedule.
-
-        Remove any override on the Planner and let the mower
-        resume to the schedule set by the Calendar.
-        """
-        body = {"data": {"type": "ResumeSchedule"}}
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def pause_mowing(self, mower_id: str) -> None:
-        """Send pause mowing command to the mower via Rest."""
-        body = {"data": {"type": "Pause"}}
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def park_until_next_schedule(self, mower_id: str) -> None:
-        """Send park until next schedule command to the mower."""
-        body = {"data": {"type": "ParkUntilNextSchedule"}}
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def park_until_further_notice(self, mower_id: str) -> None:
-        """Send park until further notice command to the mower."""
-        body = {"data": {"type": "ParkUntilFurtherNotice"}}
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def park_for(
-        self,
-        mower_id: str,
-        tdelta: datetime.timedelta,
-        external_reason: int | None = None,
-    ) -> None:
-        """Parks the mower for a period of minutes.
-
-        The mower will drive to the charging station and park for the duration set by
-        the command. If external reason is set the mower will be parked with an external
-        reason. The external reason can be used to set the reason for the parking when
-        you have more than one integration to the API.
-        """
-        body: dict[str, Any] = {
-            "data": {
-                "type": "Park",
-                "attributes": {
-                    "duration": timedelta_to_minutes(tdelta),
-                },
-            }
-        }
-        if external_reason is not None:
-            if not 200_000 <= external_reason <= 299_999:
-                msg = "External reason must be between 200000 and 299999."
-                raise ValueError(msg)
-            if tdelta >= datetime.timedelta(hours=25):
-                msg = (
-                    "External reason can only be used for park durations less than "
-                    "25 hours."
-                )
-                raise ValueError(msg)
-            if not self.data[mower_id].capabilities.work_areas:
-                msg = FEATURE_NOT_SUPPORTED_MSG
-                raise FeatureNotSupportedError(msg)
-            body["data"]["attributes"]["externalReason"] = external_reason
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def start_in_workarea(
-        self,
-        mower_id: str,
-        work_area_id: int,
-        tdelta: datetime.timedelta,
-    ) -> None:
-        """Start the mower in a work area for a period of minutes."""
-        if not self.data[mower_id].capabilities.work_areas:
-            msg = FEATURE_NOT_SUPPORTED_MSG
-            raise FeatureNotSupportedError(msg)
-        body = {
-            "data": {
-                "type": "StartInWorkArea",
-                "attributes": {
-                    "duration": timedelta_to_minutes(tdelta),
-                    "workAreaId": work_area_id,
-                },
-            }
-        }
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def start_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
-        """Start the mower for a period of minutes."""
-        body = {
-            "data": {
-                "type": "Start",
-                "attributes": {"duration": timedelta_to_minutes(tdelta)},
-            }
-        }
-        url = AutomowerEndpoint.actions.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def set_cutting_height(self, mower_id: str, cutting_height: int) -> None:
-        """Set the cutting height for the mower."""
-        body = {
-            "data": {
-                "type": "settings",
-                "attributes": {"cuttingHeight": cutting_height},
-            }
-        }
-        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def set_datetime(
-        self, mower_id: str, current_time: datetime.datetime | None = None
-    ) -> None:
-        """Set the datetime of the mower.
-
-        Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in
-        the local time of the mower.
-        """
-        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
-        body = {
-            "data": {
-                "type": "settings",
-                "attributes": {
-                    "dateTime": int(
-                        current_time.astimezone(self.mower_tz)
-                        .replace(tzinfo=datetime.UTC)
-                        .timestamp()
-                    )
-                },
-            }
-        }
-        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def set_datetime_new(
-        self, mower_id: str, current_time: datetime.datetime | None = None
-    ) -> None:
-        """Set the datetime of the mower.
-
-        If the current has not tz_info, the mower_tz will be used as tz_info.
-        """
-        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
-        body = {
-            "data": {
-                "type": "settings",
-                "attributes": {
-                    "timer": {
-                        "dateTime": int(
-                            current_time.astimezone(self.mower_tz)
-                            .replace(tzinfo=datetime.UTC)
-                            .timestamp()
-                        ),
-                        "timeZone": str(self.mower_tz),
-                    },
-                },
-            }
-        }
-        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def set_headlight_mode(
-        self,
-        mower_id: str,
-        headlight_mode: HeadlightModes,
-    ) -> None:
-        """Send headlight mode to the mower."""
-        if not self.data[mower_id].capabilities.headlights:
-            msg = FEATURE_NOT_SUPPORTED_MSG
-            raise FeatureNotSupportedError(msg)
-        body = {
-            "data": {
-                "type": "settings",
-                "attributes": {"headlight": {"mode": headlight_mode.upper()}},
-            }
-        }
-        url = AutomowerEndpoint.settings.format(mower_id=mower_id)
-        await self.auth.post_json(url, json=body)
-
-    async def set_calendar(
-        self,
-        mower_id: str,
-        tasks: Tasks,
-    ) -> None:
-        """Send calendar task to the mower."""
-        if not self.data[mower_id].capabilities.work_areas:
-            body = {
-                "data": {
-                    "type": "calendar",
-                    "attributes": tasks.to_dict(),
-                }
-            }
-            url = AutomowerEndpoint.calendar.format(mower_id=mower_id)
-            await self.auth.post_json(url, json=body)
-        if self.data[mower_id].capabilities.work_areas:
-            task_list: list[Calendar] = tasks.tasks
-            if not task_list:
-                return
-            first_work_area_id = task_list[0].work_area_id
-            for task in task_list[1:]:
-                if task.work_area_id != first_work_area_id:
-                    msg = "Only identical work areas are allowed in one command."
-                    raise WorkAreasDifferentError(msg)
-            body = {
-                "data": {
-                    "type": "calendar",
-                    "attributes": tasks.to_dict(),
-                }
-            }
-            url = AutomowerEndpoint.work_area_calendar.format(
-                mower_id=mower_id, work_area_id=first_work_area_id
-            )
-            await self.auth.post_json(url, json=body)
-
-    async def switch_stay_out_zone(
-        self, mower_id: str, stay_out_zone_id: str, *, switch: bool
-    ) -> None:
-        """Enable or disable a stay out zone."""
-        if not self.data[mower_id].capabilities.stay_out_zones:
-            msg = FEATURE_NOT_SUPPORTED_MSG
-            raise FeatureNotSupportedError(msg)
-        body = {
-            "data": {
-                "type": "stayOutZone",
-                "id": stay_out_zone_id,
-                "attributes": {"enable": switch},
-            }
-        }
-        url = AutomowerEndpoint.stay_out_zones.format(
-            mower_id=mower_id, stay_out_id=stay_out_zone_id
-        )
-        await self.auth.patch_json(url, json=body)
-
-    async def error_confirm(self, mower_id: str) -> None:
-        """Confirm non-fatal mower error."""
-        if not self.data[mower_id].capabilities.can_confirm_error:
-            msg = FEATURE_NOT_SUPPORTED_MSG
-            raise FeatureNotSupportedError(msg)
-        url = AutomowerEndpoint.error_confirm.format(mower_id=mower_id)
-        await self.auth.post_json(url)
