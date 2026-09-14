@@ -590,8 +590,8 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
                     "id": 123456,
                     "attributes": {
                         "name": "New name",
-                        "orientation": 90,
-                        "orientationShift": 10,
+                        "orientation": 900,
+                        "orientationShift": 100,
                     },
                 }
             },
@@ -624,7 +624,7 @@ async def test_patch_commands(automower_client: AbstractAuth, mower_data: dict) 
 
         with pytest.raises(
             ValueError,
-            match=re.escape("orientation must be between 0 and 1800"),
+            match=re.escape("orientation must be between 0 and 180"),
         ):
             await automower_api.commands.workarea_settings(MOWER_ID, 0).update(
                 orientation=1801
