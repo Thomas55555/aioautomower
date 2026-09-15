@@ -61,6 +61,6 @@ jobs:
           uv run coverage combine coverage*/.coverage*
           uv run coverage xml -i
       - name: 🚀 Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v7.0.0
+        uses: codecov/codecov-action@v7.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
