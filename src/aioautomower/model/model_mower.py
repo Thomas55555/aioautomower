@@ -1,5 +1,6 @@
 """Models for Automower Connect API - Mower."""
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
@@ -8,6 +9,9 @@ from re import sub
 from mashumaro import DataClassDictMixin, field_options
 
 from .utils import convert_timestamp_to_aware_datetime
+
+_LOGGER = logging.getLogger(__name__)
+UNKNOWN_ERROR = "unknown error"
 
 ERRORCODES = {
     0: "Unexpected error",
@@ -243,6 +247,26 @@ class MowerStates(StrEnum):
     RESTRICTED = "restricted"
 
 
+def deserialize_error_key(error_code: int) -> str | None:
+    """Convert an error code to a snake case error key."""
+    if error_code == 0:
+        return None
+
+    error = ERRORCODES.get(error_code)
+    if error is None:
+        _LOGGER.warning(
+            "Unknown mower error code detected: %s. "
+            "Please open an issue at "
+            "https://github.com/Thomas55555/aioautomower/issues/new"
+            "?title=Unknown+mower+error+code+%s",
+            error_code,
+            error_code,
+        )
+        return UNKNOWN_ERROR
+
+    return snake_case(error)
+
+
 @dataclass
 class Mower(DataClassDictMixin):
     """Information about the mowers current status."""
@@ -259,7 +283,7 @@ class Mower(DataClassDictMixin):
     error_code: int = field(metadata=field_options(alias="errorCode"))
     error_key: str | None = field(
         metadata=field_options(
-            deserialize=lambda x: None if x == 0 else snake_case(ERRORCODES.get(x)),
+            deserialize=deserialize_error_key,
             alias="errorCode",
         )
     )
