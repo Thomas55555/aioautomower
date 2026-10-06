@@ -251,8 +251,11 @@ def deserialize_error_key(error_code: int) -> str | None:
     error = ERRORCODES.get(error_code)
     if error is None:
         _LOGGER.warning(
-            "Unknown mower error code detected: %s. Please open an issue at "
-            "https://github.com/aioautomower/aioautomower/issues",
+            "Unknown mower error code detected: %s. "
+            "Please open an issue at "
+            "https://github.com/Thomas55555/aioautomower/issues/new"
+            "?title=Unknown+mower+error+code+%s",
+            error_code,
             error_code,
         )
         return UNKNOWN_ERROR

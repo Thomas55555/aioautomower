@@ -48,7 +48,8 @@ async def test_error_key(
     assert (
         "Unknown mower error code detected: 9999. "
         "Please open an issue at "
-        "https://github.com/aioautomower/aioautomower/issues" in caplog.text
+        "https://github.com/Thomas55555/aioautomower/issues/new?"
+        "title=Unknown+mower+error+code+9999" in caplog.text
     )
 
 
