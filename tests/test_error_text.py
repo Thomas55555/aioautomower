@@ -44,12 +44,16 @@ async def test_error_key(
     mower_python["data"][0]["attributes"]["mower"]["errorCode"] = 9999
     with caplog.at_level(logging.WARNING):
         mowers = mower_list_to_dictionary_dataclass(mower_python, mower_tz)
-    assert mowers[MOWER_ID].mower.error_key == UNKNOWN_ERROR
-    assert (
+        assert mowers[MOWER_ID].mower.error_key == UNKNOWN_ERROR
+
+        mower_list_to_dictionary_dataclass(mower_python, mower_tz)
+
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message == (
         "Unknown mower error code detected: 9999. "
         "Please open an issue at "
-        "https://github.com/Thomas55555/aioautomower/issues/new?"
-        "title=Unknown+mower+error+code+9999" in caplog.text
+        "https://github.com/Thomas55555/aioautomower/issues/new"
+        "?title=Unknown+mower+error+code+9999"
     )
 
 
