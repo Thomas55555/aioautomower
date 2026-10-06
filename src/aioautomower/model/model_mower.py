@@ -12,6 +12,7 @@ from .utils import convert_timestamp_to_aware_datetime
 
 _LOGGER = logging.getLogger(__name__)
 UNKNOWN_ERROR = "unknown error"
+_LOGGED_UNKNOWN_ERRORS: set[int] = set()
 
 ERRORCODES = {
     0: "Unexpected error",
@@ -254,14 +255,16 @@ def deserialize_error_key(error_code: int) -> str | None:
 
     error = ERRORCODES.get(error_code)
     if error is None:
-        _LOGGER.warning(
-            "Unknown mower error code detected: %s. "
-            "Please open an issue at "
-            "https://github.com/Thomas55555/aioautomower/issues/new"
-            "?title=Unknown+mower+error+code+%s",
-            error_code,
-            error_code,
-        )
+        if error_code not in _LOGGED_UNKNOWN_ERRORS:
+            _LOGGER.warning(
+                "Unknown mower error code detected: %s. "
+                "Please open an issue at "
+                "https://github.com/Thomas55555/aioautomower/issues/new"
+                "?title=Unknown+mower+error+code+%s",
+                error_code,
+                error_code,
+            )
+            _LOGGED_UNKNOWN_ERRORS.add(error_code)
         return UNKNOWN_ERROR
 
     return snake_case(error)
