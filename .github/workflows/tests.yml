@@ -33,7 +33,7 @@ jobs:
       - name: 🚀 Run pytest
         run: uv run pytest --cov src tests
       - name: ⬆️ Upload coverage artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage-${{ matrix.python }}
           path: .coverage
