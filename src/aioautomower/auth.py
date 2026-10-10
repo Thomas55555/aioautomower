@@ -85,6 +85,11 @@ class AbstractAuth(ABC):
         resp = await self.get(url, **kwargs)
         return await self._process_json_response(resp)
 
+    async def get_text(self, url: str, **kwargs: Any) -> str:
+        """Make a GET request and return raw text response."""
+        resp = await self.get(url, **kwargs)
+        return await resp.text()
+
     async def post(self, url: str, **kwargs: Any) -> ClientResponse:
         """Make a post request."""
         try:
