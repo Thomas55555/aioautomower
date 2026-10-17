@@ -5,7 +5,7 @@ the logic for interpreting recurring events for the Husqvarna Automower
 calendar. Only upcoming events will be shown.
 """
 
-import datetime
+import datetime as dt
 import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -42,8 +42,8 @@ class ProgramEvent:
 
     schedule_no: int
     work_area_id: int | None
-    start: datetime.datetime
-    end: datetime.datetime
+    start: dt.datetime
+    end: dt.datetime
     rule: rrule.rrule | None = None
 
     @property
@@ -67,8 +67,8 @@ def create_recurrence(
     schedule_no: int,
     work_area_id: int | None,
     frequency: ProgramFrequency,
-    dtstart: datetime.datetime,
-    duration: datetime.timedelta,
+    dtstart: dt.datetime,
+    duration: dt.timedelta,
     days_of_week: set[DayOfWeek],
 ) -> Iterable[SortableItem[Timespan, ProgramEvent]]:
     """Create a timeline using a recurrence rule."""
@@ -93,9 +93,9 @@ def create_recurrence(
     ruleset.rrule(rule)
 
     def adapter(
-        dtstart: datetime.datetime | datetime.date,
+        dtstart: dt.datetime | dt.date,
     ) -> SortableItem[Timespan, ProgramEvent]:
-        if not isinstance(dtstart, datetime.datetime):
+        if not isinstance(dtstart, dt.datetime):
             msg = "Expected datetime, got date"
             raise TypeError(msg)
         dtend = dtstart + duration

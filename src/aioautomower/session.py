@@ -2,7 +2,7 @@
 
 import asyncio
 import contextlib
-import datetime
+import datetime as dt
 import logging
 import zoneinfo
 from collections.abc import Callable
@@ -84,14 +84,14 @@ class AutomowerSession:
         self.commands = MowerCommands(self.auth, self.data, self.mower_tz)
         self.current_mowers: set[str] = set()
         self.data_update_cbs: list[Callable[[dict[str, MowerAttributes]], None]] = []
-        self.last_ws_message: datetime.datetime
+        self.last_ws_message: dt.datetime
         self.loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self.message_update_cbs: list[tuple[str, Callable[[MessageData], None]]] = []
         self.single_message_cbs: list[Callable[[SingleMessageData], None]] = []
         self.single_message: SingleMessageData | None = None
         self.messages: dict[str, MessageData] = {}
         self.poll = poll
-        self.pong_cbs: list[Callable[[datetime.datetime], None]] = []
+        self.pong_cbs: list[Callable[[dt.datetime], None]] = []
         self.rest_task: asyncio.Task[None] | None = None
         self.ws_task: asyncio.Task[None] | None = None
         self.reconnect_task: asyncio.Task[None] | None = None
@@ -223,7 +223,7 @@ class AutomowerSession:
             self.ws_disconnected_cbs.remove(cb)
 
     def register_pong_callback(
-        self, pong_callback: Callable[[datetime.datetime], None]
+        self, pong_callback: Callable[[dt.datetime], None]
     ) -> None:
         """Register a pong callback.
 
@@ -233,7 +233,7 @@ class AutomowerSession:
         if pong_callback not in self.pong_cbs:
             self.pong_cbs.append(pong_callback)
 
-    def _schedule_pong_callback(self, cb: Callable[[datetime.datetime], None]) -> None:
+    def _schedule_pong_callback(self, cb: Callable[[dt.datetime], None]) -> None:
         """Schedule a pong callback."""
         self.loop.call_soon_threadsafe(cb, self.last_ws_message)
 
@@ -243,7 +243,7 @@ class AutomowerSession:
             self._schedule_pong_callback(cb)
 
     def unregister_pong_callback(
-        self, pong_callback: Callable[[datetime.datetime], None]
+        self, pong_callback: Callable[[dt.datetime], None]
     ) -> None:
         """Unregister a pong update callback.
 
@@ -269,7 +269,7 @@ class AutomowerSession:
     async def _handle_text_message(self, msg: WSMessage) -> None:
         """Process a text message to data."""
         if not msg.data:
-            self.last_ws_message = datetime.datetime.now(tz=datetime.UTC)
+            self.last_ws_message = dt.datetime.now(tz=dt.UTC)
             _LOGGER.debug("last_ws_message:%s", self.last_ws_message)
             self._schedule_pong_callbacks()
         if msg.data:
