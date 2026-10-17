@@ -1,6 +1,6 @@
 """Commands for the Automower."""
 
-import datetime
+import datetime as dt
 import logging
 import zoneinfo
 from dataclasses import dataclass
@@ -216,7 +216,7 @@ class MowerCommands:
     async def park_for(
         self,
         mower_id: str,
-        tdelta: datetime.timedelta,
+        tdelta: dt.timedelta,
         external_reason: int | None = None,
     ) -> None:
         """Parks the mower for a period of minutes.
@@ -238,7 +238,7 @@ class MowerCommands:
             if not 200_000 <= external_reason <= 299_999:
                 msg = "External reason must be between 200000 and 299999."
                 raise ValueError(msg)
-            if tdelta >= datetime.timedelta(hours=25):
+            if tdelta >= dt.timedelta(hours=25):
                 msg = (
                     "External reason can only be used for park durations less than "
                     "25 hours."
@@ -255,7 +255,7 @@ class MowerCommands:
         self,
         mower_id: str,
         work_area_id: int,
-        tdelta: datetime.timedelta,
+        tdelta: dt.timedelta,
     ) -> None:
         """Start the mower in a work area for a period of minutes."""
         if not self.data[mower_id].capabilities.work_areas:
@@ -273,7 +273,7 @@ class MowerCommands:
         url = AutomowerEndpoint.actions.format(mower_id=mower_id)
         await self.auth.post_json(url, json=body)
 
-    async def start_for(self, mower_id: str, tdelta: datetime.timedelta) -> None:
+    async def start_for(self, mower_id: str, tdelta: dt.timedelta) -> None:
         """Start the mower for a period of minutes."""
         body = {
             "data": {
@@ -296,21 +296,21 @@ class MowerCommands:
         await self.auth.post_json(url, json=body)
 
     async def set_datetime(
-        self, mower_id: str, current_time: datetime.datetime | None = None
+        self, mower_id: str, current_time: dt.datetime | None = None
     ) -> None:
         """Set the datetime of the mower.
 
         Timestamp in seconds from 1970-01-01. The timestamp needs to be in 24 hours in
         the local time of the mower.
         """
-        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
+        current_time = current_time or dt.datetime.now(tz=self.mower_tz)
         body = {
             "data": {
                 "type": "settings",
                 "attributes": {
                     "dateTime": int(
                         current_time.astimezone(self.mower_tz)
-                        .replace(tzinfo=datetime.UTC)
+                        .replace(tzinfo=dt.UTC)
                         .timestamp()
                     )
                 },
@@ -320,13 +320,13 @@ class MowerCommands:
         await self.auth.post_json(url, json=body)
 
     async def set_datetime_new(
-        self, mower_id: str, current_time: datetime.datetime | None = None
+        self, mower_id: str, current_time: dt.datetime | None = None
     ) -> None:
         """Set the datetime of the mower.
 
         If the current has not tz_info, the mower_tz will be used as tz_info.
         """
-        current_time = current_time or datetime.datetime.now(tz=self.mower_tz)
+        current_time = current_time or dt.datetime.now(tz=self.mower_tz)
         body = {
             "data": {
                 "type": "settings",
@@ -334,7 +334,7 @@ class MowerCommands:
                     "timer": {
                         "dateTime": int(
                             current_time.astimezone(self.mower_tz)
-                            .replace(tzinfo=datetime.UTC)
+                            .replace(tzinfo=dt.UTC)
                             .timestamp()
                         ),
                         "timeZone": str(self.mower_tz),
