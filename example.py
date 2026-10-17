@@ -7,10 +7,12 @@ import time
 from pathlib import Path
 from pprint import pprint
 from typing import cast
-
+import anyio
 import yaml
 from aiohttp import ClientSession
-
+import re
+import anyio
+import xml.etree.ElementTree as ET
 from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aioautomower.model import MowerAttributes
@@ -82,6 +84,50 @@ class AsyncTokenAuth(AbstractAuth):
         self.token = await async_get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+
+
+def add_viewbox(svg: str, padding: float = 50.0) -> str:
+    root = ET.fromstring(svg)
+
+    xs: list[float] = []
+    ys: list[float] = []
+
+    for el in root.iter():
+        tag = el.tag.split("}")[-1]
+
+        if tag in {"polygon", "polyline"}:
+            points = el.attrib.get("points")
+            if not points:
+                continue
+
+            coords = re.findall(r"-?\d+(?:\.\d+)?", points)
+            pts = list(zip(map(float, coords[0::2]), map(float, coords[1::2])))
+
+            for x, y in pts:
+                xs.append(x)
+                ys.append(y)
+
+    if not xs or not ys:
+        return svg
+
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+
+    width = max_x - min_x
+    height = max_y - min_y
+
+    # viewBox setzen
+    root.set(
+        "viewBox",
+        f"{min_x - padding} {min_y - padding} "
+        f"{width + padding * 2} {height + padding * 2}",
+    )
+    root.set("preserveAspectRatio", "xMidYMid meet")
+
+    return ET.tostring(root, encoding="unicode")
+
+
 async def main() -> None:
     """Establish connection to mower and print states for 5 minutes."""
     configure_logging(logging.DEBUG)
@@ -123,7 +169,12 @@ async def main() -> None:
         #     mower_id, 0, datetime.timedelta(minutes=30)
         # )
         # await automower_api.async_get_messages(mower_id)
+    svg_response = await automower_api.async_get_generated_maps(
+        "c0f400c6-e933-4215-831a-0dea58427df6"
+    )
+    print("svg_response", svg_response)
 
+    await anyio.Path("map.svg").write_text(svg_response, encoding="utf-8")
     # await asyncio.sleep(10)
     # await automower_api.get_status()
     # print("self._data", automower_api._data)
