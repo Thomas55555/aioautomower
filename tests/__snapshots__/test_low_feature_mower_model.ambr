@@ -103,6 +103,7 @@
 # ---
 # name: test_mower_snapshot[low_feature_mower_data-low_feature_message_data][status.system]
   dict({
+    'manufacture_date': None,
     'model': 'Automower Aspire',
     'name': 'Test Mower 1',
     'serial_number': '123',
