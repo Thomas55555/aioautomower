@@ -1,6 +1,7 @@
 """Helper utils for Automower Connect API."""
 
 from datetime import UTC, date, datetime
+from functools import cache
 
 from aioautomower import tz_util
 
@@ -28,6 +29,7 @@ def convert_timestamp_to_aware_datetime(timestamp: int) -> datetime | None:
     )
 
 
+@cache
 def decode_manufacture_date(serial_number: str | int) -> date | None:
     """Decode the manufacture date from a 9-digit YYWWNNNNN serial number.
 

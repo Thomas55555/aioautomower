@@ -236,10 +236,10 @@
 # ---
 # name: test_mower_snapshot[status.system]
   dict({
-    'manufacture_date': None,
+    'manufacture_date': datetime.date(2018, 11, 26),
     'model': '450XH-TEST',
     'name': 'Test Mower 1',
-    'serial_number': '123',
+    'serial_number': '184800801',
   })
 # ---
 # name: test_mower_snapshot[status.work_area_dict]

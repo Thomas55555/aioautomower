@@ -33,6 +33,22 @@ def test_decode_manufacture_date(
     assert result == expected_result
 
 
+def test_decode_manufacture_date_is_cached() -> None:
+    """Test repeated decoding of the same serial number is served from the cache."""
+    # Arrange
+    decode_manufacture_date.cache_clear()
+
+    # Act
+    first_result = decode_manufacture_date("184800801")
+    second_result = decode_manufacture_date("184800801")
+
+    # Assert
+    cache_info = decode_manufacture_date.cache_info()
+    assert first_result == second_result == date(2018, 11, 26)
+    assert cache_info.hits == 1
+    assert cache_info.misses == 1
+
+
 def test_system_manufacture_date_from_serial_number() -> None:
     """Test the system model derives the manufacture date from the serial number."""
     # Arrange
