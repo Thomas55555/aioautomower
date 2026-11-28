@@ -30,6 +30,9 @@ class AutomowerEndpoint:
     mowers = "mowers/"
     "List data for all mowers linked to a user."
 
+    maps_generated = "mowers/{mower_id}/maps/generated"
+    "List generated maps for a mower."
+
     actions = "mowers/{mower_id}/actions"
     "Accepts actions to control a mower linked to a user."
 
